@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello React</title>
+    <script src="https://fb.me/react-0.14.7.js"></script>
+    <script src="https://fb.me/react-dom-0.14.7.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="todo"></div>
+    <script type="text/babel">
+      var Todo = React.createClass({
+        getInitialState: function() {
+          return {list: []};
+        },
+        add: function(event) {
+          var val = this.refs.new_item.value.trim();
+          if (val === '') {
+            return;
+          }
+          this.setState({list: [...this.state.list, val]});
+        },
+        render: function() {
+          var items = [];
+          for (var i = 0; i < this.state.list.length; i++) {
+            items.push(<li key={i}>{this.state.list[i]}</li>);
+          }
+          return (
+            <div>
+              <input type="text" placeholder="An item" ref="new_item" />
+              <input value="Add item" type="button" onClick={this.add} />
+              <br/ >
+              <ul>{items}</ul>
+            </div>
+          );
+        }
+      });
+
+      ReactDOM.render(
+        <Todo />,
+        document.getElementById('todo')
+      );
+    </script>
+  </body>
+</html>
