@@ -8,111 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
-    <form id="game-list">
-      <div id="games">
-      </div>
-      <input type="submit" value="refresh" />
-    </form>
-    <form id="socket-form">
-      <textarea id="message" placeholder="Gogogo" required></textarea>
-      <input type="submit" />
-    </form>
-    <div>
-      cookie: <span id="cookie" />
-    </div>
-    <script>
-      window.onload = function() {
-        var game_form = document.getElementById('game-list');
-        game_form.onsubmit = function(e) {
-          e.preventDefault();
-          var xhttp = new XMLHttpRequest();
-          xhttp.onreadystatechange = function() {
-            if (xhttp.readyState < 4) {
-              return;
-            }
-            if (xhttp.status != 200) {
-              console.log('Error reading game list: %s', xhttp.status);
-              return;
-            }
-            console.log(xhttp.responseText);
-          };
-          xhttp.open('GET', 'games', true);
-          xhttp.send();
-        };
-
-        document.getElementById('cookie').innerHTML = document.cookie;
-        var form = document.getElementById('socket-form');
-        var message = document.getElementById('message');
-        form.onsubmit = function(e) {
-          e.preventDefault();
-          socket.send(JSON.stringify({
-            type: 'chat',
-            text: message.value
-          }));
-          console.log('Sent: ' + message.value);
-          message.value = '';
-        };
-
-        var readCookie = function(name) {
-          var c = document.cookie.split('; ');
-          for (var i = c.length - 1; i >= 0; i--) {
-            var cc = c[i].split('=');
-            if (cc[0] === name) {
-              return cc[1];
-            }
-          }
-          throw 'Cookie '+name+' not found.';
-        };
-
-        var socket = new WebSocket('ws://192.168.1.203:8080');
-        socket.onerror = function(error) {
-          console.log("WebSocket error: " + error);
-        };
-        socket.onopen = function(e) {
-          console.log("WebSocket open");
-          socket.send(JSON.stringify({
-            type: 'hello',
-            session_id: readCookie('session_id'),
-          }));
-        };
-        socket.onmessage = function(e) {
-          console.log("WebSocket message: %s", JSON.parse(e.data)['text']);
-        };
-        socket.onclose = function(e) {
-          console.log("WebSocket closed");
-        };
-      };
-    </script>
-    <div id="todo"></div>
     <div id="gamelist"></div>
     <script type="text/babel">
-      var Todo = React.createClass({
-        getInitialState: function() {
-          return {list: []};
-        },
-        add: function(e) {
-          var val = this.refs.new_item.value.trim();
-          if (val === '') {
-            return;
-          }
-          this.setState({list: [...this.state.list, val]});
-        },
-        render: function() {
-          var items = [];
-          for (var i = 0; i < this.state.list.length; i++) {
-            items.push(<li key={i}>{this.state.list[i]}</li>);
-          }
-          return (
-            <div>
-              <input type="text" placeholder="An item" ref="new_item" />
-              <input value="Add item" type="button" onClick={this.add} />
-              <br/ >
-              <ul>{items}</ul>
-            </div>
-          );
-        }
-      });
-
       var GameList = React.createClass({
         getInitialState: function() { 
           return {games: []};
@@ -136,7 +33,12 @@
         render: function() {
           var games = [];
           for (var i = 0; i < this.state.games.length; i++) {
-            games.push(<div key={i}>{this.state.games[i].name}</div>);
+            games.push(
+              <div key={i}>
+                {this.state.games[i].name}
+                <a href={"game/" + this.state.games[i].id}>join</a>
+              </div>
+            );
           }
           return (
             <div>
@@ -148,11 +50,6 @@
       });
 
       ReactDOM.render(<GameList />, document.getElementById('gamelist'));
-
-      ReactDOM.render(
-        <Todo />,
-        document.getElementById('todo')
-      );
     </script>
   </body>
 </html>

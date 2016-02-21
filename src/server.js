@@ -35,22 +35,25 @@ require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
   console.log("request: " + req.method + " " + req.url);
 
-  if (url.pathname === '/') {
-    var path = 'src/index.html';
+  var serveStatic = function(fn, headers) {
+    if (typeof headers === 'undefined') {
+      headers = {};
+    }
+    headers['Content-Type'] = 'text/html';
+    headers['Content-Length'] = fs.statSync(fn).size;
+    res.writeHead(200, headers);
+    return fs.createReadStream(fn).pipe(res);
+  };
 
+  if (url.pathname === '/') {
     if (!(url.query.session in sessions)) {
       console.log('Bad session');
       res.writeHead(500);
       res.end();
     }
-
-    res.writeHead(200, {
-      'Content-Type': 'text/html',
-      'Content-Length': fs.statSync(path).size,
+    return serveStatic('src/index.html', {
       'Set-Cookie': 'session_id=' + url.query.session,
     });
-
-    return fs.createReadStream(path).pipe(res);
   }
 
   var cookies = require('cookie').parse(req.headers.cookie);
@@ -73,6 +76,21 @@ require('http').createServer(function(req, res) {
     });
 
     res.end(json);
+  }
+  else if (url.pathname.startsWith('/game/')) {
+    var game_id = url.pathname.replace('/game/', '');
+    var game = undefined;
+    for (var i = 0; i < games.length; i++) {
+      if (games[i].id == game_id) {
+        game = games[i];
+        break;
+      }
+    }
+    if (typeof game === 'undefined') {
+      res.writeHead(404);
+      res.end();
+    }
+    return serveStatic('src/game.html');
   }
   else {
     res.writeHead(404);
