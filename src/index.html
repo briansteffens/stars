@@ -12,15 +12,33 @@
       <textarea id="message" placeholder="Gogogo" required></textarea>
       <input type="submit" />
     </form>
+    <div>
+      cookie: <span id="cookie" />
+    </div>
     <script>
       window.onload = function() {
+        document.getElementById('cookie').innerHTML = document.cookie;
         var form = document.getElementById('socket-form');
         var message = document.getElementById('message');
         form.onsubmit = function(e) {
           e.preventDefault();
-          socket.send(message.value);
+          socket.send(JSON.stringify({
+            type: 'chat',
+            text: message.value
+          }));
           console.log('Sent: ' + message.value);
           message.value = '';
+        };
+
+        var readCookie = function(name) {
+          var c = document.cookie.split('; ');
+          for (var i = c.length - 1; i >= 0; i--) {
+            var cc = c[i].split('=');
+            if (cc[0] === name) {
+              return cc[1];
+            }
+          }
+          throw 'Cookie '+name+' not found.';
         };
 
         var socket = new WebSocket('ws://192.168.1.203:8080');
@@ -29,9 +47,13 @@
         };
         socket.onopen = function(e) {
           console.log("WebSocket open");
+          socket.send(JSON.stringify({
+            type: 'hello',
+            session_id: readCookie('session_id'),
+          }));
         };
         socket.onmessage = function(e) {
-          console.log("WebSocket message: %s", e.data);
+          console.log("WebSocket message: %s", JSON.parse(e.data)['text']);
         };
         socket.onclose = function(e) {
           console.log("WebSocket closed");
