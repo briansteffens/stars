@@ -8,6 +8,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
+    <form id="game-list">
+      <div id="games">
+      </div>
+      <input type="submit" value="refresh" />
+    </form>
     <form id="socket-form">
       <textarea id="message" placeholder="Gogogo" required></textarea>
       <input type="submit" />
@@ -17,6 +22,24 @@
     </div>
     <script>
       window.onload = function() {
+        var game_form = document.getElementById('game-list');
+        game_form.onsubmit = function(e) {
+          e.preventDefault();
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (xhttp.readyState < 4) {
+              return;
+            }
+            if (xhttp.status != 200) {
+              console.log('Error reading game list: %s', xhttp.status);
+              return;
+            }
+            console.log(xhttp.responseText);
+          };
+          xhttp.open('GET', 'games', true);
+          xhttp.send();
+        };
+
         document.getElementById('cookie').innerHTML = document.cookie;
         var form = document.getElementById('socket-form');
         var message = document.getElementById('message');
@@ -61,6 +84,7 @@
       };
     </script>
     <div id="todo"></div>
+    <div id="gamelist"></div>
     <script type="text/babel">
       var Todo = React.createClass({
         getInitialState: function() {
@@ -88,6 +112,42 @@
           );
         }
       });
+
+      var GameList = React.createClass({
+        getInitialState: function() { 
+          return {games: []};
+        },
+        refresh: function(e) {
+          var xhttp = new XMLHttpRequest();
+          var this_ = this;
+          xhttp.onreadystatechange = function() {
+            if (xhttp.readyState < 4) {
+              return;
+            }
+            if (xhttp.status != 200) {
+              console.log('Error reading game list: %s', xhttp.status);
+              return;
+            }
+            this_.setState(JSON.parse(xhttp.responseText)); 
+          };
+          xhttp.open('GET', 'games', true);
+          xhttp.send();
+        },
+        render: function() {
+          var games = [];
+          for (var i = 0; i < this.state.games.length; i++) {
+            games.push(<div key={i}>{this.state.games[i].name}</div>);
+          }
+          return (
+            <div>
+              {games}
+              <input type="button" value="refresh" onClick={this.refresh} />
+            </div>
+          );
+        },
+      });
+
+      ReactDOM.render(<GameList />, document.getElementById('gamelist'));
 
       ReactDOM.render(
         <Todo />,
