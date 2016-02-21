@@ -7,3 +7,8 @@ install_node:
   pkg.installed:
     - pkgs:
       - nodejs
+
+server_dependencies:
+  npm.installed:
+    - pkgs:
+      - ws

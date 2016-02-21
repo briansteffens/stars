@@ -8,13 +8,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
+    <form id="socket-form">
+      <textarea id="message" placeholder="Gogogo" required></textarea>
+      <input type="submit" />
+    </form>
+    <script>
+      window.onload = function() {
+        var form = document.getElementById('socket-form');
+        var message = document.getElementById('message');
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          socket.send(message.value);
+          console.log('Sent: ' + message.value);
+          message.value = '';
+        };
+
+        var socket = new WebSocket('ws://192.168.1.203:8080');
+        socket.onerror = function(error) {
+          console.log("WebSocket error: " + error);
+        };
+        socket.onopen = function(e) {
+          console.log("WebSocket open");
+        };
+        socket.onmessage = function(e) {
+          console.log("WebSocket message: %s", e.data);
+        };
+        socket.onclose = function(e) {
+          console.log("WebSocket closed");
+        };
+      };
+    </script>
     <div id="todo"></div>
     <script type="text/babel">
       var Todo = React.createClass({
         getInitialState: function() {
           return {list: []};
         },
-        add: function(event) {
+        add: function(e) {
           var val = this.refs.new_item.value.trim();
           if (val === '') {
             return;
