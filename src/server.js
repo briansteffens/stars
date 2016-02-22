@@ -22,12 +22,26 @@ var games = [
   {
     id: 0,
     name: 'The first game ever!',
-    players: [3, 7],
+    players: [{
+      user_id: 3,
+      ws: undefined,
+    }, {
+      user_id: 7,
+      ws: undefined,
+    }],
+    chats: [],
   },
   {
     id: 1,
     name: 'The second game ever',
-    players: [7, 3],
+    players: [{
+      user_id: 3,
+      ws: undefined,
+    }, {
+      user_id: 7,
+      ws: undefined,
+    }],
+    chats: [],
   },
 ];
 
@@ -63,12 +77,30 @@ require('http').createServer(function(req, res) {
     var game_list = [];
 
     for (var i = 0; i < games.length; i++) {
-      if (games[i].players.indexOf(session.user_id) >= 0) {
-        game_list.push(games[i]);
+      for (var j = 0; j < games[i].players.length; j++) {
+        if (games[i].players[j].user_id == session.user_id) {
+          var game_temp = {
+            id: games[i].id,
+            name: games[i].name,
+            players: [],
+          };
+          for (var k = 0; k < games[i].players.length; k++) {
+            game_temp.players.push({
+              user_id: games[i].players[k].user_id,
+            });
+          }
+          game_list.push(game_temp);
+          continue;
+        }
       }
     }
-
-    var json = JSON.stringify({games: game_list});
+    console.log(game_list);
+    for (var x = 0; x < game_list.length; x++) {
+      for (var y = 0; y < game_list[x].players.length; y++) {
+        console.log(game_list[x].players[y]);
+      }
+    }
+    var json = JSON.stringify({'games': game_list});
 
     res.writeHead(200, {
       'Content-Type': 'application/json',
@@ -100,22 +132,56 @@ require('http').createServer(function(req, res) {
 
 var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
-  var session_id = undefined;
-  var chats = [];
+  var session = undefined;
+  var game = undefined;
+  var player = undefined;
+  var user = undefined;
   ws.on('message', function(message) {
-    console.log('session %s: %s', session_id, message);
+    console.log('session %s: %s', session, message);
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
       console.log('session %s says hello', msg.session_id);
-      session_id = msg.session_id;
+      session = sessions[msg.session_id];
+      user = users[session.user_id];
+      outer: for (var i = 0; i < games.length; i++) {
+        for (var j = 0; j < games[i].players.length; j++) {
+          if (games[i].players[j].user_id == session.user_id) {
+            game = games[i];
+            player = game.players[j];
+            break outer;
+          }
+        }
+      }
+      if (typeof game === 'undefined') {
+        console.log('Game not found.');
+        ws.send(JSON.stringify({
+          type: 'error',
+          text: 'Game not found',
+        }));
+        return;
+      }
+      player.ws = ws;
+      console.log('user_id %s connected to game %s', session.user_id, game.id);
+      ws.send(JSON.stringify({
+        type: 'chats',
+        chats: game.chats,
+      }));
     }
     else if (msg.type === 'chat') {
-      chats.push(msg.text);
-      console.log('chat history:');
-      for (var i = 0; i < chats.length; i++) {
-        console.log('chat %s: %s', i, chats[i]);
+      var newMessage = {
+        type: 'chat',
+        chat: {
+          username: user.username,
+          timestamp: Date.now(),
+          text: msg.text,
+        }
+      };
+      game.chats.splice(0, 0, newMessage);
+      for (var i = 0; i < game.players.length; i++) {
+        if (typeof game.players[i].ws !== 'undefined') {
+          game.players[i].ws.send(JSON.stringify(newMessage));
+        }
       }
-      console.log();
     }
     else {
       console.log('unrecognized message type: %s', message);

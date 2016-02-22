@@ -8,24 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
-    <form id="socket-form">
-      <textarea id="message" placeholder="Gogogo" required></textarea>
-      <input type="submit" />
-    </form>
     <script>
+      var chat = undefined;
+      var socket = undefined;
       window.onload = function() {
-        var form = document.getElementById('socket-form');
-        var message = document.getElementById('message');
-        form.onsubmit = function(e) {
-          e.preventDefault();
-          socket.send(JSON.stringify({
-            type: 'chat',
-            text: message.value
-          }));
-          console.log('Sent: ' + message.value);
-          message.value = '';
-        };
-
         var readCookie = function(name) {
           var c = document.cookie.split('; ');
           for (var i = c.length - 1; i >= 0; i--) {
@@ -37,7 +23,7 @@
           throw 'Cookie '+name+' not found.';
         };
 
-        var socket = new WebSocket('ws://192.168.1.203:8080');
+        socket = new WebSocket('ws://192.168.1.203:8080');
         socket.onerror = function(error) {
           console.log("WebSocket error: " + error);
         };
@@ -46,15 +32,63 @@
           socket.send(JSON.stringify({
             type: 'hello',
             session_id: readCookie('session_id'),
+            game_id: window.location.href.split('/').pop(),
           }));
         };
         socket.onmessage = function(e) {
-          console.log("WebSocket message: %s", JSON.parse(e.data)['text']);
+          var msg = JSON.parse(e.data);
+          if (msg.type === 'chat') {
+            chat.add(msg.chat);
+          }
+          else {
+            console.log('Unrecognized WebSocket message type: %s', msg.type);
+          }
         };
         socket.onclose = function(e) {
           console.log("WebSocket closed");
         };
       };
+    </script>
+    <div id="chat"></div>
+    <script type="text/babel">
+      var Chat = React.createClass({
+        getInitialState: function() {
+          return {chats: []};
+        },
+        add: function(msg) {
+          this.setState({chats: [msg, ...this.state.chats]});
+        },
+        send: function(e) {
+          e.preventDefault();
+          socket.send(JSON.stringify({
+            type: 'chat',
+            text: this.refs.message.value,
+          }));
+          this.refs.message.value = '';
+        },
+        render: function() {
+          var chats = [];
+          for (var i = this.state.chats.length - 1; i >= 0; i--) {
+            var chat = this.state.chats[i];
+            chats.push(
+              <div key={i}>
+                [{chat.timestamp}]
+                <strong>{chat.username}</strong>:
+                {chat.text}
+              </div>
+            );
+          }
+          return (
+            <form onSubmit={this.send}>
+              {chats}
+              <input type="text" placeholder="enter a message" ref="message" />
+              <input type="submit" value="send" />
+            </form>
+          );
+        },
+      });
+
+      chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
     </script>
   </body>
 </html>
