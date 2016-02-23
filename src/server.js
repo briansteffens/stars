@@ -209,8 +209,4 @@ wss.on('connection', function(ws) {
       console.log('unrecognized message type: %s', message);
     }
   });
-  ws.send(JSON.stringify({
-    text: 'something',
-    index: 385
-  }));
 });
