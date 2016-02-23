@@ -132,16 +132,30 @@ require('http').createServer(function(req, res) {
   }
 }).listen(80);
 
-var wsend = function(socket, payload) {
-  socket.send(JSON.stringify(payload));
-}
-
 var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
   var session = undefined;
   var game = undefined;
   var player = undefined;
   var user = undefined;
+
+  var send = function(payload, to_player) {
+    if (typeof to_player === 'undefined') {
+      to_player = player;
+    }
+    to_player.ws.send(JSON.stringify(payload), function ack(error) {
+      if (typeof error === 'undefined') {
+        return;
+      }
+      if (error.message === 'not opened') {
+        player.ws = undefined;
+        console.log('player %s disconnected', player.user_id);
+        return;
+      }
+      throw error;
+    });
+  }
+
   ws.on('message', function(message) {
     console.log('session %s: %s', session, message);
     var msg = JSON.parse(message);
@@ -160,14 +174,14 @@ wss.on('connection', function(ws) {
       }
       if (typeof game === 'undefined') {
         console.log('Game not found.');
-        wsend(ws, {type: 'error', text: 'Game not found'});
+        send({type: 'error', text: 'Game not found'});
         return;
       }
       player.ws = ws;
       console.log('user_id %s connected to game %s', session.user_id, game.id);
-      wsend(ws, {type: 'chats', chats: game.chats});
+      send({type: 'chats', chats: game.chats});
       if (game.turn == player.user_id) {
-        wsend(ws, {type: 'opponentYield'});
+        send({type: 'opponentYield'});
       }
     }
     else if (msg.type === 'chat') {
@@ -182,7 +196,7 @@ wss.on('connection', function(ws) {
       game.chats.splice(0, 0, newMessage.chat);
       for (var i = 0; i < game.players.length; i++) {
         if (typeof game.players[i].ws !== 'undefined') {
-          wsend(game.players[i].ws, newMessage);
+          send(newMessage, game.players[i]);
         }
       }
     }
@@ -196,7 +210,7 @@ wss.on('connection', function(ws) {
           if (game.players[i].user_id != player.user_id) {
             game.turn = game.players[i].user_id;
             if (typeof game.players[i].ws !== 'undefined') {
-              wsend(game.players[i].ws, {type: 'opponentYield'});
+              send({type: 'opponentYield'}, game.players[i]);
             }
           }
         }
