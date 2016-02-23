@@ -10,6 +10,7 @@
   <body>
     <script>
       var chat = undefined;
+      var turn = undefined;
       var socket = undefined;
       window.onload = function() {
         var readCookie = function(name) {
@@ -39,6 +40,9 @@
           var msg = JSON.parse(e.data);
           if (msg.type === 'chat') {
             chat.add(msg.chat);
+          }
+          else if (msg.type === 'opponentYield') {
+            turn.opponentYield();
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -87,8 +91,32 @@
           );
         },
       });
-
       chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
+    </script>
+    <div id="turn"></div>
+    <script type="text/babel">
+      var Turn = React.createClass({
+        getInitialState: function() {
+          return {yours: false};
+        },
+        opponentYield: function() {
+          this.setState({yours: true});
+        },
+        yield: function(e) {
+          socket.send(JSON.stringify({type: 'yield'}));
+          this.setState({yours: false});
+        },
+        render: function() {
+          return (
+            <form>
+              It is <strong>{this.state.yours ? '' : 'not '}your turn</strong>.
+              <input type="button" onClick={this.yield} value="yield"
+                disabled={!this.state.yours} />
+            </form>
+          );
+        },
+      });
+      turn = ReactDOM.render(<Turn />, document.getElementById('turn'));
     </script>
   </body>
 </html>

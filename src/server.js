@@ -30,6 +30,7 @@ var games = [
       ws: undefined,
     }],
     chats: [],
+    turn: 3,
   },
   {
     id: 1,
@@ -42,6 +43,7 @@ var games = [
       ws: undefined,
     }],
     chats: [],
+    turn: 7,
   },
 ];
 
@@ -166,6 +168,9 @@ wss.on('connection', function(ws) {
         type: 'chats',
         chats: game.chats,
       }));
+      if (game.turn == player.user_id) {
+        ws.send(JSON.stringify({type: 'opponentYield'}));
+      }
     }
     else if (msg.type === 'chat') {
       var newMessage = {
@@ -181,6 +186,23 @@ wss.on('connection', function(ws) {
         if (typeof game.players[i].ws !== 'undefined') {
           game.players[i].ws.send(JSON.stringify(newMessage));
         }
+      }
+    }
+    else if (msg.type === 'yield') {
+      if (game.turn != player.user_id) {
+        console.log('player yielded when not their turn');
+      }
+      else {
+        var old_turn = game.turn;
+        for (var i = 0; i < game.players.length; i++) {
+          if (game.players[i].user_id != player.user_id) {
+            game.turn = game.players[i].user_id;
+            if (typeof game.players[i].ws !== 'undefined') {
+              game.players[i].ws.send(JSON.stringify({type: 'opponentYield'}));
+            }
+          }
+        }
+        console.assert(old_turn !== game.turn);
       }
     }
     else {
