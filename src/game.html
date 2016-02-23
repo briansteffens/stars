@@ -41,6 +41,11 @@
           if (msg.type === 'chat') {
             chat.add(msg.chat);
           }
+          else if (msg.type === 'chats') {
+            for (var i = msg.chats.length - 1; i >= 0; i--) {
+              chat.add(msg.chats[i]);
+            }
+          }
           else if (msg.type === 'opponentYield') {
             turn.opponentYield();
           }

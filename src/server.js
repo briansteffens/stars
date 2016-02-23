@@ -132,6 +132,10 @@ require('http').createServer(function(req, res) {
   }
 }).listen(80);
 
+var wsend = function(socket, payload) {
+  socket.send(JSON.stringify(payload));
+}
+
 var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
   var session = undefined;
@@ -156,20 +160,14 @@ wss.on('connection', function(ws) {
       }
       if (typeof game === 'undefined') {
         console.log('Game not found.');
-        ws.send(JSON.stringify({
-          type: 'error',
-          text: 'Game not found',
-        }));
+        wsend(ws, {type: 'error', text: 'Game not found'});
         return;
       }
       player.ws = ws;
       console.log('user_id %s connected to game %s', session.user_id, game.id);
-      ws.send(JSON.stringify({
-        type: 'chats',
-        chats: game.chats,
-      }));
+      wsend(ws, {type: 'chats', chats: game.chats});
       if (game.turn == player.user_id) {
-        ws.send(JSON.stringify({type: 'opponentYield'}));
+        wsend(ws, {type: 'opponentYield'});
       }
     }
     else if (msg.type === 'chat') {
@@ -181,10 +179,10 @@ wss.on('connection', function(ws) {
           text: msg.text,
         }
       };
-      game.chats.splice(0, 0, newMessage);
+      game.chats.splice(0, 0, newMessage.chat);
       for (var i = 0; i < game.players.length; i++) {
         if (typeof game.players[i].ws !== 'undefined') {
-          game.players[i].ws.send(JSON.stringify(newMessage));
+          wsend(game.players[i].ws, newMessage);
         }
       }
     }
@@ -198,7 +196,7 @@ wss.on('connection', function(ws) {
           if (game.players[i].user_id != player.user_id) {
             game.turn = game.players[i].user_id;
             if (typeof game.players[i].ws !== 'undefined') {
-              game.players[i].ws.send(JSON.stringify({type: 'opponentYield'}));
+              wsend(game.players[i].ws, {type: 'opponentYield'});
             }
           }
         }
