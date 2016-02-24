@@ -13,7 +13,7 @@
       var chat = undefined;
       var turn = undefined;
       var socket = undefined;
-      var turns = undefined;
+      var log = undefined;
       window.onload = function() {
         var readCookie = function(name) {
           var c = document.cookie.split('; ');
@@ -55,7 +55,7 @@
             turn.opponentYield();
           }
           else if (msg.type === 'turns') {
-            turns.merge(msg.turns);
+            log.merge(msg.turns);
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -131,9 +131,9 @@
       });
       turn = ReactDOM.render(<Turn />, document.getElementById('turn'));
     </script>
-    <div id="turns"></div>
+    <div id="log"></div>
     <script type="text/babel">
-var Turns = React.createClass({
+var Log = React.createClass({
   getInitialState: function() {
     return {turns: []};
   },
@@ -170,7 +170,7 @@ var Turns = React.createClass({
     );
   },
 });
-turns = ReactDOM.render(<Turns />, document.getElementById('turns'));
+log = ReactDOM.render(<Log />, document.getElementById('log'));
     </script>
   </body>
 </html>
