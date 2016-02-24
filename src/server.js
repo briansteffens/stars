@@ -18,34 +18,47 @@ var users = {
   },
 };
 
-var games = [
-  {
-    id: 0,
-    name: 'The first game ever!',
-    players: [{
-      user_id: 3,
-      ws: undefined,
-    }, {
-      user_id: 7,
-      ws: undefined,
-    }],
-    chats: [],
-    turn: 3,
-  },
-  {
-    id: 1,
-    name: 'The second game ever',
-    players: [{
-      user_id: 3,
-      ws: undefined,
-    }, {
-      user_id: 7,
-      ws: undefined,
-    }],
-    chats: [],
-    turn: 7,
-  },
-];
+var games = [{
+  id: 0,
+  name: 'The first game ever!',
+  players: [{
+    user_id: 3,
+    ws: undefined,
+  }, {
+    user_id: 7,
+    ws: undefined,
+  }],
+  chats: [],
+  turn: 3,
+  turns: [{
+    user_id: 3,
+    actions: [
+      {
+        type: 'draw',
+        count: 3,
+        cards: [{
+          name: 'meteor',
+        },{
+          name: 'meteor',
+        },{
+          name: 'asteroid',
+        }],
+      }
+    ],
+  }],
+},{
+  id: 1,
+  name: 'The second game ever',
+  players: [{
+    user_id: 3,
+    ws: undefined,
+  }, {
+    user_id: 7,
+    ws: undefined,
+  }],
+  chats: [],
+  turn: 7,
+}];
 
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
@@ -156,6 +169,22 @@ wss.on('connection', function(ws) {
     });
   }
 
+  var prepare_turn_for_sending = function(user_id, turn) {
+    var ret = JSON.parse(JSON.stringify(turn));
+
+    // Don't need to strip out secrets if the turn belongs to the user
+    console.log(">> %s %s", turn.user_id, user_id);
+    if (turn.user_id != user_id) {
+      for (var i = 0; i < ret.actions.length; i++) {
+        if (ret.actions[i].type === 'draw') {
+          ret.actions[i].cards = undefined;
+        }
+      }
+    }
+
+    return ret;
+  }
+
   ws.on('message', function(message) {
     console.log('session %s: %s', session, message);
     var msg = JSON.parse(message);
@@ -180,6 +209,12 @@ wss.on('connection', function(ws) {
       player.ws = ws;
       console.log('user_id %s connected to game %s', session.user_id, game.id);
       send({type: 'chats', chats: game.chats});
+      var turns_out = [];
+      for (var i = 0; i < game.turns.length; i++) {
+        turns_out.push(prepare_turn_for_sending(session.user_id,
+              game.turns[i]));
+      }
+      send({type: 'turns', turns: turns_out});
       if (game.turn == player.user_id) {
         send({type: 'opponentYield'});
       }

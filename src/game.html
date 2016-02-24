@@ -12,6 +12,7 @@
       var chat = undefined;
       var turn = undefined;
       var socket = undefined;
+      var turns = undefined;
       window.onload = function() {
         var readCookie = function(name) {
           var c = document.cookie.split('; ');
@@ -48,6 +49,9 @@
           }
           else if (msg.type === 'opponentYield') {
             turn.opponentYield();
+          }
+          else if (msg.type === 'turns') {
+            turns.merge(msg.turns);
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -122,6 +126,46 @@
         },
       });
       turn = ReactDOM.render(<Turn />, document.getElementById('turn'));
+    </script>
+    <div id="turns"></div>
+    <script type="text/babel">
+var Turns = React.createClass({
+  getInitialState: function() {
+    return {turns: []};
+  },
+  merge: function(added) {
+    this.setState({turns: added});
+  },
+  render: function() {
+    var turns = [];
+    for (var t = 0; t < this.state.turns.length; t++) {
+      var turn = this.state.turns[t];
+      var actions = [];
+      for (var a = 0; a < turn.actions.length; a++) {
+        var action = turn.actions[a];
+        var desc = (<span>unknown action</span>);
+        if (action.type === 'draw') {
+          desc = (<span>draws {action.count} cards</span>);
+        }
+        actions.push(
+          <div key={a}>
+            <strong>{action.type}</strong> - <i>{desc}</i>
+          </div>
+        );
+      }
+      turns.push(
+        <div key={t}>
+          A turn by user {turn.user_id}
+          {actions}
+        </div>
+      );
+    }
+    return (
+      <div>{turns}</div>
+    );
+  },
+});
+turns = ReactDOM.render(<Turns />, document.getElementById('turns'));
     </script>
   </body>
 </html>
