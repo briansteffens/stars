@@ -32,7 +32,7 @@ var games = [{
   turn: 3,
   turns: [{
     user_id: 3,
-    actions: [
+    moves: [
       {
         type: 'draw',
         count: 3,
@@ -175,9 +175,9 @@ wss.on('connection', function(ws) {
     // Don't need to strip out secrets if the turn belongs to the user
     console.log(">> %s %s", turn.user_id, user_id);
     if (turn.user_id != user_id) {
-      for (var i = 0; i < ret.actions.length; i++) {
-        if (ret.actions[i].type === 'draw') {
-          ret.actions[i].cards = undefined;
+      for (var i = 0; i < ret.moves.length; i++) {
+        if (ret.moves[i].type === 'draw') {
+          ret.moves[i].cards = undefined;
         }
       }
     }

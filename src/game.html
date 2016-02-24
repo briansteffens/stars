@@ -140,23 +140,23 @@ var Turns = React.createClass({
     var turns = [];
     for (var t = 0; t < this.state.turns.length; t++) {
       var turn = this.state.turns[t];
-      var actions = [];
-      for (var a = 0; a < turn.actions.length; a++) {
-        var action = turn.actions[a];
-        var desc = (<span>unknown action</span>);
-        if (action.type === 'draw') {
-          desc = (<span>draws {action.count} cards</span>);
+      var moves = [];
+      for (var m = 0; m < turn.moves.length; m++) {
+        var move = turn.moves[m];
+        var desc = (<span>unknown move type</span>);
+        if (move.type === 'draw') {
+          desc = (<span>draws {move.count} cards</span>);
         }
-        actions.push(
-          <div key={a}>
-            <strong>{action.type}</strong> - <i>{desc}</i>
+        moves.push(
+          <div key={m}>
+            <strong>{move.type}</strong> - <i>{desc}</i>
           </div>
         );
       }
       turns.push(
         <div key={t}>
           A turn by user {turn.user_id}
-          {actions}
+          {moves}
         </div>
       );
     }
