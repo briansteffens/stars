@@ -208,6 +208,11 @@ wss.on('connection', function(ws) {
       }
       player.ws = ws;
       console.log('user_id %s connected to game %s', session.user_id, game.id);
+      send({
+        type: 'greetings',
+        user_id: session.user_id,
+        username: user.username,
+      });
       send({type: 'chats', chats: game.chats});
       var turns_out = [];
       for (var i = 0; i < game.turns.length; i++) {
