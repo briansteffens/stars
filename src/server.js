@@ -1,4 +1,5 @@
 var fs = require('fs');
+var state = require('./state.js');
 
 var sessions = {
   'a': {
@@ -65,26 +66,6 @@ function get_player(game, user_id) {
   }
 
   throw 'Player not found';
-}
-
-function apply_move(game, state, move) {
-  var state = JSON.parse(JSON.stringify(state)); // lolclone
-
-  var player = get_player(game, move.user_id);
-
-  if (move.type === 'draw') {
-    for (var c = 0; c < move.cards; c++) {
-      player.hand.push(move.cards[c]);
-    }
-  }
-  else if (move.type === 'yield') {
-
-  }
-  else {
-    throw 'Unrecognized move type ' + move.type;
-  }
-
-  return state;
 }
 
 require('http').createServer(function(req, res) {
@@ -165,6 +146,9 @@ require('http').createServer(function(req, res) {
       res.end();
     }
     return serveStatic('src/game.html');
+  }
+  else if (url.pathname.startsWith('/state.js')) {
+    return serveStatic('src/state.js');
   }
   else {
     res.writeHead(404);
@@ -267,20 +251,11 @@ wss.on('connection', function(ws) {
       }
     }
     else if (msg.type === 'yield') {
-      if (game.state.turn != player_id) {
-        console.log('player yielded when not their turn');
-      }
-      else {
-        var old_turn = game.state.turn;
-        for (var i = 0; i < game.player_ids.length; i++) {
-          if (game.player_ids[i] != player_id) {
-            game.state.turn = game.player_ids[i];
-            if (typeof game.sockets[game.player_ids[i]] !== 'undefined') {
-              send({type: 'opponentYield'}, game.player_ids[i]);
-            }
-          }
-        }
-        console.assert(old_turn !== game.state.turn);
+      game.moves.push(msg);
+      game.state = state.apply_move(game, game.state, msg);
+      var other_player = state.next_player(game, player_id);
+      if (typeof game.sockets[other_player] !== 'undefined') {
+        send(msg, other_player);
       }
     }
     else {
