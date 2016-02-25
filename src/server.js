@@ -21,45 +21,40 @@ var users = {
 var games = [{
   id: 0,
   name: 'The first game ever!',
-  players: [{
+  player_ids: [3, 7],
+  sockets: {
+    3: undefined,
+    7: undefined,
+  },
+  chats: [],
+  moves: [{
     user_id: 3,
-    ws: undefined,
-    hand: [],
+    turn: 0,
+    type: 'draw',
+    count: 1,
+    cards: [{name: 'meteor'}],
+  }, {
+    user_id: 3,
+    turn: 0,
+    type: 'yield',
   }, {
     user_id: 7,
-    ws: undefined,
-    hand: [],
+    turn: 1,
+    type: 'draw',
+    count: 1,
+    cards: [{name: 'asteroid'}],
   }],
-  chats: [],
-  turn: 3,
-  turns: [{
-    user_id: 3,
-    moves: [
-      {
-        type: 'draw',
-        count: 3,
-        cards: [{
-          name: 'meteor',
-        },{
-          name: 'meteor',
-        },{
-          name: 'asteroid',
-        }],
-      }
-    ],
-  }],
-},{
-  id: 1,
-  name: 'The second game ever',
-  players: [{
-    user_id: 3,
-    ws: undefined,
-  }, {
-    user_id: 7,
-    ws: undefined,
-  }],
-  chats: [],
-  turn: 7,
+  state: {
+    turn: 3,
+    players: {
+      3: {
+        hand: [],
+      },
+      7: {
+        hand: [],
+      },
+    },
+  },
 }];
 
 function get_player(game, user_id) {
@@ -72,25 +67,24 @@ function get_player(game, user_id) {
   throw 'Player not found';
 }
 
-function apply_move(game, move) {
+function apply_move(game, state, move) {
+  var state = JSON.parse(JSON.stringify(state)); // lolclone
+
+  var player = get_player(game, move.user_id);
+
   if (move.type === 'draw') {
     for (var c = 0; c < move.cards; c++) {
       player.hand.push(move.cards[c]);
     }
   }
+  else if (move.type === 'yield') {
+
+  }
   else {
     throw 'Unrecognized move type ' + move.type;
   }
-}
 
-function apply_turn(game, turn) {
-  var player = get_player(game, turn.user_id);
-
-  for (var m = 0; m < turn.moves.length; m++) {
-    apply_move(game, turn.moves[m]);
-  }
-
-  game.turns.push(turn);
+  return state;
 }
 
 require('http').createServer(function(req, res) {
@@ -125,16 +119,16 @@ require('http').createServer(function(req, res) {
     var game_list = [];
 
     for (var i = 0; i < games.length; i++) {
-      for (var j = 0; j < games[i].players.length; j++) {
-        if (games[i].players[j].user_id == session.user_id) {
+      for (var j = 0; j < games[i].player_ids.length; j++) {
+        if (games[i].player_ids[j] == session.user_id) {
           var game_temp = {
             id: games[i].id,
             name: games[i].name,
             players: [],
           };
-          for (var k = 0; k < games[i].players.length; k++) {
+          for (var k = 0; k < games[i].player_ids.length; k++) {
             game_temp.players.push({
-              user_id: games[i].players[k].user_id,
+              user_id: games[i].player_ids[k],
             });
           }
           game_list.push(game_temp);
@@ -182,35 +176,35 @@ var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
   var session = undefined;
   var game = undefined;
-  var player = undefined;
+  var player_id = undefined;
   var user = undefined;
 
   var send = function(payload, to_player) {
     if (typeof to_player === 'undefined') {
-      to_player = player;
+      to_player = player_id;
     }
-    to_player.ws.send(JSON.stringify(payload), function ack(error) {
+    game.sockets[to_player].send(JSON.stringify(payload), function ack(error) {
       if (typeof error === 'undefined') {
         return;
       }
       if (error.message === 'not opened') {
-        player.ws = undefined;
-        console.log('player %s disconnected', player.user_id);
+        game.sockets[to_player] = undefined;
+        console.log('player %s disconnected', to_player);
         return;
       }
       throw error;
     });
   }
 
-  var prepare_turn_for_sending = function(user_id, turn) {
-    var ret = JSON.parse(JSON.stringify(turn));
+  var prepare_move_for_sending = function(user_id, move) {
+    var ret = JSON.parse(JSON.stringify(move));
 
-    // Don't need to strip out secrets if the turn belongs to the user
-    console.log(">> %s %s", turn.user_id, user_id);
-    if (turn.user_id != user_id) {
-      for (var i = 0; i < ret.moves.length; i++) {
-        if (ret.moves[i].type === 'draw') {
-          ret.moves[i].cards = undefined;
+    // Don't need to strip out secrets if the move belongs to the user
+    console.log(">> %s %s", move.user_id, user_id);
+    if (move.user_id != user_id) {
+      if (ret.type === 'draw') {
+        for (var c = 0; c < ret.cards.length; c++) {
+          ret.cards[c] = {'name': 'unknown'};
         }
       }
     }
@@ -226,10 +220,10 @@ wss.on('connection', function(ws) {
       session = sessions[msg.session_id];
       user = users[session.user_id];
       outer: for (var i = 0; i < games.length; i++) {
-        for (var j = 0; j < games[i].players.length; j++) {
-          if (games[i].players[j].user_id == session.user_id) {
+        for (var j = 0; j < games[i].player_ids.length; j++) {
+          if (games[i].player_ids[j] == session.user_id) {
             game = games[i];
-            player = game.players[j];
+            player_id = game.player_ids[j];
             break outer;
           }
         }
@@ -239,7 +233,7 @@ wss.on('connection', function(ws) {
         send({type: 'error', text: 'Game not found'});
         return;
       }
-      player.ws = ws;
+      game.sockets[player_id] = ws;
       console.log('user_id %s connected to game %s', session.user_id, game.id);
       send({
         type: 'greetings',
@@ -247,13 +241,12 @@ wss.on('connection', function(ws) {
         username: user.username,
       });
       send({type: 'chats', chats: game.chats});
-      var turns_out = [];
-      for (var i = 0; i < game.turns.length; i++) {
-        turns_out.push(prepare_turn_for_sending(session.user_id,
-              game.turns[i]));
+      var moves_out = [];
+      for (var i = 0; i < game.moves.length; i++) {
+        moves_out.push(prepare_move_for_sending(player_id, game.moves[i]));
       }
-      send({type: 'turns', turns: turns_out});
-      if (game.turn == player.user_id) {
+      send({type: 'moves', moves: moves_out});
+      if (game.state.turn == player_id) {
         send({type: 'opponentYield'});
       }
     }
@@ -267,27 +260,27 @@ wss.on('connection', function(ws) {
         }
       };
       game.chats.splice(0, 0, newMessage.chat);
-      for (var i = 0; i < game.players.length; i++) {
-        if (typeof game.players[i].ws !== 'undefined') {
-          send(newMessage, game.players[i]);
+      for (var i = 0; i < game.player_ids.length; i++) {
+        if (typeof game.sockets[game.player_ids[i]] !== 'undefined') {
+          send(newMessage, game.player_ids[i]);
         }
       }
     }
     else if (msg.type === 'yield') {
-      if (game.turn != player.user_id) {
+      if (game.state.turn != player_id) {
         console.log('player yielded when not their turn');
       }
       else {
-        var old_turn = game.turn;
-        for (var i = 0; i < game.players.length; i++) {
-          if (game.players[i].user_id != player.user_id) {
-            game.turn = game.players[i].user_id;
-            if (typeof game.players[i].ws !== 'undefined') {
-              send({type: 'opponentYield'}, game.players[i]);
+        var old_turn = game.state.turn;
+        for (var i = 0; i < game.player_ids.length; i++) {
+          if (game.player_ids[i] != player_id) {
+            game.state.turn = game.player_ids[i];
+            if (typeof game.sockets[game.player_ids[i]] !== 'undefined') {
+              send({type: 'opponentYield'}, game.player_ids[i]);
             }
           }
         }
-        console.assert(old_turn !== game.turn);
+        console.assert(old_turn !== game.state.turn);
       }
     }
     else {
