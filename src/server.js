@@ -24,9 +24,11 @@ var games = [{
   players: [{
     user_id: 3,
     ws: undefined,
+    hand: [],
   }, {
     user_id: 7,
     ws: undefined,
+    hand: [],
   }],
   chats: [],
   turn: 3,
@@ -59,6 +61,37 @@ var games = [{
   chats: [],
   turn: 7,
 }];
+
+function get_player(game, user_id) {
+  for (var i = 0; i < game.players.length; i++) {
+    if (game.players[i].user_id == user_id) {
+      return game.players[i];
+    }
+  }
+
+  throw 'Player not found';
+}
+
+function apply_move(game, move) {
+  if (move.type === 'draw') {
+    for (var c = 0; c < move.cards; c++) {
+      player.hand.push(move.cards[c]);
+    }
+  }
+  else {
+    throw 'Unrecognized move type ' + move.type;
+  }
+}
+
+function apply_turn(game, turn) {
+  var player = get_player(game, turn.user_id);
+
+  for (var m = 0; m < turn.moves.length; m++) {
+    apply_move(game, turn.moves[m]);
+  }
+
+  game.turns.push(turn);
+}
 
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
