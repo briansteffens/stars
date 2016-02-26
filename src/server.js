@@ -58,16 +58,6 @@ var games = [{
   },
 }];
 
-function get_player(game, user_id) {
-  for (var i = 0; i < game.players.length; i++) {
-    if (game.players[i].user_id == user_id) {
-      return game.players[i];
-    }
-  }
-
-  throw 'Player not found';
-}
-
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
   console.log("request: " + req.method + " " + req.url);
@@ -184,7 +174,6 @@ wss.on('connection', function(ws) {
     var ret = JSON.parse(JSON.stringify(move));
 
     // Don't need to strip out secrets if the move belongs to the user
-    console.log(">> %s %s", move.user_id, user_id);
     if (move.user_id != user_id) {
       if (ret.type === 'draw') {
         for (var c = 0; c < ret.cards.length; c++) {
@@ -230,9 +219,6 @@ wss.on('connection', function(ws) {
         moves_out.push(prepare_move_for_sending(player_id, game.moves[i]));
       }
       send({type: 'moves', moves: moves_out});
-      if (game.state.turn == player_id) {
-        send({type: 'opponentYield'});
-      }
     }
     else if (msg.type === 'chat') {
       var newMessage = {

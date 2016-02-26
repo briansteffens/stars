@@ -17,9 +17,7 @@
       };
       var game_info = undefined;
       var chat = undefined;
-      var turn = undefined;
       var socket = undefined;
-      var log = undefined;
       var view = undefined;
       window.onload = function() {
         var readCookie = function(name) {
@@ -59,23 +57,8 @@
             game_info = msg;
             view.forceUpdate();
           }
-          else if (msg.type === 'opponentYield') {
-            //turn.opponentYield();
-          }
-          else if (msg.type === 'turns') {
-            log.merge(msg.turns);
-          }
           else if (msg.type === 'yield') {
             view.add_move(msg);
-            /*
-            game.moves.push(msg);
-            game.state = state.apply_move(game, game.state, msg);
-            if (state.whose_turn(game) == game_info.user_id) {
-              turn.opponentYield();
-            } else {
-              turn.yield();
-            }
-            */
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -163,75 +146,6 @@
         },
       });
       view = ReactDOM.render(<View />, document.getElementById('view'));
-    </script>
-    <div id="turn"></div>
-    <script type="text/babel">
-      var Turn = React.createClass({
-        getInitialState: function() {
-          return {yours: false};
-        },
-        opponentYield: function() {
-          this.setState({yours: true});
-        },
-        yield: function(e) {
-          socket.send(JSON.stringify({
-            type: 'yield',
-            user_id: game_info.user_id
-          }));
-          this.setState({yours: false});
-        },
-        render: function() {
-          return (
-            <form>
-              It is <strong>{this.state.yours ? '' : 'not '}your turn</strong>.
-              <input type="button" onClick={this.yield} value="yield"
-                disabled={!this.state.yours} />
-            </form>
-          );
-        },
-      });
-      turn = ReactDOM.render(<Turn />, document.getElementById('turn'));
-    </script>
-    <div id="log"></div>
-    <script type="text/babel">
-var Log = React.createClass({
-  getInitialState: function() {
-    return {turns: []};
-  },
-  merge: function(added) {
-    this.setState({turns: added});
-  },
-  render: function() {
-    var turns = [];
-    for (var t = 0; t < this.state.turns.length; t++) {
-      var turn = this.state.turns[t];
-      var player = turn.user_id == game_info.user_id ? 'you' : 'they';
-      var moves = [];
-      for (var m = 0; m < turn.moves.length; m++) {
-        var move = turn.moves[m];
-        var desc = (<span>unknown move type</span>);
-        if (move.type === 'draw') {
-          desc = (<span>{player} drew {move.count} cards</span>);
-        }
-        moves.push(
-          <div key={m}>
-            <strong>{move.type}</strong> - <i>{desc}</i>
-          </div>
-        );
-      }
-      turns.push(
-        <div key={t}>
-          A turn by user {turn.user_id}
-          {moves}
-        </div>
-      );
-    }
-    return (
-      <div>{turns}</div>
-    );
-  },
-});
-log = ReactDOM.render(<Log />, document.getElementById('log'));
     </script>
   </body>
 </html>
