@@ -41,7 +41,15 @@
       return 0;
     }
 
-    return game.moves[game.moves.length - 1].turn;
+    var last_move = game.moves[game.moves.length - 1];
+
+    var ret = last_move.turn;
+
+    if (last_move.type === 'yield') {
+      ret++;
+    }
+
+    return ret;
   };
 
   exports.is_first_turn = function(game) {

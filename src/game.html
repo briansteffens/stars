@@ -145,12 +145,14 @@
           }
 
           var my_turn = state.whose_turn(this.state) == game_info.user_id;
+          var draw = state.draw_possible(this.state, game_info.user_id);
 
           return (
             <div>
               It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
               <input type="button" onClick={this.yield} value="yield"
                 disabled={!my_turn} />
+              You can draw {draw} cards.
             </div>
           );
         },
