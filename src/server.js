@@ -158,21 +158,6 @@ wss.on('connection', function(ws) {
     });
   }
 
-  var prepare_move_for_sending = function(user_id, move) {
-    var ret = JSON.parse(JSON.stringify(move));
-
-    // Don't need to strip out secrets if the move belongs to the user
-    if (move.user_id != user_id) {
-      if (ret.type === 'draw') {
-        for (var c = 0; c < ret.cards.length; c++) {
-          ret.cards[c] = {'name': 'unknown'};
-        }
-      }
-    }
-
-    return ret;
-  }
-
   ws.on('message', function(message) {
     console.log('session %s: %s', session, message);
     var msg = JSON.parse(message);
@@ -204,7 +189,7 @@ wss.on('connection', function(ws) {
       send({type: 'chats', chats: game.chats});
       var moves_out = [];
       for (var i = 0; i < game.moves.length; i++) {
-        moves_out.push(prepare_move_for_sending(player_id, game.moves[i]));
+        moves_out.push(player_id, game.moves[i]);
       }
       send({type: 'moves', moves: moves_out});
     }
@@ -225,6 +210,14 @@ wss.on('connection', function(ws) {
       }
     }
     else if (msg.type === 'yield') {
+      msg.user_id = player_id;
+      msg.turn = state.current_turn(game);
+      game.moves.push(msg);
+      game.state = state.apply_move(game, game.state, msg);
+      send(msg);
+      send(msg, state.next_player(game, player_id));
+    }
+    else if (msg.type === 'draw') {
       msg.user_id = player_id;
       msg.turn = state.current_turn(game);
       game.moves.push(msg);

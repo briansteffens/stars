@@ -57,7 +57,7 @@
             game_info = msg;
             view.forceUpdate();
           }
-          else if (msg.type === 'yield') {
+          else if (msg.type === 'yield' || msg.type === 'draw') {
             view.add_move(msg);
           }
           else if (msg.type === 'moves') {
@@ -139,6 +139,9 @@
         yield: function(e) {
           socket.send(JSON.stringify({type: 'yield'}));
         },
+        draw: function(e) {
+          socket.send(JSON.stringify({type: 'draw',count: 1}));
+        },
         render: function() {
           if (typeof game_info === 'undefined') {
             return (<i>Connecting..</i>);
@@ -153,6 +156,8 @@
               <input type="button" onClick={this.yield} value="yield"
                 disabled={!my_turn} />
               You can draw {draw} cards.
+              <input type="button" onClick={this.draw} value="draw"
+                disabled={!draw} />
             </div>
           );
         },
