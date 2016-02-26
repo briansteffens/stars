@@ -28,23 +28,7 @@ var games = [{
     7: undefined,
   },
   chats: [],
-  moves: [{
-    user_id: 3,
-    turn: 0,
-    type: 'draw',
-    count: 1,
-    cards: [{name: 'meteor'}],
-  }, {
-    user_id: 3,
-    turn: 0,
-    type: 'yield',
-  }, {
-    user_id: 7,
-    turn: 1,
-    type: 'draw',
-    count: 1,
-    cards: [{name: 'asteroid'}],
-  }],
+  moves: [],
   state: {
     turn: 3,
     players: {

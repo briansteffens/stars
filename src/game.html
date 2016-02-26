@@ -60,6 +60,9 @@
           else if (msg.type === 'yield') {
             view.add_move(msg);
           }
+          else if (msg.type === 'moves') {
+            view.set_moves(msg.moves);
+          }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
           }
@@ -123,6 +126,13 @@
           this.setState({
             player_ids: [3, 7],
             moves: [...this.state.moves, move],
+            state: {},
+          });
+        },
+        set_moves: function(moves) {
+          this.setState({
+            player_ids: [3, 7],
+            moves: moves,
             state: {},
           });
         },
