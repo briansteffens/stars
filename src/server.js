@@ -157,7 +157,11 @@ wss.on('connection', function(ws) {
     if (typeof to_player === 'undefined') {
       to_player = player_id;
     }
-    game.sockets[to_player].send(JSON.stringify(payload), function ack(error) {
+    var socket = game.sockets[to_player];
+    if (typeof socket === 'undefined') {
+      return;
+    }
+    socket.send(JSON.stringify(payload), function ack(error) {
       if (typeof error === 'undefined') {
         return;
       }
@@ -241,13 +245,8 @@ wss.on('connection', function(ws) {
       msg.turn = state.current_turn(game);
       game.moves.push(msg);
       game.state = state.apply_move(game, game.state, msg);
-      if (typeof game.sockets[player_id] !== 'undefined') {
-        send(msg);
-      }
-      var other_player = state.next_player(game, player_id);
-      if (typeof game.sockets[other_player] !== 'undefined') {
-        send(msg, other_player);
-      }
+      send(msg);
+      send(msg, state.next_player(game, player_id));
     }
     else {
       console.log('unrecognized message type: %s', message);
