@@ -20,6 +20,7 @@
       var turn = undefined;
       var socket = undefined;
       var log = undefined;
+      var view = undefined;
       window.onload = function() {
         var readCookie = function(name) {
           var c = document.cookie.split('; ');
@@ -56,14 +57,17 @@
           }
           else if (msg.type === 'greetings') {
             game_info = msg;
+            view.forceUpdate();
           }
           else if (msg.type === 'opponentYield') {
-            turn.opponentYield();
+            //turn.opponentYield();
           }
           else if (msg.type === 'turns') {
             log.merge(msg.turns);
           }
           else if (msg.type === 'yield') {
+            view.add_move(msg);
+            /*
             game.moves.push(msg);
             game.state = state.apply_move(game, game.state, msg);
             if (state.whose_turn(game) == game_info.user_id) {
@@ -71,6 +75,7 @@
             } else {
               turn.yield();
             }
+            */
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -120,6 +125,44 @@
         },
       });
       chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
+    </script>
+    <div id="view"></div>
+    <script type="text/babel">
+      var View = React.createClass({
+        getInitialState: function() {
+          return {
+            player_ids: [3, 7],
+            moves: [],
+            state: {},
+          };
+        },
+        add_move: function(move) {
+          this.setState({
+            player_ids: [3, 7],
+            moves: [...this.state.moves, move],
+            state: {},
+          });
+        },
+        yield: function(e) {
+          socket.send(JSON.stringify({type: 'yield'}));
+        },
+        render: function() {
+          if (typeof game_info === 'undefined') {
+            return (<i>Connecting..</i>);
+          }
+
+          var my_turn = state.whose_turn(this.state) == game_info.user_id;
+
+          return (
+            <div>
+              It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
+              <input type="button" onClick={this.yield} value="yield"
+                disabled={!my_turn} />
+            </div>
+          );
+        },
+      });
+      view = ReactDOM.render(<View />, document.getElementById('view'));
     </script>
     <div id="turn"></div>
     <script type="text/babel">

@@ -251,8 +251,13 @@ wss.on('connection', function(ws) {
       }
     }
     else if (msg.type === 'yield') {
+      msg.user_id = player_id;
+      msg.turn = state.current_turn(game);
       game.moves.push(msg);
       game.state = state.apply_move(game, game.state, msg);
+      if (typeof game.sockets[player_id] !== 'undefined') {
+        send(msg);
+      }
       var other_player = state.next_player(game, player_id);
       if (typeof game.sockets[other_player] !== 'undefined') {
         send(msg, other_player);
