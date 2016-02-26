@@ -18,7 +18,7 @@
 */
     return state;
   };
-  exports.asdf = function() { console.log('heya'); };
+
   exports.next_player = function(game, player_id) {
     return game.player_ids[(game.player_ids[0] == player_id) | 0];
   };
