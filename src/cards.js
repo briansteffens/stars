@@ -4,6 +4,11 @@
       name: 'drone',
       type: 'ship',
     },{
+      name: 'fighter',
+      type: 'ship',
+      cost: 1,
+      upkeep: 1,
+    },{
       name: 'asteroid',
       type: 'resource',
     },{
