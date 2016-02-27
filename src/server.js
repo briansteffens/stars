@@ -1,5 +1,6 @@
 var fs = require('fs');
 var state = require('./state.js');
+var cards = require('./cards.js');
 
 var sessions = {
   'a': {
@@ -46,14 +47,15 @@ var games = [{
   },
 }];
 
-function next_card_name() {
-  var card_names = ['asteroid', 'meteor', 'planet', 'star'];
-  return card_names[Math.floor(Math.random() * card_names.length)];
+var all_cards = cards.all();
+
+function next_card() {
+  return all_cards[Math.floor(Math.random() * all_cards.length)];
 }
 
 for (var i = 0; i < 10; i++) {
-  games[0].state.players[3].deck.push({name: next_card_name()});
-  games[0].state.players[7].deck.push({name: next_card_name()});
+  games[0].state.players[3].deck.push(next_card());
+  games[0].state.players[7].deck.push(next_card());
 }
 
 console.log(games[0].state.players[3]);
