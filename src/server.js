@@ -30,17 +30,33 @@ var games = [{
   chats: [],
   moves: [],
   state: {
-    turn: 3,
+    turn: 0,
+    turn_player_id: 3,
+    draw_possible: 7,
     players: {
       3: {
         hand: [],
+        deck: [],
       },
       7: {
         hand: [],
+        deck: [],
       },
     },
   },
 }];
+
+function next_card_name() {
+  var card_names = ['asteroid', 'meteor', 'planet', 'star'];
+  return card_names[Math.floor(Math.random() * card_names.length)];
+}
+
+for (var i = 0; i < 10; i++) {
+  games[0].state.players[3].deck.push({name: next_card_name()});
+  games[0].state.players[7].deck.push({name: next_card_name()});
+}
+
+console.log(games[0].state.players[3]);
 
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
@@ -137,6 +153,13 @@ wss.on('connection', function(ws) {
   var player_id = undefined;
   var user = undefined;
 
+  // Add implicit properties to a move originating from a client
+  var fill_in = function(move) {
+    move.user_id = player_id;
+    move.turn = state.current_turn(game);
+    return move;
+  };
+
   var send = function(payload, to_player) {
     if (typeof to_player === 'undefined') {
       to_player = player_id;
@@ -145,6 +168,7 @@ wss.on('connection', function(ws) {
     if (typeof socket === 'undefined') {
       return;
     }
+    console.log(payload);
     socket.send(JSON.stringify(payload), function ack(error) {
       if (typeof error === 'undefined') {
         return;
@@ -156,7 +180,14 @@ wss.on('connection', function(ws) {
       }
       throw error;
     });
-  }
+  };
+
+  var send_state = function(to_player) {
+    send({
+      type: 'state',
+      state: state.strip_state(game.state),
+    }, to_player);
+  };
 
   ws.on('message', function(message) {
     console.log('session %s: %s', session, message);
@@ -187,11 +218,7 @@ wss.on('connection', function(ws) {
         username: user.username,
       });
       send({type: 'chats', chats: game.chats});
-      var moves_out = [];
-      for (var i = 0; i < game.moves.length; i++) {
-        moves_out.push(player_id, game.moves[i]);
-      }
-      send({type: 'moves', moves: moves_out});
+      send_state(player_id);
     }
     else if (msg.type === 'chat') {
       var newMessage = {
@@ -209,21 +236,11 @@ wss.on('connection', function(ws) {
         }
       }
     }
-    else if (msg.type === 'yield') {
-      msg.user_id = player_id;
-      msg.turn = state.current_turn(game);
-      game.moves.push(msg);
-      game.state = state.apply_move(game, game.state, msg);
-      send(msg);
-      send(msg, state.next_player(game, player_id));
-    }
-    else if (msg.type === 'draw') {
-      msg.user_id = player_id;
-      msg.turn = state.current_turn(game);
-      game.moves.push(msg);
-      game.state = state.apply_move(game, game.state, msg);
-      send(msg);
-      send(msg, state.next_player(game, player_id));
+    else if (msg.type === 'yield' || msg.type === 'draw') {
+      msg = fill_in(msg);
+      state.apply_move(game, msg);
+      send_state(player_id);
+      send_state(state.next_player(game, player_id));
     }
     else {
       console.log('unrecognized message type: %s', message);

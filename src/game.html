@@ -6,7 +6,6 @@
     <script src="https://fb.me/react-0.14.7.js"></script>
     <script src="https://fb.me/react-dom-0.14.7.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="/state.js"></script>
   </head>
   <body>
     <script>
@@ -57,11 +56,8 @@
             game_info = msg;
             view.forceUpdate();
           }
-          else if (msg.type === 'yield' || msg.type === 'draw') {
-            view.add_move(msg);
-          }
-          else if (msg.type === 'moves') {
-            view.set_moves(msg.moves);
+          else if (msg.type === 'state') {
+            view.set_state(msg.state);
           }
           else {
             console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -116,48 +112,33 @@
     <script type="text/babel">
       var View = React.createClass({
         getInitialState: function() {
-          return {
-            player_ids: [3, 7],
-            moves: [],
-            state: {},
-          };
+          return {state: {}};
         },
-        add_move: function(move) {
-          this.setState({
-            player_ids: [3, 7],
-            moves: [...this.state.moves, move],
-            state: {},
-          });
-        },
-        set_moves: function(moves) {
-          this.setState({
-            player_ids: [3, 7],
-            moves: moves,
-            state: {},
-          });
+        set_state: function(game_state) {
+          this.setState(game_state);
         },
         yield: function(e) {
           socket.send(JSON.stringify({type: 'yield'}));
         },
         draw: function(e) {
-          socket.send(JSON.stringify({type: 'draw',count: 1}));
+          socket.send(JSON.stringify({type: 'draw'}));
         },
         render: function() {
           if (typeof game_info === 'undefined') {
             return (<i>Connecting..</i>);
           }
 
-          var my_turn = state.whose_turn(this.state) == game_info.user_id;
-          var draw = state.draw_possible(this.state, game_info.user_id);
+          var my_turn = this.state.turn_player_id == game_info.user_id;
+          var draw_possible = my_turn ? this.state.draw_possible : 0;
 
           return (
             <div>
               It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
               <input type="button" onClick={this.yield} value="yield"
                 disabled={!my_turn} />
-              You can draw {draw} cards.
+              You can draw {draw_possible} cards.
               <input type="button" onClick={this.draw} value="draw"
-                disabled={!draw} />
+                disabled={!draw_possible} />
             </div>
           );
         },

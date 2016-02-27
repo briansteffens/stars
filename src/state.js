@@ -1,21 +1,45 @@
 (function(exports){
-  exports.apply_move = function(game, state, move) {
-    var state = JSON.parse(JSON.stringify(state)); // lolclone
-/*
-    var player = get_player(game, move.user_id);
+  exports.clone_state = function(state) {
+    return JSON.parse(JSON.stringify(state)); // TODO: something better
+  };
+
+  exports.apply_move = function(game, move) {
+    var state = exports.clone_state(game.state);
+    var player = state.players[move.user_id];
 
     if (move.type === 'draw') {
-      for (var c = 0; c < move.cards; c++) {
-        player.hand.push(move.cards[c]);
-      }
+      player.hand.push(player.deck.pop());
     }
     else if (move.type === 'yield') {
-
+      state.turn++;
     }
     else {
       throw 'Unrecognized move type ' + move.type;
     }
-*/
+
+    game.moves.push(move);
+    game.state = state;
+
+    state.turn_player_id = exports.whose_turn(game);
+    state.draw_possible = exports.draw_possible(game, state.turn_player_id);
+  };
+
+  // Strip out secrets from a state for sending to the given player
+  exports.strip_state = function(state, dest_player_id) {
+    var state = exports.clone_state(state);
+
+    for (var p_id in state.players) {
+      if (!state.players.hasOwnProperty(p_id) || p_id == dest_player_id) {
+        continue;
+      }
+
+      var other_player = state.players[p_id];
+
+      for (var i = 0; i < other_player.hand.length; i++) {
+        other_player.hand[i] = {name: '?'};
+      }
+    }
+
     return state;
   };
 
@@ -85,7 +109,7 @@
 
     for (var i = 0; i < moves.length; i++) {
       if (moves[i].type === 'draw') {
-        possible_to_draw -= moves[i].count;
+        possible_to_draw -= 1;
       }
     }
 
