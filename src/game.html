@@ -130,9 +130,25 @@
           if (typeof game_info === 'undefined' || this.state === null) {
             return (<i>Connecting..</i>);
           }
+
           console.log(this.state);
+
           var that = this;
+
           var me = this.state.players[game_info.user_id];
+
+          var enemy = null;
+          for (let key in this.state.players) {
+            if (this.state.players.hasOwnProperty(key) &&
+                key != game_info.user_id) {
+              enemy = this.state.players[key];
+              break;
+            }
+          }
+          if (enemy === null) {
+            throw 'enemy not found';
+          }
+
           var hand = [];
           for (let i = 0; i < me.hand.length; i++) {
             hand.push(
@@ -144,14 +160,16 @@
             );
           }
 
-          var permanents = [];
-          for (let i = 0; i < me.permanents.length; i++) {
-            permanents.push(
-              <strong key={i}>
-                {me.permanents[i].name+" "}
-              </strong>
-            );
-          }
+          let render_permanents = function(perms) {
+            let ret = [];
+            for (let i = 0; i < perms.length; i++) {
+              ret.push(<strong key={i}>{perms[i].name+" "}</strong>);
+            }
+            return ret;
+          };
+
+          let permanents = render_permanents(me.permanents);
+          let enemy_permanents = render_permanents(enemy.permanents);
 
           var my_turn = this.state.turn_player_id == game_info.user_id;
           var draw_possible = my_turn ? this.state.draw_possible : 0;
@@ -168,8 +186,10 @@
                 <input type="button" onClick={this.draw} value="draw"
                   disabled={!draw_possible} />
               </div>
-              <div>Permanents: {permanents}</div>
+              <div>Your permanents: {permanents}</div>
               <div>Your hand: {hand}</div>
+              <hr />
+              <div>Enemy permanents: {enemy_permanents}</div>
             </div>
           );
         },
