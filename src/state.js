@@ -113,6 +113,7 @@
       }
     }
 
-    return possible_to_draw;
+    return Math.min(possible_to_draw,
+        game.state.players[player_id].deck.length);
   };
 })(typeof exports === 'undefined' ? this['state'] = {} : exports);
