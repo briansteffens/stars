@@ -49,9 +49,16 @@ var games = [{
 
 var all_cards = cards.all();
 
-function next_card() {
+function random_card() {
   return all_cards[Math.floor(Math.random() * all_cards.length)];
 }
+
+function next_card() {
+  var card = JSON.parse(JSON.stringify(random_card()));
+  card.copy_id = next_card.next_id++;
+  return card;
+}
+next_card.next_id = 0;
 
 for (var i = 0; i < 10; i++) {
   games[0].state.players[3].deck.push(next_card());
@@ -59,6 +66,7 @@ for (var i = 0; i < 10; i++) {
 }
 
 console.log(games[0].state.players[3]);
+console.log(games[0].state.players[7]);
 
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
