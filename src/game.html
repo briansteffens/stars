@@ -112,7 +112,7 @@
     <script type="text/babel">
       var View = React.createClass({
         getInitialState: function() {
-          return {state: {}};
+          return null;
         },
         set_state: function(game_state) {
           this.setState(game_state);
@@ -124,8 +124,14 @@
           socket.send(JSON.stringify({type: 'draw'}));
         },
         render: function() {
-          if (typeof game_info === 'undefined') {
+          if (typeof game_info === 'undefined' || this.state === null) {
             return (<i>Connecting..</i>);
+          }
+          console.log(this.state);
+          var me = this.state.players[game_info.user_id];
+          var hand = [];
+          for (let i = 0; i < me.hand.length; i++) {
+            hand.push(<strong key={i}>{me.hand[i].name+" "}</strong>);
           }
 
           var my_turn = this.state.turn_player_id == game_info.user_id;
@@ -133,12 +139,17 @@
 
           return (
             <div>
-              It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
-              <input type="button" onClick={this.yield} value="yield"
-                disabled={!my_turn} />
-              You can draw {draw_possible} cards.
-              <input type="button" onClick={this.draw} value="draw"
-                disabled={!draw_possible} />
+              <div>
+                It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
+                <input type="button" onClick={this.yield} value="yield"
+                  disabled={!my_turn} />
+              </div>
+              <div>
+                You can draw {draw_possible} cards.
+                <input type="button" onClick={this.draw} value="draw"
+                  disabled={!draw_possible} />
+              </div>
+              <div>Your hand: {hand}</div>
             </div>
           );
         },

@@ -185,7 +185,7 @@ wss.on('connection', function(ws) {
   var send_state = function(to_player) {
     send({
       type: 'state',
-      state: state.strip_state(game.state),
+      state: state.strip_state(game.state, to_player),
     }, to_player);
   };
 
