@@ -13,6 +13,19 @@
     else if (move.type === 'yield') {
       state.turn++;
     }
+    else if (move.type === 'play') {
+      var index = null;
+      for (var i = 0; i < player.hand.length; i++) {
+        if (player.hand[i].copy_id == move.copy_id) {
+          index = i;
+          break;
+        }
+      }
+      if (index === null) {
+        throw 'Attempt to play ' + move.copy_id + ' not in hand.';
+      }
+      player.permanents.push(player.hand.splice(index, 1)[0]);
+    }
     else {
       throw 'Unrecognized move type ' + move.type;
     }

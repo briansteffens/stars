@@ -123,15 +123,34 @@
         draw: function(e) {
           socket.send(JSON.stringify({type: 'draw'}));
         },
+        play: function(card, e) {
+          socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
+        },
         render: function() {
           if (typeof game_info === 'undefined' || this.state === null) {
             return (<i>Connecting..</i>);
           }
           console.log(this.state);
+          var that = this;
           var me = this.state.players[game_info.user_id];
           var hand = [];
           for (let i = 0; i < me.hand.length; i++) {
-            hand.push(<strong key={i}>{me.hand[i].name+" "}</strong>);
+            hand.push(
+              <strong key={i}>
+                {me.hand[i].name+" "}
+                <input type="button" onClick={that.play.bind(this, me.hand[i])}
+                  value="play" />
+              </strong>
+            );
+          }
+
+          var permanents = [];
+          for (let i = 0; i < me.permanents.length; i++) {
+            permanents.push(
+              <strong key={i}>
+                {me.permanents[i].name+" "}
+              </strong>
+            );
           }
 
           var my_turn = this.state.turn_player_id == game_info.user_id;
@@ -149,6 +168,7 @@
                 <input type="button" onClick={this.draw} value="draw"
                   disabled={!draw_possible} />
               </div>
+              <div>Permanents: {permanents}</div>
               <div>Your hand: {hand}</div>
             </div>
           );
