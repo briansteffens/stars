@@ -12,6 +12,7 @@
       name: 'asteroid',
       type: 'resource',
       worth: 1,
+      _draw_chances: 3,
     },{
       name: 'star',
       type: 'generator',

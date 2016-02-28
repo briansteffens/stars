@@ -53,8 +53,18 @@ var games = [{
 
 var all_cards = cards.all();
 
+var random_pool = [];
+for (var i = 0; i < all_cards.length; i++) {
+  var chance = typeof all_cards[i]._draw_chances === 'undefined' ?
+               1 : all_cards[i]._draw_chances;
+
+  for (var j = 0; j < chance; j++) {
+    random_pool.push(all_cards[i]);
+  }
+}
+
 function random_card() {
-  return all_cards[Math.floor(Math.random() * all_cards.length)];
+  return random_pool[Math.floor(Math.random() * random_pool.length)];
 }
 
 function next_card() {
