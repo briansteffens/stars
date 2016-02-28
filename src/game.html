@@ -112,10 +112,12 @@
     <script type="text/babel">
       var View = React.createClass({
         getInitialState: function() {
-          return null;
+          return {game: null};
         },
         set_state: function(game_state) {
-          this.setState(game_state);
+          this.setState({
+            game: game_state,
+          });
         },
         yield: function(e) {
           socket.send(JSON.stringify({type: 'yield'}));
@@ -127,21 +129,23 @@
           socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
         },
         render: function() {
-          if (typeof game_info === 'undefined' || this.state === null) {
+          console.log(this.state);
+
+          var game = this.state.game;
+
+          if (typeof game_info === 'undefined' || game === null) {
             return (<i>Connecting..</i>);
           }
 
-          console.log(this.state);
-
           var that = this;
 
-          var me = this.state.players[game_info.user_id];
+          var me = game.players[game_info.user_id];
 
           var enemy = null;
-          for (let key in this.state.players) {
-            if (this.state.players.hasOwnProperty(key) &&
+          for (let key in game.players) {
+            if (game.players.hasOwnProperty(key) &&
                 key != game_info.user_id) {
-              enemy = this.state.players[key];
+              enemy = game.players[key];
               break;
             }
           }
@@ -171,8 +175,8 @@
           let permanents = render_permanents(me.permanents);
           let enemy_permanents = render_permanents(enemy.permanents);
 
-          var my_turn = this.state.turn_player_id == game_info.user_id;
-          var draw_possible = my_turn ? this.state.draw_possible : 0;
+          var my_turn = game.turn_player_id == game_info.user_id;
+          var draw_possible = my_turn ? game.draw_possible : 0;
 
           return (
             <div>
