@@ -10,11 +10,12 @@
       upkeep: 1,
       attack: 2,
       defense: 1,
+      _draw_chances: 5,
     },{
       name: 'asteroid',
       type: 'resource',
       worth: 1,
-      _draw_chances: 3,
+      _draw_chances: 5,
     },{
       name: 'star',
       type: 'generator',

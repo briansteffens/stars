@@ -6,8 +6,21 @@
     <script src="https://fb.me/react-0.14.7.js"></script>
     <script src="https://fb.me/react-dom-0.14.7.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <style>
+      #canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .permanent {
+        display: inline-block;
+      }
+    </style>
   </head>
   <body>
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <a href="#" onclick="draw();">draw</a>
     <script>
       function clone(obj) {
         return JSON.parse(JSON.stringify(obj)); // TODO: something better
@@ -121,6 +134,46 @@
             attacker: null,
           };
         },
+        get_permanent: function(copy_id) {
+          for (let player_id of Object.keys(this.state.game.players)) {
+            for (let perm of this.state.game.players[player_id].permanents) {
+              if (perm.copy_id == copy_id) {
+                return perm;
+              }
+            }
+          }
+          throw 'Permanent ' + copy_id + ' not found';
+        },
+        render_canvas: function() {
+          console.log('render');
+          var canvas = document.getElementById('canvas');
+          var ctx = canvas.getContext('2d');
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+
+          if (this.state.game === null) {
+            return;
+          }
+
+          ctx.strokeStyle = 'rgb(200, 0, 0)';
+
+          for (let attack of this.state.game.attacks) {
+            let attacker = this.get_permanent(attack.attacker);
+            let target = this.get_permanent(attack.target);
+            let attacker_el = document.getElementById('perm_'+attack.attacker);
+            let target_el = document.getElementById('perm_'+attack.target);
+            console.log(attacker_el);
+            console.log(target_el);
+
+            ctx.beginPath();
+            ctx.moveTo(attacker_el.offsetLeft, attacker_el.offsetTop);
+            ctx.lineTo(target_el.offsetLeft, target_el.offsetTop);
+            ctx.stroke();
+          }
+        },
+        componentDidUpdate: function() {
+          setTimeout(this.render_canvas());
+        },
         set_state: function(game_state) {
           this.setState({
             game: game_state,
@@ -148,6 +201,10 @@
             attacker: this.state.attacker.copy_id,
             target: target.copy_id,
           }));
+          this.setState({
+            game: clone(this.state.game),
+            attacker: null,
+          });
         },
         render: function() {
           console.log(this.state);
@@ -214,11 +271,12 @@
               }
 
               ret.push(
-                <strong key={i}>
-                  {perms[i].name+" "}
+                <div key={i} id={'perm_' + perms[i].copy_id}
+                     className="permanent">
+                  <strong>{perms[i].name+" "}</strong>
                   {attack_with}
                   {attack}
-                </strong>
+                </div>
               );
             }
             return ret;

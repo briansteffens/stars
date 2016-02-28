@@ -11,6 +11,7 @@
       player.hand.push(player.deck.pop());
     }
     else if (move.type === 'yield') {
+      state.attacks = [];
       state.turn++;
     }
     else if (move.type === 'play') {
@@ -45,6 +46,12 @@
       } else {
         throw 'Unplayable card type ' + card.type;
       }
+    }
+    else if (move.type === 'attack') {
+      state.attacks.push({
+        attacker: move.attacker,
+        target: move.target,
+      });
     }
     else {
       throw 'Unrecognized move type ' + move.type;

@@ -34,18 +34,19 @@ var games = [{
     turn: 0,
     turn_player_id: 3,
     draw_possible: 7,
+    attacks: [],
     players: {
       3: {
         hand: [],
         deck: [],
         permanents: [],
-        scrap: 0,
+        scrap: 1,
       },
       7: {
         hand: [],
         deck: [],
         permanents: [],
-        scrap: 0,
+        scrap: 1,
       },
     },
   },
@@ -261,7 +262,7 @@ wss.on('connection', function(ws) {
       }
     }
     else if (msg.type === 'yield' || msg.type === 'draw' ||
-        msg.type === 'play') {
+        msg.type === 'play' || msg.type === 'attack') {
       msg = fill_in(msg);
       state.apply_move(game, msg);
       send_state(player_id);
