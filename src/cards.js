@@ -8,6 +8,8 @@
       type: 'ship',
       cost: 1,
       upkeep: 1,
+      attack: 2,
+      defense: 1,
     },{
       name: 'asteroid',
       type: 'resource',
