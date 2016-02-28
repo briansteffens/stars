@@ -25,12 +25,23 @@
         throw 'Attempt to play ' + move.copy_id + ' not in hand.';
       }
 
-      var card = player.hand.splice(index, 1)[0];
+      var card = player.hand[index];
+
+      var remove_from_hand = function() {
+        return player.hand.splice(index, 1)[0];
+      }
 
       if (card.type === 'resource') {
-        player.scrap += card.worth;
+        player.scrap += remove_from_hand().worth;
       } else if (card.type === 'generator' || card.type === 'ship') {
-        player.permanents.push(card);
+        var cost = card.hasOwnProperty('cost') ? card.cost : 0;
+        if (card.cost > player.scrap) {
+          console.log('Player doesn\'t have enough scrap');
+        }
+        else {
+          player.scrap -= cost;
+          player.permanents.push(remove_from_hand());
+        }
       } else {
         throw 'Unplayable card type ' + card.type;
       }
