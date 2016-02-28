@@ -11,6 +11,7 @@
     },{
       name: 'asteroid',
       type: 'resource',
+      worth: 1,
     },{
       name: 'star',
       type: 'generator',

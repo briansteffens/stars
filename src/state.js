@@ -24,7 +24,16 @@
       if (index === null) {
         throw 'Attempt to play ' + move.copy_id + ' not in hand.';
       }
-      player.permanents.push(player.hand.splice(index, 1)[0]);
+
+      var card = player.hand.splice(index, 1)[0];
+
+      if (card.type === 'resource') {
+        player.scrap += card.worth;
+      } else if (card.type === 'generator' || card.type === 'ship') {
+        player.permanents.push(card);
+      } else {
+        throw 'Unplayable card type ' + card.type;
+      }
     }
     else {
       throw 'Unrecognized move type ' + move.type;

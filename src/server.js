@@ -39,11 +39,13 @@ var games = [{
         hand: [],
         deck: [],
         permanents: [],
+        scrap: 0,
       },
       7: {
         hand: [],
         deck: [],
         permanents: [],
+        scrap: 0,
       },
     },
   },

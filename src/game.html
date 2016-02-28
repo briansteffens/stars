@@ -181,6 +181,7 @@
                 <input type="button" onClick={this.yield} value="yield"
                   disabled={!my_turn} />
               </div>
+              <div>Scrap: {me.scrap}</div>
               <div>
                 You can draw {draw_possible} cards.
                 <input type="button" onClick={this.draw} value="draw"
@@ -189,6 +190,7 @@
               <div>Your permanents: {permanents}</div>
               <div>Your hand: {hand}</div>
               <hr />
+              <div>Enemy scrap: {enemy.scrap}</div>
               <div>Enemy permanents: {enemy_permanents}</div>
             </div>
           );
