@@ -3,6 +3,20 @@
     return JSON.parse(JSON.stringify(state)); // TODO: something better
   };
 
+  exports.get_permanent = function(state, copy_id) {
+    for (var player_id in state.players) {
+      if (state.players.hasOwnProperty(player_id)) {
+        var permanents = state.players[player_id].permanents;
+        for (var i = 0; i < permanents.length; i++) {
+          if (permanents[i].copy_id == copy_id) {
+            return permanents[i];
+          }
+        }
+      }
+    }
+    throw 'Permanent ' + copy_id + ' not found.';
+  };
+
   exports.apply_move = function(game, move) {
     var state = exports.clone_state(game.state);
     var player = state.players[move.user_id];
@@ -48,6 +62,14 @@
       }
     }
     else if (move.type === 'attack') {
+      var attacker = exports.get_permanent(state, move.attacker);
+
+      if (attacker.tapped) {
+        throw 'Attacker already tapped';
+      }
+
+      attacker.tapped = true;
+
       state.attacks.push({
         attacker: move.attacker,
         target: move.target,

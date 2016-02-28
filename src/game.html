@@ -255,7 +255,7 @@
               if (are_mine && typeof perms[i].attack !== 'undefined') {
                 attack_with = (
                   <input type="button" value="attack with"
-                    disabled={!can_attack}
+                    disabled={!can_attack || perms[i].tapped}
                     onClick={that.attack_start.bind(null, perms[i])} />
                 );
               }

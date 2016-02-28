@@ -71,6 +71,7 @@ function random_card() {
 function next_card() {
   var card = JSON.parse(JSON.stringify(random_card()));
   card.copy_id = next_card.next_id++;
+  card.tapped = false;
   return card;
 }
 next_card.next_id = 0;
