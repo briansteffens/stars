@@ -33,6 +33,7 @@ var games = [{
   state: {
     turn: 0,
     turn_player_id: 3,
+    phase: 'main',
     draw_possible: 7,
     attacks: [],
     players: {

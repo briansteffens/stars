@@ -28,6 +28,14 @@
       state.attacks = [];
       state.turn++;
     }
+    else if (move.type === 'launch_attack') {
+      state.turn++;
+      state.phase = 'defend';
+    }
+    else if (move.type === 'end_defend') {
+      state.attacks = [];
+      state.phase = 'main';
+    }
     else if (move.type === 'play') {
       var index = null;
       for (var i = 0; i < player.hand.length; i++) {
