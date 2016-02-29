@@ -20,6 +20,7 @@
   exports.apply_move = function(game, move) {
     var state = exports.clone_state(game.state);
     var player = state.players[move.user_id];
+    var other_player = state.players[exports.next_player(game, move.user_id)];
 
     if (move.type === 'draw') {
       player.hand.push(player.deck.pop());
@@ -31,6 +32,21 @@
       }
     }
     else if (move.type === 'defend') {
+      for (var i = 0; i < state.attacks.length; i++) {
+        var attacker = exports.get_permanent(game.state,
+            state.attacks[i].attacker);
+        var target = exports.get_permanent(game.state,
+            state.attacks[i].target);
+
+        var resolve = function(atk, def, defender) {
+          if (atk.attack >= def.defense) {
+            defender.permanents.splice(defender.permanents.indexOf(def), 1);
+          }
+        }
+
+        resolve(attacker, target, player);
+        resolve(target, attacker, other_player);
+      }
       state.attacks = [];
       state.phase = 'main';
     }
