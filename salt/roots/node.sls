@@ -12,3 +12,4 @@ server_dependencies:
   npm.installed:
     - pkgs:
       - ws
+      - cookie
