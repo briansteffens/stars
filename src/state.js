@@ -25,14 +25,12 @@
       player.hand.push(player.deck.pop());
     }
     else if (move.type === 'yield') {
-      state.attacks = [];
       state.turn++;
+      if (state.attacks.length > 0) {
+        state.phase = 'defend';
+      }
     }
-    else if (move.type === 'launch_attack') {
-      state.turn++;
-      state.phase = 'defend';
-    }
-    else if (move.type === 'end_defend') {
+    else if (move.type === 'defend') {
       state.attacks = [];
       state.phase = 'main';
     }

@@ -264,7 +264,8 @@ wss.on('connection', function(ws) {
       }
     }
     else if (msg.type === 'yield' || msg.type === 'draw' ||
-        msg.type === 'play' || msg.type === 'attack') {
+        msg.type === 'play' || msg.type === 'attack' ||
+        msg.type === 'defend') {
       msg = fill_in(msg);
       state.apply_move(game, msg);
       send_state(player_id);

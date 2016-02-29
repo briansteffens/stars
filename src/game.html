@@ -205,6 +205,9 @@
             attacker: null,
           });
         },
+        defend: function(e) {
+          socket.send(JSON.stringify({type: 'defend'}));
+        },
         render: function() {
           console.log(this.state);
 
@@ -255,7 +258,8 @@
               if (are_mine && typeof perms[i].attack !== 'undefined') {
                 attack_with = (
                   <input type="button" value="attack with"
-                    disabled={!can_attack || perms[i].tapped}
+                    disabled={!can_attack || perms[i].tapped ||
+                              game.phase !== 'main'}
                     onClick={that.attack_start.bind(null, perms[i])} />
                 );
               }
@@ -288,6 +292,9 @@
             <div>
               <div>
                 It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
+                Phase: <strong>{game.phase}</strong>
+                <input type="button" onClick={this.defend} value="defend"
+                  disabled={!my_turn || game.phase !== 'defend'} />
                 <input type="button" onClick={this.yield} value="yield"
                   disabled={!my_turn} />
               </div>
