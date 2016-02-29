@@ -89,11 +89,15 @@ require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
   console.log("request: " + req.method + " " + req.url);
 
-  var serveStatic = function(fn, headers) {
+  var serveStatic = function(fn, headers, content_type) {
     if (typeof headers === 'undefined') {
       headers = {};
     }
-    headers['Content-Type'] = 'text/html';
+    if (typeof content_type === 'undefined') {
+      headers['Content-Type'] = 'text/html';
+    } else {
+      headers['Content-Type'] = content_type;
+    }
     headers['Content-Length'] = fs.statSync(fn).size;
     res.writeHead(200, headers);
     return fs.createReadStream(fn).pipe(res);
@@ -148,6 +152,15 @@ require('http').createServer(function(req, res) {
     });
 
     res.end(json);
+  }
+  else if (url.pathname.startsWith('/game/socket.js')) {
+    return serveStatic('src/socket.js');
+  }
+  else if (url.pathname.startsWith('/game/style.css')) {
+    return serveStatic('src/style.css', {}, 'text/css');
+  }
+  else if (url.pathname.startsWith('/game/view.js')) {
+    return serveStatic('src/view.js');
   }
   else if (url.pathname.startsWith('/game/')) {
     var game_id = url.pathname.replace('/game/', '');
