@@ -144,7 +144,6 @@
           throw 'Permanent ' + copy_id + ' not found';
         },
         render_canvas: function() {
-          console.log('render');
           var canvas = document.getElementById('canvas');
           var ctx = canvas.getContext('2d');
           canvas.width = window.innerWidth;
@@ -154,20 +153,31 @@
             return;
           }
 
+          let game = this.state.game;
+
           ctx.strokeStyle = 'rgb(200, 0, 0)';
 
-          for (let attack of this.state.game.attacks) {
-            let attacker = this.get_permanent(attack.attacker);
-            let target = this.get_permanent(attack.target);
+          var draw_attack_line = function(top_el, bottom_el) {
+            ctx.beginPath();
+            ctx.moveTo(top_el.offsetLeft + top_el.offsetWidth / 2,
+                       top_el.offsetTop + top_el.offsetHeight);
+            ctx.lineTo(bottom_el.offsetLeft + bottom_el.offsetWidth / 2,
+                       bottom_el.offsetTop);
+            ctx.stroke();
+          };
+
+          var my_turn = game.turn_player_id == game_info.user_id;
+
+          for (let attack of game.attacks) {
             let attacker_el = document.getElementById('perm_'+attack.attacker);
             let target_el = document.getElementById('perm_'+attack.target);
-            console.log(attacker_el);
-            console.log(target_el);
 
-            ctx.beginPath();
-            ctx.moveTo(attacker_el.offsetLeft, attacker_el.offsetTop);
-            ctx.lineTo(target_el.offsetLeft, target_el.offsetTop);
-            ctx.stroke();
+            if (my_turn && game.phase === 'main' ||
+                !my_turn && game.phase === 'defend') {
+              draw_attack_line(attacker_el, target_el);
+            } else {
+              draw_attack_line(target_el, attacker_el);
+            }
           }
         },
         componentDidUpdate: function() {
