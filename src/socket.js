@@ -22,7 +22,7 @@ window.onload = function() {
     throw 'Cookie '+name+' not found.';
   };
 
-  socket = new WebSocket('ws://192.168.1.203:8080');
+  socket = new WebSocket('ws://' + location.hostname + ':8080');
   socket.onerror = function(error) {
     console.log("WebSocket error: " + error);
   };
