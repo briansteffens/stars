@@ -33,13 +33,12 @@
     }
     else if (move.type === 'defend') {
       for (var i = 0; i < state.attacks.length; i++) {
-        var attacker = exports.get_permanent(game.state,
-            state.attacks[i].attacker);
-        var target = exports.get_permanent(game.state,
-            state.attacks[i].target);
+        var attacker = exports.get_permanent(state, state.attacks[i].attacker);
+        var target = exports.get_permanent(state, state.attacks[i].target);
 
         var resolve = function(atk, def, defender) {
-          if (atk.attack >= def.defense) {
+          def.defense -= atk.attack;
+          if (def.defense <= 0) {
             defender.permanents.splice(defender.permanents.indexOf(def), 1);
           }
         }
