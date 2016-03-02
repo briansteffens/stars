@@ -56,6 +56,11 @@
       }
       state.attacks = [];
       state.phase = 'main';
+
+      // untap
+      for (var i = 0; i < player.permanents.length; i++) {
+        player.permanents[i].tapped = false;
+      }
     }
     else if (move.type === 'play') {
       var index = null;
