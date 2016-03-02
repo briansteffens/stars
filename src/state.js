@@ -42,7 +42,7 @@
         var target = exports.get_permanent(state, state.attacks[i].target);
 
         var resolve = function(atk, def, attacker, defender) {
-          def.defense -= atk.attack;
+          def.defense -= typeof atk.attack !== 'undefined' ? atk.attack : 0;
           if (def.defense <= 0) {
             if (def.name === 'mother ship') {
               state.winner = attacker.user_id;

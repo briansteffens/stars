@@ -25,7 +25,6 @@
     return {
       name: 'mother ship',
       type: 'ship',
-      attack: 0,
       defense: 20,
     };
   };
