@@ -155,11 +155,8 @@ var View = React.createClass({
           );
         }
 
-        var stats = '';
-        if (typeof perms[i].attack !== 'undefined' &&
-            typeof perms[i].defense !== 'undefined') {
-          stats = perms[i].attack + '/' + perms[i].defense;
-        }
+        let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
+        let stats = or_zero(perms[i].attack) + '/' + or_zero(perms[i].defense);
 
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id}
