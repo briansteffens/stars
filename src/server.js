@@ -31,6 +31,7 @@ var games = [{
   chats: [],
   moves: [],
   state: {
+    winner: undefined,
     turn: 0,
     turn_player_id: 3,
     phase: 'main',
@@ -38,12 +39,14 @@ var games = [{
     attacks: [],
     players: {
       3: {
+        user_id: 3,
         hand: [],
         deck: [],
         permanents: [],
         scrap: 1,
       },
       7: {
+        user_id: 7,
         hand: [],
         deck: [],
         permanents: [],

@@ -18,6 +18,11 @@
   };
 
   exports.apply_move = function(game, move) {
+    if (typeof game.state.winner !== 'undefined') {
+      console.log('game already finished');
+      return;
+    }
+
     var state = exports.clone_state(game.state);
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
@@ -36,15 +41,18 @@
         var attacker = exports.get_permanent(state, state.attacks[i].attacker);
         var target = exports.get_permanent(state, state.attacks[i].target);
 
-        var resolve = function(atk, def, defender) {
+        var resolve = function(atk, def, attacker, defender) {
           def.defense -= atk.attack;
           if (def.defense <= 0) {
+            if (def.name === 'mother ship') {
+              state.winner = attacker.user_id;
+            }
             defender.permanents.splice(defender.permanents.indexOf(def), 1);
           }
         }
 
-        resolve(attacker, target, player);
-        resolve(target, attacker, other_player);
+        resolve(attacker, target, other_player, player);
+        resolve(target, attacker, player, other_player);
       }
       state.attacks = [];
       state.phase = 'main';

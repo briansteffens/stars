@@ -177,9 +177,19 @@ var View = React.createClass({
     let permanents = render_permanents(me.permanents, true);
     let enemy_permanents = render_permanents(enemy.permanents);
 
+    let gameover = '';
+    if (typeof game.winner !== 'undefined') {
+      console.log(game.winner);
+      let outcome = game.winner == game_info.user_id ? 'won' : 'lost';
+      gameover = (
+        <h3>Game over! You {outcome}!</h3>
+      );
+    }
+
     return (
       <div>
         <div>
+          {gameover}
           It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
           Phase: <strong>{game.phase}</strong>
           <input type="button" onClick={this.defend} value="defend"
