@@ -155,10 +155,17 @@ var View = React.createClass({
           );
         }
 
+        var stats = '';
+        if (typeof perms[i].attack !== 'undefined' &&
+            typeof perms[i].defense !== 'undefined') {
+          stats = perms[i].attack + '/' + perms[i].defense;
+        }
+
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id}
                className="permanent">
             <strong>{perms[i].name+" "}</strong>
+            <i>{stats}</i>
             {attack_with}
             {attack}
           </div>
