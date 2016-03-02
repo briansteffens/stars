@@ -21,4 +21,12 @@
       type: 'generator',
     }];
   };
+  exports.mother_ship = function() {
+    return {
+      name: 'mother ship',
+      type: 'ship',
+      attack: 0,
+      defense: 20,
+    };
+  };
 })(typeof exports === 'undefined' ? this['state'] = {} : exports);

@@ -82,6 +82,14 @@ for (var i = 0; i < 10; i++) {
   games[0].state.players[7].deck.push(next_card());
 }
 
+function next_mother_ship() {
+  var ret = cards.mother_ship();
+  ret.copy_id = next_card.next_id++;
+  return ret;
+}
+games[0].state.players[3].permanents.push(next_mother_ship());
+games[0].state.players[7].permanents.push(next_mother_ship());
+
 console.log(games[0].state.players[3]);
 console.log(games[0].state.players[7]);
 
