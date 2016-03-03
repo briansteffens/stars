@@ -200,11 +200,11 @@ var View = React.createClass({
           <input type="button" onClick={this.draw} value="draw"
             disabled={!draw_possible} />
         </div>
-        <div>Your permanents: {permanents}</div>
         <div>Your hand: {hand}</div>
+        <div>Your permanents: {permanents}</div>
         <hr />
-        <div>Enemy scrap: {enemy.scrap}</div>
         <div>Enemy permanents: {enemy_permanents}</div>
+        <div>Enemy scrap: {enemy.scrap}</div>
       </div>
     );
   },
