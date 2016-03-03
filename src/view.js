@@ -205,6 +205,7 @@ var View = React.createClass({
         <hr />
         <div>Enemy permanents: {enemy_permanents}</div>
         <div>Enemy scrap: {enemy.scrap}</div>
+        <div>Enemy hand: {enemy.hand.length} cards</div>
       </div>
     );
   },
