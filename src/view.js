@@ -171,10 +171,13 @@ var View = React.createClass({
 
         let power = '';
         if (perms[i].upkeep !== undefined) {
+          let can_power = perms[i].powered ||
+                          me.power_used + perms[i].upkeep <= me.power_total;
+
           power = (
             <input type="button"
               value={perms[i].powered ? "power off" : "power on"}
-              disabled={perms[i].tapped}
+              disabled={perms[i].tapped || !can_power}
               onClick={that.toggle_power.bind(null, perms[i])} />
           );
         }
