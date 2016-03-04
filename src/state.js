@@ -32,6 +32,10 @@
     }
     else if (move.type === 'yield') {
       state.turn++;
+
+      // Reset ability to play cards per turn
+      other_player.cant_play = [];
+
       if (state.attacks.length > 0) {
         state.phase = 'defend';
       }
@@ -80,9 +84,19 @@
         return player.hand.splice(index, 1)[0];
       }
 
+      if (player.cant_play.indexOf(card.type) >= 0) {
+        console.log(card.type + ' has already been played this turn');
+        return;
+      }
+
       if (card.type === 'resource') {
         player.scrap += remove_from_hand().worth;
       } else if (card.type === 'generator' || card.type === 'ship') {
+        // Mark a card type as played this turn
+        if (card.type === 'generator') {
+          player.cant_play.push(card.type);
+        }
+
         var cost = card.hasOwnProperty('cost') ? card.cost : 0;
         if (card.cost > player.scrap) {
           console.log('Player doesn\'t have enough scrap');

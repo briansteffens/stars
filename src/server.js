@@ -44,6 +44,7 @@ var games = [{
         deck: [],
         permanents: [],
         scrap: 1,
+        cant_play: [],
       },
       7: {
         user_id: 7,
@@ -51,6 +52,7 @@ var games = [{
         deck: [],
         permanents: [],
         scrap: 1,
+        cant_play: [],
       },
     },
   },
