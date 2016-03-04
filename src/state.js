@@ -27,6 +27,37 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
+    var update_power = function(player) {
+      player.power_used = 0;
+      player.power_total = 0;
+
+      for (var i = 0; i < player.permanents.length; i++) {
+        var perm = player.permanents[i];
+
+        if (typeof perm.power !== 'undefined') {
+          player.power_total += perm.power;
+        }
+
+        if (perm.powered && typeof perm.upkeep !== 'undefined') {
+          player.power_used += perm.upkeep;
+        }
+      }
+
+      // Depower stuff if upkeep exceeds total power
+      for (var i = 0; i < player.permanents.length; i++) {
+        var perm = player.permanents[i];
+
+        if (perm.powered && typeof perm.upkeep !== 'undefined') {
+          if (player.power_used <= player.power_total) {
+            break;
+          }
+
+          perm.powered = false;
+          player.power_used -= perm.upkeep;
+        }
+      }
+    };
+
     if (move.type === 'draw') {
       player.hand.push(player.deck.pop());
     }
@@ -126,6 +157,9 @@
     else {
       throw 'Unrecognized move type ' + move.type;
     }
+
+    update_power(player);
+    update_power(other_player);
 
     game.moves.push(move);
     game.state = state;

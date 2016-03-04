@@ -45,6 +45,8 @@ var games = [{
         permanents: [],
         scrap: 1,
         cant_play: [],
+        power_used: 0,
+        power_total: 0,
       },
       7: {
         user_id: 7,
@@ -53,6 +55,8 @@ var games = [{
         permanents: [],
         scrap: 1,
         cant_play: [],
+        power_used: 0,
+        power_total: 0,
       },
     },
   },
@@ -78,6 +82,7 @@ function next_card() {
   var card = JSON.parse(JSON.stringify(random_card()));
   card.copy_id = next_card.next_id++;
   card.tapped = false;
+  card.powered = false;
   return card;
 }
 next_card.next_id = 0;

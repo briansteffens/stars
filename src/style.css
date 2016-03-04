@@ -35,3 +35,8 @@ div.player_separator {
   padding: 1px;
   margin: 23px 0px;
 }
+
+.power {
+  color: #0b3;
+  font-weight: bold;
+}

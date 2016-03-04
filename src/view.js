@@ -187,6 +187,12 @@ var View = React.createClass({
       );
     }
 
+    let render_power = function(player) {
+      return (
+        <span className="power">{player.power_used}/{player.power_total}</span>
+      );
+    };
+
     return (
       <div>
         <div>
@@ -199,6 +205,7 @@ var View = React.createClass({
             disabled={!my_turn} />
         </div>
         <div>Scrap: {me.scrap}</div>
+        <div>Power: {render_power(me)}</div>
         <div>
           You can draw {draw_possible} cards.
           <input type="button" onClick={this.draw} value="draw"
@@ -209,6 +216,7 @@ var View = React.createClass({
         <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
         <div>Enemy scrap: {enemy.scrap}</div>
+        <div>Enemy power: {render_power(enemy)}</div>
         <div>Enemy hand: {enemy.hand.length} cards</div>
       </div>
     );
