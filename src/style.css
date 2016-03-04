@@ -12,6 +12,10 @@
   border: solid 2px #acf;
 }
 
-.permanent input, .permanent div {
+.permanent div {
   text-align: center;
+}
+
+.permanent input {
+  width: 100%;
 }
