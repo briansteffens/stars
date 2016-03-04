@@ -27,7 +27,7 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
-    var update_power = function(player) {
+    var update_power = function(player, enforce) {
       player.power_used = 0;
       player.power_total = 0;
 
@@ -41,6 +41,10 @@
         if (perm.powered && typeof perm.upkeep !== 'undefined') {
           player.power_used += perm.upkeep;
         }
+      }
+
+      if (!enforce) {
+        return;
       }
 
       // Depower stuff if upkeep exceeds total power
@@ -154,12 +158,26 @@
         target: move.target,
       });
     }
+    else if (move.type === 'toggle_power') {
+      var card = exports.get_permanent(state, move.card);
+
+      if (card.tapped) {
+        throw 'Cannot toggle power of tapped card';
+      }
+
+      card.powered = !card.powered;
+      update_power(player, false);
+
+      if (player.power_used > player.power_total) {
+        throw 'Not enough available power';
+      }
+    }
     else {
       throw 'Unrecognized move type ' + move.type;
     }
 
-    update_power(player);
-    update_power(other_player);
+    update_power(player, true);
+    update_power(other_player, true);
 
     game.moves.push(move);
     game.state = state;

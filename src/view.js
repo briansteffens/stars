@@ -87,6 +87,12 @@ var View = React.createClass({
       attacker: null,
     });
   },
+  toggle_power: function(card, e) {
+    socket.send(JSON.stringify({
+      type: 'toggle_power',
+      card: card.copy_id,
+    }));
+  },
   defend: function(e) {
     socket.send(JSON.stringify({type: 'defend'}));
   },
@@ -163,11 +169,21 @@ var View = React.createClass({
           classes += ' generator';
         }
 
+        let power = '';
+        if (perms[i].upkeep !== undefined) {
+          power = (
+            <input type="button"
+              value={perms[i].powered ? "power off" : "power on"}
+              onClick={that.toggle_power.bind(null, perms[i])} />
+          );
+        }
+
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
             {attack}
             <div className="title">{perms[i].name+" "}</div>
             <div>{stats}</div>
+            {power}
             {attack_with}
           </div>
         );

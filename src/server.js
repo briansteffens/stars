@@ -296,9 +296,13 @@ wss.on('connection', function(ws) {
     }
     else if (msg.type === 'yield' || msg.type === 'draw' ||
         msg.type === 'play' || msg.type === 'attack' ||
-        msg.type === 'defend') {
+        msg.type === 'defend' || msg.type === 'toggle_power') {
       msg = fill_in(msg);
-      state.apply_move(game, msg);
+      try {
+        state.apply_move(game, msg);
+      } catch (ex) {
+        console.log("EXCEPTION in apply_move: " + ex);
+      }
       send_state(player_id);
       send_state(state.next_player(game, player_id));
     }
