@@ -4,7 +4,14 @@
   height: 100%;
   pointer-events: none;
 }
+
 .permanent {
   display: inline-block;
   margin-right: 8px;
+  background-color: #def;
+  border: solid 2px #acf;
+}
+
+.permanent input, .permanent div {
+  text-align: center;
 }

@@ -161,10 +161,10 @@ var View = React.createClass({
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id}
                className="permanent">
-            <strong>{perms[i].name+" "}</strong>
-            <i>{stats}</i>
-            {attack_with}
             {attack}
+            <div>{perms[i].name+" "}</div>
+            <div>{stats}</div>
+            {attack_with}
           </div>
         );
       }
@@ -201,9 +201,9 @@ var View = React.createClass({
             disabled={!draw_possible} />
         </div>
         <div>Your hand: {hand}</div>
-        <div>Your permanents: {permanents}</div>
+        <div>{permanents}</div>
         <hr />
-        <div>Enemy permanents: {enemy_permanents}</div>
+        <div>{enemy_permanents}</div>
         <div>Enemy scrap: {enemy.scrap}</div>
         <div>Enemy hand: {enemy.hand.length} cards</div>
       </div>
