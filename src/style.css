@@ -19,3 +19,10 @@
 .permanent input {
   width: 100%;
 }
+
+div.player_separator {
+  background-color: #cde;
+  border: solid 2px #def;
+  padding: 1px;
+  margin: 23px 0px;
+}

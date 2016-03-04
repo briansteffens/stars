@@ -202,7 +202,7 @@ var View = React.createClass({
         </div>
         <div>Your hand: {hand}</div>
         <div>{permanents}</div>
-        <hr />
+        <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
         <div>Enemy scrap: {enemy.scrap}</div>
         <div>Enemy hand: {enemy.hand.length} cards</div>
