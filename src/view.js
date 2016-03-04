@@ -146,7 +146,7 @@ var View = React.createClass({
         if (are_mine && typeof perms[i].attack !== 'undefined') {
           attack_with = (
             <input type="button" value="fire"
-              disabled={!can_attack || perms[i].tapped ||
+              disabled={!can_attack || perms[i].tapped || !perms[i].powered ||
                         game.phase !== 'main'}
               onClick={that.attack_start.bind(null, perms[i])} />
           );
