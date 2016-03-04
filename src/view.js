@@ -158,9 +158,13 @@ var View = React.createClass({
         let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
         let stats = or_zero(perms[i].attack) + '/' + or_zero(perms[i].defense);
 
+        let classes = 'permanent';
+        if (perms[i].type === 'generator') {
+          classes += ' generator';
+        }
+
         ret.push(
-          <div key={i} id={'perm_' + perms[i].copy_id}
-               className="permanent">
+          <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
             {attack}
             <div>{perms[i].name+" "}</div>
             <div>{stats}</div>

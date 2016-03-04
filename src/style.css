@@ -20,6 +20,11 @@
   width: 100%;
 }
 
+.generator {
+  background-color: #dfe;
+  border: solid 2px #afc;
+}
+
 div.player_separator {
   background-color: #cde;
   border: solid 2px #def;
