@@ -166,7 +166,7 @@ var View = React.createClass({
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
             {attack}
-            <div>{perms[i].name+" "}</div>
+            <div className="title">{perms[i].name+" "}</div>
             <div>{stats}</div>
             {attack_with}
           </div>

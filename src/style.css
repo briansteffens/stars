@@ -20,6 +20,10 @@
   width: 100%;
 }
 
+.permanent .title {
+  font-weight: bold;
+}
+
 .generator {
   background-color: #dfe;
   border: solid 2px #afc;
