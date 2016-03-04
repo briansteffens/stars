@@ -174,6 +174,7 @@ var View = React.createClass({
           power = (
             <input type="button"
               value={perms[i].powered ? "power off" : "power on"}
+              disabled={perms[i].tapped}
               onClick={that.toggle_power.bind(null, perms[i])} />
           );
         }

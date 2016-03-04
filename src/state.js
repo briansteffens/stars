@@ -147,6 +147,10 @@
     else if (move.type === 'attack') {
       var attacker = exports.get_permanent(state, move.attacker);
 
+      if (!attacker.powered) {
+        throw 'Attacker is powered down';
+      }
+
       if (attacker.tapped) {
         throw 'Attacker already tapped';
       }
