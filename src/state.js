@@ -265,7 +265,7 @@
   };
 
   exports.draw_possible = function(game, player_id) {
-    if (exports.whose_turn(game) != player_id) {
+    if (exports.whose_turn(game) != player_id || game.state.phase !== 'main') {
       return 0;
     }
 
