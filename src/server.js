@@ -41,6 +41,7 @@ var games = [{
     draw_possible: 7,
     can_explore: 1,
     attacks: [],
+    next_copy_id: 0,
     players: {
       3: {
         user_id: 3,
@@ -84,12 +85,11 @@ function random_card() {
 
 function next_card() {
   var card = JSON.parse(JSON.stringify(random_card()));
-  card.copy_id = next_card.next_id++;
+  card.copy_id = games[0].state.next_copy_id++;
   card.tapped = false;
   card.powered = false;
   return card;
 }
-next_card.next_id = 0;
 
 for (var i = 0; i < 50; i++) {
   games[0].state.players[3].deck.push(next_card());
@@ -98,7 +98,7 @@ for (var i = 0; i < 50; i++) {
 
 function next_mother_ship() {
   var ret = cards.mother_ship();
-  ret.copy_id = next_card.next_id++;
+  ret.copy_id = games[0].state.next_copy_id++;
   return ret;
 }
 games[0].state.players[3].permanents.push(next_mother_ship());

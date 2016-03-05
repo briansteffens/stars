@@ -1,15 +1,14 @@
 (function(exports){
   var explore_cards = require('./cards.js').explore();
-  var next_id = 100000;
 
   exports.clone_state = function(state) {
     return JSON.parse(JSON.stringify(state)); // TODO: something better
   };
 
-  exports.next_explore = function(game) {
+  exports.next_explore = function(game, state) {
     var rand = Math.floor(explore_cards.length * game.explore_rng());
     var card = JSON.parse(JSON.stringify(explore_cards[rand]));
-    card.copy_id = next_id++; // TODO: fix
+    card.copy_id = state.next_copy_id++;
     card.tapped = false;
     card.powered = false;
     return card;
@@ -113,7 +112,7 @@
       if (state.can_explore <= 0) {
         throw 'Player cannot explore anymore this turn';
       }
-      player.hand.push(exports.next_explore(game));
+      player.hand.push(exports.next_explore(game, state));
       state.can_explore--;
     }
     else if (move.type === 'yield') {
