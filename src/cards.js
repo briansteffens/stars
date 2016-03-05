@@ -21,17 +21,17 @@
       name: 'asteroid',
       type: 'resource',
       worth: 1,
-      _draw_chances: 30,
+      _draw_chances: 150,
     },{
       name: 'brown dwarf',
       type: 'generator',
       power: 1,
-      _draw_chances: 20,
+      _draw_chances: 50,
     },{
       name: 'white dwarf',
       type: 'generator',
       power: 2,
-      _draw_chances: 10,
+      _draw_chances: 20,
     },{
       name: 'blue supergiant',
       type: 'generator',
@@ -49,5 +49,17 @@
       type: 'ship',
       defense: 20,
     };
+  };
+  exports.pool = function(cards) {
+    var ret = [];
+    for (var i = 0; i < cards.length; i++) {
+      var chance = typeof cards[i]._draw_chances === 'undefined' ?
+                   1 : cards[i]._draw_chances;
+
+      for (var j = 0; j < chance; j++) {
+        ret.push(cards[i]);
+      }
+    }
+    return ret;
   };
 })(typeof exports === 'undefined' ? this['state'] = {} : exports);

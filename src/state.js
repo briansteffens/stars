@@ -1,5 +1,6 @@
-(function(exports){
-  var explore_cards = require('./cards.js').explore();
+(function(exports) {
+  var cards = require('./cards.js');
+  var explore_cards = cards.pool(cards.explore());
 
   exports.clone_state = function(state) {
     return JSON.parse(JSON.stringify(state)); // TODO: something better
