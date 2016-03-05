@@ -116,6 +116,10 @@
       state.can_explore--;
     }
     else if (move.type === 'yield') {
+      if (state.phase !== 'main') {
+        throw 'Can only yield in main phase';
+      }
+
       state.turn++;
 
       // Reset ability to play cards per turn

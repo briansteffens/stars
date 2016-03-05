@@ -234,7 +234,7 @@ var View = React.createClass({
           <input type="button" onClick={this.defend} value="defend"
             disabled={!my_turn || game.phase !== 'defend'} />
           <input type="button" onClick={this.yield} value="yield"
-            disabled={!my_turn} />
+            disabled={!my_turn || game.phase !== 'main'} />
         </div>
         <div>Scrap: {me.scrap}</div>
         <div>Power: {render_power(me)}</div>
