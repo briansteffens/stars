@@ -1,8 +1,11 @@
 (function(exports){
   exports.all = function() {
     return [{
-      name: 'drone',
+      name: 'exploratory drone',
       type: 'ship',
+      cost: 1,
+      upkeep: 1,
+      _draw_chances: 5,
     },{
       name: 'fighter',
       type: 'ship',
