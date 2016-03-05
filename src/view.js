@@ -183,10 +183,16 @@ var View = React.createClass({
           );
         }
 
+        let generates = '';
+        if (perms[i].power !== undefined) {
+          generates = (<div>generates {perms[i].power}</div>);
+        }
+
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
             {attack}
             <div className="title">{perms[i].name+" "}</div>
+            {generates}
             <div>{stats}</div>
             {power}
             {attack_with}
