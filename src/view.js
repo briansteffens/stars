@@ -282,3 +282,6 @@ var Chat = React.createClass({
 
 chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
 view = ReactDOM.render(<View />, document.getElementById('view'));
+
+var body_el = document.getElementsByTagName('body').item(0);
+body_el.onresize = view.render_canvas;
