@@ -128,7 +128,15 @@ require('http').createServer(function(req, res) {
     });
   }
 
-  var cookies = require('cookie').parse(req.headers.cookie);
+  try {
+    var cookies = require('cookie').parse(req.headers.cookie);
+  } catch (err) {
+    console.log("EX in cookie parse: " + err);
+    res.writeHead(400);
+    res.end();
+    return;
+  }
+
   var session = sessions[cookies.session_id];
 
   if (url.pathname === '/games') {
