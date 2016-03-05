@@ -13,3 +13,4 @@ server_dependencies:
     - pkgs:
       - ws
       - cookie
+      - seedrandom

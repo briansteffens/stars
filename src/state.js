@@ -1,6 +1,18 @@
 (function(exports){
+  var explore_cards = require('./cards.js').explore();
+  var next_id = 100000;
+
   exports.clone_state = function(state) {
     return JSON.parse(JSON.stringify(state)); // TODO: something better
+  };
+
+  exports.next_explore = function(game) {
+    var rand = Math.floor(explore_cards.length * game.explore_rng());
+    var card = JSON.parse(JSON.stringify(explore_cards[rand]));
+    card.copy_id = next_id++; // TODO: fix
+    card.tapped = false;
+    card.powered = false;
+    return card;
   };
 
   exports.get_player_permanent = function(state, player_id, copy_id) {
@@ -70,8 +82,39 @@
       }
     };
 
+    var phase_main_start = function(player) {
+      // untap
+      for (var i = 0; i < player.permanents.length; i++) {
+        player.permanents[i].tapped = false;
+      }
+
+      // reset explore count
+      state.can_explore = 1;
+      for (var i = 0; i < player.permanents.length; i++) {
+        if (player.permanents[i].name === 'exploratory drone' &&
+            player.permanents[i].powered) {
+          state.can_explore++;
+        }
+      }
+    };
+
     if (move.type === 'draw') {
       player.hand.push(player.deck.pop());
+    }
+    else if (move.type === 'explore') {
+      if (player.user_id != state.turn_player_id) {
+        throw 'Can only explore on your turn';
+      }
+
+      if (state.phase !== 'main') {
+        throw 'Can only explore during main phase';
+      }
+
+      if (state.can_explore <= 0) {
+        throw 'Player cannot explore anymore this turn';
+      }
+      player.hand.push(exports.next_explore(game));
+      state.can_explore--;
     }
     else if (move.type === 'yield') {
       state.turn++;
@@ -81,6 +124,9 @@
 
       if (state.attacks.length > 0) {
         state.phase = 'defend';
+      }
+      else {
+        phase_main_start(other_player);
       }
     }
     else if (move.type === 'defend') {
@@ -104,10 +150,7 @@
       state.attacks = [];
       state.phase = 'main';
 
-      // untap
-      for (var i = 0; i < player.permanents.length; i++) {
-        player.permanents[i].tapped = false;
-      }
+      phase_main_start(player);
     }
     else if (move.type === 'play') {
       var index = null;

@@ -68,6 +68,9 @@ var View = React.createClass({
   draw: function(e) {
     socket.send(JSON.stringify({type: 'draw'}));
   },
+  explore: function(e) {
+    socket.send(JSON.stringify({type: 'explore'}));
+  },
   play: function(card, e) {
     socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
   },
@@ -220,6 +223,8 @@ var View = React.createClass({
       );
     };
 
+    var explore_possible = my_turn ? game.can_explore : 0;
+
     return (
       <div>
         <div>
@@ -237,6 +242,11 @@ var View = React.createClass({
           You can draw {draw_possible} cards.
           <input type="button" onClick={this.draw} value="draw"
             disabled={!draw_possible} />
+        </div>
+        <div>
+          You can explore {explore_possible} times.
+          <input type="button" onClick={this.explore} value="explore"
+            disabled={!explore_possible} />
         </div>
         <div>Your hand: {hand}</div>
         <div>{permanents}</div>

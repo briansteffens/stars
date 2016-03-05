@@ -13,22 +13,25 @@
       upkeep: 1,
       attack: 2,
       defense: 1,
-      _draw_chances: 20,
-    },{
+      _draw_chances: 5,
+    }];
+  };
+  exports.explore = function() {
+    return [{
       name: 'asteroid',
       type: 'resource',
       worth: 1,
-      _draw_chances: 10,
+      _draw_chances: 30,
     },{
       name: 'brown dwarf',
       type: 'generator',
       power: 1,
-      _draw_chances: 10,
+      _draw_chances: 20,
     },{
       name: 'white dwarf',
       type: 'generator',
       power: 2,
-      _draw_chances: 5,
+      _draw_chances: 10,
     },{
       name: 'blue supergiant',
       type: 'generator',
@@ -37,6 +40,7 @@
       name: 'yellow dwarf',
       type: 'generator',
       power: 3,
+      _draw_chances: 5,
     }];
   };
   exports.mother_ship = function() {

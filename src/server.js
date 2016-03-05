@@ -1,6 +1,8 @@
 var fs = require('fs');
-var state = require('./state.js');
+var seedrandom = require('seedrandom');
+
 var cards = require('./cards.js');
+var state = require('./state.js');
 
 var sessions = {
   'a': {
@@ -30,12 +32,14 @@ var games = [{
   },
   chats: [],
   moves: [],
+  explore_rng: seedrandom('greetings'),
   state: {
     winner: undefined,
     turn: 0,
     turn_player_id: 3,
     phase: 'main',
     draw_possible: 7,
+    can_explore: 1,
     attacks: [],
     players: {
       3: {
@@ -87,7 +91,7 @@ function next_card() {
 }
 next_card.next_id = 0;
 
-for (var i = 0; i < 10; i++) {
+for (var i = 0; i < 50; i++) {
   games[0].state.players[3].deck.push(next_card());
   games[0].state.players[7].deck.push(next_card());
 }
@@ -296,7 +300,8 @@ wss.on('connection', function(ws) {
     }
     else if (msg.type === 'yield' || msg.type === 'draw' ||
         msg.type === 'play' || msg.type === 'attack' ||
-        msg.type === 'defend' || msg.type === 'toggle_power') {
+        msg.type === 'defend' || msg.type === 'toggle_power' ||
+        msg.type === 'explore') {
       msg = fill_in(msg);
       try {
         state.apply_move(game, msg);
