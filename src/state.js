@@ -3,14 +3,22 @@
     return JSON.parse(JSON.stringify(state)); // TODO: something better
   };
 
+  exports.get_player_permanent = function(state, player_id, copy_id) {
+    var permanents = state.players[player_id].permanents;
+    for (var i = 0; i < permanents.length; i++) {
+      if (permanents[i].copy_id == copy_id) {
+        return permanents[i];
+      }
+    }
+    return null;
+  };
+
   exports.get_permanent = function(state, copy_id) {
     for (var player_id in state.players) {
       if (state.players.hasOwnProperty(player_id)) {
-        var permanents = state.players[player_id].permanents;
-        for (var i = 0; i < permanents.length; i++) {
-          if (permanents[i].copy_id == copy_id) {
-            return permanents[i];
-          }
+        var temp = exports.get_player_permanent(state, player_id, copy_id);
+        if (temp !== null) {
+          return temp;
         }
       }
     }
@@ -163,7 +171,7 @@
       });
     }
     else if (move.type === 'toggle_power') {
-      var card = exports.get_permanent(state, move.card);
+      var card = exports.get_player_permanent(state, player.user_id, move.card);
 
       if (card.tapped) {
         throw 'Cannot toggle power of tapped card';
