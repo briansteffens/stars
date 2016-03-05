@@ -218,6 +218,10 @@
       });
     }
     else if (move.type === 'toggle_power') {
+      if (state.turn_player_id != player.user_id) {
+        throw 'Wrong turn';
+      }
+
       var card = exports.get_player_permanent(state, player.user_id, move.card);
 
       if (card.tapped) {
