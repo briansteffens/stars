@@ -28,6 +28,7 @@ var View = React.createClass({
     let game = this.state.game;
 
     ctx.strokeStyle = 'rgb(200, 0, 0)';
+    ctx.lineWidth = 2;
 
     var draw_attack_line = function(top_el, bottom_el) {
       ctx.beginPath();
