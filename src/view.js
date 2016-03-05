@@ -171,7 +171,7 @@ var View = React.createClass({
         }
 
         let power = '';
-        if (perms[i].upkeep !== undefined) {
+        if (are_mine && perms[i].upkeep !== undefined) {
           let can_power = perms[i].powered ||
                           me.power_used + perms[i].upkeep <= me.power_total;
 
