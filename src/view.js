@@ -208,14 +208,26 @@ var View = React.createClass({
         upkeep = (<div>upkeep: {card.upkeep}</div>);
       }
 
+      let cost = '';
+      if (card.cost !== undefined) {
+        cost = (<div>cost: {card.cost}</div>);
+      }
+
+      let worth = '';
+      if (card.worth !== undefined) {
+        worth = (<div>worth: {card.worth}</div>);
+      }
+
       return (
         <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
           {attack}
           <div className="title">{card.name+" "}</div>
           {generates}
           <div>{stats}</div>
+          {cost}
           {upkeep}
           {scrap}
+          {worth}
           {power}
           {play}
           {attack_with}
