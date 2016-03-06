@@ -203,12 +203,18 @@ var View = React.createClass({
             value="play" />);
       }
 
+      let upkeep = '';
+      if (card.upkeep !== undefined) {
+        upkeep = (<div>upkeep: {card.upkeep}</div>);
+      }
+
       return (
         <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
           {attack}
           <div className="title">{card.name+" "}</div>
           {generates}
           <div>{stats}</div>
+          {upkeep}
           {scrap}
           {power}
           {play}

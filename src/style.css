@@ -8,6 +8,7 @@
 .permanent {
   display: inline-block;
   margin-right: 8px;
+  margin-bottom: 8px;
   background-color: #def;
   border: solid 2px #acf;
 }
