@@ -36,6 +36,13 @@ div.player_separator {
   margin: 23px 0px;
 }
 
+div.hand_separator {
+  background-color: #ddd;
+  border: solid 2px #eee;
+  padding: 1px;
+  margin: 8px 0px;
+}
+
 .power {
   color: #0b3;
   font-weight: bold;

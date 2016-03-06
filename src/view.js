@@ -131,114 +131,122 @@ var View = React.createClass({
       throw 'enemy not found';
     }
 
-    var hand = [];
-    for (let i = 0; i < me.hand.length; i++) {
-      hand.push(
-        <strong key={i}>
-          {me.hand[i].name+" "}
-          <input type="button" onClick={that.play.bind(this, me.hand[i])}
-            value="play" />
-        </strong>
-      );
-    }
-
     var my_turn = game.turn_player_id == game_info.user_id;
     var draw_possible = my_turn ? game.draw_possible : 0;
+
+    let render_card = function(card, is_mine, is_perm) {
+      let can_attack = is_perm && my_turn && that.state.attacker === null;
+      let is_attacking = is_perm && my_turn && that.state.attacker !== null;
+
+      let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
+
+      let stats = '';
+      if (card.type === 'ship') {
+        stats = or_zero(card.attack) + '/' + or_zero(card.defense);
+      }
+
+      let classes = 'permanent';
+      if (card.type === 'generator') {
+        classes += ' generator';
+      }
+
+      let generates = '';
+      if (card.power !== undefined) {
+        generates = (<div>generates {card.power}</div>);
+      }
+
+      let attack_with = '';
+      let attack = '';
+      let power = '';
+      let scrap = '';
+      let play = '';
+
+      if (is_perm) {
+        // Attack button
+        if (is_attacking && !is_mine && typeof card.defense !== 'undefined') {
+          attack = (<input type="button" value="attack"
+              onClick={that.attack_finish.bind(null, card)} />);
+        }
+
+        // Attack with button
+        if (is_mine && typeof card.attack !== 'undefined') {
+          attack_with = (
+            <input type="button" value="fire"
+              disabled={!can_attack || card.tapped || !card.powered ||
+                        game.phase !== 'main'}
+              onClick={that.attack_start.bind(null, card)} />
+          );
+        }
+
+        // Power button
+        if (is_mine && card.upkeep !== undefined) {
+          let can_power = card.powered ||
+                          me.power_used + card.upkeep <= me.power_total;
+
+          power = (
+            <input type="button"
+              value={card.powered ? "power off" : "power on"}
+              disabled={card.tapped || !can_power}
+              onClick={that.toggle_power.bind(null, card)} />
+          );
+        }
+
+        // Scrap button
+        if (card.cost > 1) {
+          scrap = (<input type="button" value="scrap" disabled={!my_turn}
+              onClick={that.scrap.bind(null, card)} />);
+        }
+      }
+      else {
+        // Play button
+        play = (<input type="button" onClick={that.play.bind(that, card)}
+            value="play" />);
+      }
+
+      return (
+        <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
+          {attack}
+          <div className="title">{card.name+" "}</div>
+          {generates}
+          <div>{stats}</div>
+          {scrap}
+          {power}
+          {play}
+          {attack_with}
+        </div>
+      );
+    };
 
     let render_permanents = function(perms, are_mine) {
       let ret = [];
 
-      let can_attack = my_turn && that.state.attacker === null;
-      let is_attacking = my_turn && that.state.attacker !== null;
-
       for (let i = 0; i < perms.length; i++) {
-        var attack_with = '';
-        if (are_mine && typeof perms[i].attack !== 'undefined') {
-          attack_with = (
-            <input type="button" value="fire"
-              disabled={!can_attack || perms[i].tapped || !perms[i].powered ||
-                        game.phase !== 'main'}
-              onClick={that.attack_start.bind(null, perms[i])} />
-          );
-        }
-
-        var attack = '';
-        if (is_attacking && !are_mine &&
-            typeof perms[i].defense !== 'undefined') {
-          attack = (
-            <input type="button" value="attack"
-              onClick={that.attack_finish.bind(null, perms[i])} />
-          );
-        }
-
-        let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
-        let stats = or_zero(perms[i].attack) + '/' + or_zero(perms[i].defense);
-
-        let classes = 'permanent';
-        if (perms[i].type === 'generator') {
-          classes += ' generator';
-        }
-
-        let power = '';
-        if (are_mine && perms[i].upkeep !== undefined) {
-          let can_power = perms[i].powered ||
-                          me.power_used + perms[i].upkeep <= me.power_total;
-
-          power = (
-            <input type="button"
-              value={perms[i].powered ? "power off" : "power on"}
-              disabled={perms[i].tapped || !can_power}
-              onClick={that.toggle_power.bind(null, perms[i])} />
-          );
-        }
-
-        let generates = '';
-        if (perms[i].power !== undefined) {
-          generates = (<div>generates {perms[i].power}</div>);
-        }
-
-        let scrap = '';
-        if (perms[i].cost > 1) {
-          scrap = (
-            <input type="button" value="scrap" disabled={!my_turn}
-              onClick={that.scrap.bind(null, perms[i])} />
-          );
-        }
-
-        ret.push(
-          <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
-            {attack}
-            <div className="title">{perms[i].name+" "}</div>
-            {generates}
-            <div>{stats}</div>
-            {scrap}
-            {power}
-            {attack_with}
-          </div>
-        );
+        ret.push(render_card(perms[i], are_mine, true));
       }
+
       return ret;
     };
 
     let permanents = render_permanents(me.permanents, true);
     let enemy_permanents = render_permanents(enemy.permanents);
 
+    var hand = [];
+    for (let i = 0; i < me.hand.length; i++) {
+      hand.push(render_card(me.hand[i], true, false));
+    }
+
     let gameover = '';
     if (typeof game.winner !== 'undefined') {
-      console.log(game.winner);
       let outcome = game.winner == game_info.user_id ? 'won' : 'lost';
-      gameover = (
-        <h3>Game over! You {outcome}!</h3>
-      );
+      gameover = (<h3>Game over! You {outcome}!</h3>);
     }
 
     let render_power = function(player) {
-      return (
-        <span className="power">{player.power_used}/{player.power_total}</span>
-      );
+      return (<span className="power">{player.power_used}/{player.power_total}
+          </span>);
     };
 
-    var explore_possible = my_turn ? game.can_explore : 0;
+    let explore_possible = my_turn ? game.can_explore : 0;
 
     return (
       <div>
@@ -263,7 +271,9 @@ var View = React.createClass({
           <input type="button" onClick={this.explore} value="explore"
             disabled={!explore_possible} />
         </div>
-        <div>Your hand: {hand}</div>
+        <div>Your hand:</div>
+        <div>{hand}</div>
+        <div className="hand_separator"></div>
         <div>{permanents}</div>
         <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
