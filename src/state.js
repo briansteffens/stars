@@ -170,6 +170,10 @@
       phase_main_start(player);
     }
     else if (move.type === 'play') {
+      if (player.user_id != state.turn_player_id) {
+        throw 'Can only play cards during your turn';
+      }
+
       var index = null;
       for (var i = 0; i < player.hand.length; i++) {
         if (player.hand[i].copy_id == move.copy_id) {
