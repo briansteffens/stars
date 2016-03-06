@@ -301,7 +301,7 @@ wss.on('connection', function(ws) {
     else if (msg.type === 'yield' || msg.type === 'draw' ||
         msg.type === 'play' || msg.type === 'attack' ||
         msg.type === 'defend' || msg.type === 'toggle_power' ||
-        msg.type === 'explore') {
+        msg.type === 'explore' || msg.type === 'scrap') {
       msg = fill_in(msg);
       try {
         state.apply_move(game, msg);

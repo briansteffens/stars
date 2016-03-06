@@ -101,6 +101,15 @@
     if (move.type === 'draw') {
       player.hand.push(player.deck.pop());
     }
+    else if (move.type === 'scrap') {
+      if (player.user_id != state.turn_player_id) {
+        throw 'Can only scrap during your turn';
+      }
+
+      var card = exports.get_permanent(state, move.card, player.user_id);
+      player.permanents.splice(player.permanents.indexOf(card), 1);
+      player.scrap += Math.floor(card.cost / 2);
+    }
     else if (move.type === 'explore') {
       if (player.user_id != state.turn_player_id) {
         throw 'Can only explore on your turn';

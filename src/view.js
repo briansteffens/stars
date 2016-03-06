@@ -97,6 +97,12 @@ var View = React.createClass({
       card: card.copy_id,
     }));
   },
+  scrap: function(card, e) {
+    socket.send(JSON.stringify({
+      type: 'scrap',
+      card: card.copy_id,
+    }));
+  },
   defend: function(e) {
     socket.send(JSON.stringify({type: 'defend'}));
   },
@@ -191,12 +197,21 @@ var View = React.createClass({
           generates = (<div>generates {perms[i].power}</div>);
         }
 
+        let scrap = '';
+        if (perms[i].cost > 1) {
+          scrap = (
+            <input type="button" value="scrap" disabled={!my_turn}
+              onClick={that.scrap.bind(null, perms[i])} />
+          );
+        }
+
         ret.push(
           <div key={i} id={'perm_' + perms[i].copy_id} className={classes}>
             {attack}
             <div className="title">{perms[i].name+" "}</div>
             {generates}
             <div>{stats}</div>
+            {scrap}
             {power}
             {attack_with}
           </div>
