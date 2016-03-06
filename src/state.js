@@ -161,6 +161,9 @@
         }
         if (target.defense <= 0) {
           player.permanents.splice(player.permanents.indexOf(target, 1));
+          if (target.name === 'mother ship') {
+            state.winner = other_player.user_id;
+          }
         }
       }
 
