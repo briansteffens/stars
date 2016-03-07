@@ -74,7 +74,7 @@ var View = React.createClass({
   },
   play: function(card, e) {
     if (card.type === 'instant') {
-      this.use_start(card, e);
+      this.target_start(card, e);
     } else {
       socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
     }
@@ -163,15 +163,15 @@ var View = React.createClass({
       }
 
       let actions = [];
-      let attack = '';
+      let target = '';
       let power = '';
       let scrap = '';
       let play = '';
 
       if (is_perm) {
-        // Attack button
+        // Target button
         if (is_attacking && !is_mine && typeof card.defense !== 'undefined') {
-          attack = (<input type="button" value="attack"
+          target = (<input type="button" value="target"
               onClick={that.target_finish.bind(null, card)} />);
         }
 
