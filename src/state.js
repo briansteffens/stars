@@ -99,6 +99,9 @@
     };
 
     if (move.type === 'draw') {
+      if (state.draw_possible <= 0) {
+        throw 'Cannot draw anymore cards this turn';
+      }
       player.hand.push(player.deck.pop());
     }
     else if (move.type === 'scrap') {
@@ -150,6 +153,7 @@
           targets.push(target);
         }
       }
+      console.log("TARGETS: " + targets);
 
       for (var i = 0; i < targets.length; i++) {
         var target = targets[i];
@@ -160,7 +164,7 @@
           }
         }
         if (target.defense <= 0) {
-          player.permanents.splice(player.permanents.indexOf(target, 1));
+          player.permanents.splice(player.permanents.indexOf(target), 1);
           if (target.name === 'mother ship') {
             state.winner = other_player.user_id;
           }
@@ -219,23 +223,41 @@
         throw 'Unplayable card type ' + card.type;
       }
     }
-    else if (move.type === 'attack') {
-      var attacker = exports.get_permanent(state, move.attacker);
+    else if (move.type === 'action') {
+      var source = exports.get_permanent(state, move.source);
+      var target = exports.get_permanent(state, move.target);
 
-      if (!attacker.powered) {
-        throw 'Attacker is powered down';
+      var action = null;
+
+      for (var i = 0; i < source.actions.length; i++) {
+        if (source.actions[i].name === move.action) {
+          action = source.actions[i];
+          break;
+        }
       }
 
-      if (attacker.tapped) {
-        throw 'Attacker already tapped';
+      if (action === null) {
+        throw 'Action '+move.action+' not found';
       }
 
-      attacker.tapped = true;
+      if (!source.powered) {
+        throw 'Actor is powered down';
+      }
 
-      state.attacks.push({
-        attacker: move.attacker,
-        target: move.target,
-      });
+      if (source.tapped) {
+        throw 'Actor already tapped';
+      }
+
+      source.tapped = true;
+
+      if (action.name === 'attack') {
+        state.attacks.push({
+          attacker: source.copy_id,
+          target: target.copy_id,
+        });
+      } else {
+        throw 'Action '+action.name+' unknown';
+      }
     }
     else if (move.type === 'toggle_power') {
       if (state.turn_player_id != player.user_id) {

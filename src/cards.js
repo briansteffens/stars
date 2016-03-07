@@ -1,6 +1,34 @@
 (function(exports){
+  exports.fill_in = function(cards) {
+    for (var i = 0; i < cards.length; i++) {
+      card = cards[i];
+
+      if (typeof card.actions === 'undefined') {
+        card.actions = [];
+      }
+
+      if (typeof card.attack !== 'undefined') {
+        var found = false;
+        for (var j = 0; j < card.actions.length; j++) {
+          if (card.actions[j].name === 'attack') {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          card.actions.push({
+            name: 'attack',
+            targeting: 'enemy',
+          });
+        }
+      }
+    }
+
+    return cards;
+  };
+
   exports.all = function() {
-    return [{
+    return exports.fill_in([{
       name: 'exploratory drone',
       type: 'ship',
       cost: 1,
@@ -49,10 +77,15 @@
       type: 'resource',
       worth: 1,
       _draw_chances: 9,
-    }];
+    },{
+      name: 'repair crew',
+      type: 'instant',
+//      _draw_chances: 30,
+    }]);
   };
+
   exports.explore = function() {
-    return [{
+    return exports.fill_in([{
       name: 'asteroid',
       type: 'resource',
       worth: 2,
@@ -71,20 +104,23 @@
       name: 'blue supergiant',
       type: 'generator',
       power: 10,
+      _draw_chances: 1000,
     },{
       name: 'yellow dwarf',
       type: 'generator',
       power: 3,
       _draw_chances: 5,
-    }];
+    }]);
   };
+
   exports.mother_ship = function() {
-    return {
+    return exports.fill_in([{
       name: 'mother ship',
       type: 'ship',
       defense: 20,
-    };
+    }])[0];
   };
+
   exports.pool = function(cards) {
     var ret = [];
     for (var i = 0; i < cards.length; i++) {

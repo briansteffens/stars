@@ -2,7 +2,8 @@ var View = React.createClass({
   getInitialState: function() {
     return {
       game: null,
-      attacker: null,
+      source: null,
+      action: null,
     };
   },
   get_permanent: function(copy_id) {
@@ -72,23 +73,30 @@ var View = React.createClass({
     socket.send(JSON.stringify({type: 'explore'}));
   },
   play: function(card, e) {
-    socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
+    if (card.type === 'instant') {
+      this.use_start(card, e);
+    } else {
+      socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
+    }
   },
-  attack_start: function(card, e) {
+  target_start: function(source, action, e) {
     this.setState({
       game: clone(this.state.game),
-      attacker: card,
+      action: action,
+      source: source,
     });
   },
-  attack_finish: function(target, e) {
+  target_finish: function(target, e) {
     socket.send(JSON.stringify({
-      type: 'attack',
-      attacker: this.state.attacker.copy_id,
+      type: 'action',
+      source: this.state.source.copy_id,
+      action: this.state.action.name,
       target: target.copy_id,
     }));
     this.setState({
       game: clone(this.state.game),
-      attacker: null,
+      action: null,
+      source: null,
     });
   },
   toggle_power: function(card, e) {
@@ -135,7 +143,6 @@ var View = React.createClass({
     var draw_possible = my_turn ? game.draw_possible : 0;
 
     let render_card = function(card, is_mine, is_perm) {
-      let can_attack = is_perm && my_turn && that.state.attacker === null;
       let is_attacking = is_perm && my_turn && that.state.attacker !== null;
 
       let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
@@ -155,7 +162,7 @@ var View = React.createClass({
         generates = (<div>generates {card.power}</div>);
       }
 
-      let attack_with = '';
+      let actions = [];
       let attack = '';
       let power = '';
       let scrap = '';
@@ -165,17 +172,21 @@ var View = React.createClass({
         // Attack button
         if (is_attacking && !is_mine && typeof card.defense !== 'undefined') {
           attack = (<input type="button" value="attack"
-              onClick={that.attack_finish.bind(null, card)} />);
+              onClick={that.target_finish.bind(null, card)} />);
         }
 
-        // Attack with button
-        if (is_mine && typeof card.attack !== 'undefined') {
-          attack_with = (
-            <input type="button" value="fire"
-              disabled={!can_attack || card.tapped || !card.powered ||
-                        game.phase !== 'main'}
-              onClick={that.attack_start.bind(null, card)} />
-          );
+        // Action buttons
+        if (is_mine) {
+          for (let i = 0; i < card.actions.length; i++) {
+            let action = card.actions[i];
+            let can_attack = is_perm && my_turn && that.state.action === null &&
+                card.powered && !card.tapped;
+            actions.push(
+              <input type="button" value={action.name} key={action.name}
+                onClick={that.target_start.bind(null, card, action)}
+                disabled={!can_attack} />
+            );
+          }
         }
 
         // Power button
@@ -230,7 +241,7 @@ var View = React.createClass({
           {worth}
           {power}
           {play}
-          {attack_with}
+          {actions}
         </div>
       );
     };
