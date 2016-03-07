@@ -159,11 +159,11 @@
         var target = targets[i];
         for (var j = 0; j < state.attacks.length; j++) {
           if (state.attacks[j].target == target.copy_id) {
-            target.defense -= exports.get_permanent(state,
+            target.hp -= exports.get_permanent(state,
                 state.attacks[j].attacker).attack;
           }
         }
-        if (target.defense <= 0) {
+        if (target.hp <= 0) {
           player.permanents.splice(player.permanents.indexOf(target), 1);
           if (target.name === 'mother ship') {
             state.winner = other_player.user_id;
@@ -250,13 +250,18 @@
 
       source.tapped = true;
 
-      if (action.name === 'attack') {
-        state.attacks.push({
-          attacker: source.copy_id,
-          target: target.copy_id,
-        });
-      } else {
-        throw 'Action '+action.name+' unknown';
+      switch (action.name) {
+        case 'attack':
+          state.attacks.push({
+            attacker: source.copy_id,
+            target: target.copy_id,
+          });
+          break;
+        case 'repair':
+          target.hp = Math.min(target.hp + action.amount, target.defense);
+          break;
+        default:
+          throw 'Action '+action.name+' unknown';
       }
     }
     else if (move.type === 'toggle_power') {

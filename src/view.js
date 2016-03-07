@@ -143,13 +143,26 @@ var View = React.createClass({
     var draw_possible = my_turn ? game.draw_possible : 0;
 
     let render_card = function(card, is_mine, is_perm) {
-      let is_attacking = is_perm && my_turn && that.state.attacker !== null;
+      let is_targeting = false;
+      if (is_perm && my_turn && that.state.action !== null) {
+        switch (that.state.action.targeting) {
+          case 'friendly':
+            is_targeting = is_mine && card.hp !== undefined;
+            break;
+          case 'enemy':
+            is_targeting = !is_mine && card.hp !== undefined;
+            break;
+          default:
+            console.log('Unrecognized targeting:'+that.state.action.targeting);
+            return;
+        }
+      }
 
       let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
 
       let stats = '';
       if (card.type === 'ship') {
-        stats = or_zero(card.attack) + '/' + or_zero(card.defense);
+        stats = or_zero(card.attack) + '/' + or_zero(card.hp);
       }
 
       let classes = 'permanent';
@@ -170,7 +183,7 @@ var View = React.createClass({
 
       if (is_perm) {
         // Target button
-        if (is_attacking && !is_mine && typeof card.defense !== 'undefined') {
+        if (is_targeting) {
           target = (<input type="button" value="target"
               onClick={that.target_finish.bind(null, card)} />);
         }
@@ -203,7 +216,7 @@ var View = React.createClass({
         }
 
         // Scrap button
-        if (card.cost > 1) {
+        if (is_mine && card.cost > 1) {
           scrap = (<input type="button" value="scrap" disabled={!my_turn}
               onClick={that.scrap.bind(null, card)} />);
         }
@@ -231,7 +244,7 @@ var View = React.createClass({
 
       return (
         <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
-          {attack}
+          {target}
           <div className="title">{card.name+" "}</div>
           {generates}
           <div>{stats}</div>

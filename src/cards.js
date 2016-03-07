@@ -22,6 +22,10 @@
           });
         }
       }
+
+      if (typeof card.defense !== 'undefined') {
+        card.hp = card.defense;
+      }
     }
 
     return cards;
@@ -80,7 +84,19 @@
     },{
       name: 'repair crew',
       type: 'instant',
-//      _draw_chances: 30,
+      //_draw_chances: 30,
+    },{
+      name: 'repair bot',
+      type: 'ship',
+      upkeep: 1,
+      actions: [
+        {
+          name: 'repair',
+          targeting: 'friendly',
+          amount: 3,
+        },
+      ],
+      _draw_chances: 30,
     }]);
   };
 
