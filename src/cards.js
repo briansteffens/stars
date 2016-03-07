@@ -37,7 +37,7 @@
       type: 'ship',
       cost: 1,
       upkeep: 1,
-      defense: 1,
+      defense: 2,
       _draw_chances: 7,
     },{
       name: 'fighter',
@@ -46,7 +46,7 @@
       upkeep: 2,
       attack: 1,
       defense: 2,
-      _draw_chances: 12,
+      _draw_chances: 8,
     },{
       name: 'bomber',
       type: 'ship',
@@ -69,18 +69,18 @@
       cost: 2,
       upkeep: 2,
       attack: 1,
-      defense: 4,
+      defense: 3,
       _draw_chances: 4,
     },{
       name: 'reactor',
       type: 'generator',
       power: 1,
-      _draw_chances: 7,
+      _draw_chances: 15,
     },{
       name: 'scrap',
       type: 'resource',
       worth: 1,
-      _draw_chances: 9,
+      _draw_chances: 19,
     },{
       name: 'repair crew',
       type: 'instant',
@@ -91,7 +91,7 @@
           amount: 2,
         },
       ],
-      _draw_chances: 30,
+      _draw_chances: 7,
     },{
       name: 'repair bot',
       type: 'ship',
@@ -103,6 +103,7 @@
           amount: 3,
         },
       ],
+      _draw_chances: 5,
     }]);
   };
 
@@ -113,25 +114,35 @@
       worth: 2,
       _draw_chances: 150,
     },{
+      name: 'rocky planet',
+      type: 'resource',
+      worth: 8,
+      _draw_chances: 40,
+    },{
+      name: 'ship wreckage',
+      type: 'resource',
+      worth: 3,
+      _draw_chances: 80,
+    },{
       name: 'brown dwarf',
       type: 'generator',
-      power: 1,
+      power: 4,
       _draw_chances: 50,
     },{
       name: 'white dwarf',
       type: 'generator',
-      power: 2,
-      _draw_chances: 20,
+      power: 6,
+      _draw_chances: 35,
     },{
       name: 'blue supergiant',
       type: 'generator',
       power: 10,
-      _draw_chances: 1000,
+      _draw_chances: 1,
     },{
       name: 'yellow dwarf',
       type: 'generator',
-      power: 3,
-      _draw_chances: 5,
+      power: 8,
+      _draw_chances: 15,
     }]);
   };
 

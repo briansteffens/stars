@@ -48,7 +48,7 @@ var games = [{
         hand: [],
         deck: [],
         permanents: [],
-        scrap: 10,
+        scrap: 0,
         cant_play: [],
         power_used: 0,
         power_total: 10,
