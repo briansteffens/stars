@@ -66,16 +66,21 @@
     },{
       name: 'laser turret',
       type: 'ship',
-      cost: 2,
-      upkeep: 2,
+      cost: 1,
+      upkeep: 3,
       attack: 1,
       defense: 3,
       _draw_chances: 4,
     },{
-      name: 'reactor',
+      name: 'crude reactor',
       type: 'generator',
       power: 1,
-      _draw_chances: 15,
+      _draw_chances: 18,
+    },{
+      name: 'reactor',
+      type: 'generator',
+      power: 2,
+      _draw_chances: 12,
     },{
       name: 'scrap',
       type: 'resource',
