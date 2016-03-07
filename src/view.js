@@ -74,7 +74,7 @@ var View = React.createClass({
   },
   play: function(card, e) {
     if (card.type === 'instant') {
-      this.target_start(card, e);
+      this.target_start(card, card.actions[0], e);
     } else {
       socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
     }

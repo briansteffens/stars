@@ -27,15 +27,37 @@
 
   exports.get_permanent = function(state, copy_id) {
     for (var player_id in state.players) {
-      if (state.players.hasOwnProperty(player_id)) {
-        var temp = exports.get_player_permanent(state, player_id, copy_id);
-        if (temp !== null) {
-          return temp;
-        }
+      if (!state.players.hasOwnProperty(player_id)) {
+        continue;
+      }
+      var temp = exports.get_player_permanent(state, player_id, copy_id);
+      if (temp !== null) {
+        return temp;
       }
     }
     throw 'Permanent ' + copy_id + ' not found.';
   };
+
+  exports.get_card = function(state, copy_id) {
+    for (var player_id in state.players) {
+      if (!state.players.hasOwnProperty(player_id)) {
+        continue;
+      }
+      var hand = state.players[player_id].hand;
+      for (var i = 0; i < hand.length; i++) {
+        if (hand[i].copy_id == copy_id) {
+          return hand[i];
+        }
+      }
+    }
+
+    var ret = exports.get_permanent(state, copy_id);
+    if (ret !== null) {
+      return ret;
+    }
+
+    throw 'Permanent ' + copy_id + ' not found.';
+  }
 
   exports.apply_move = function(game, move) {
     if (typeof game.state.winner !== 'undefined') {
@@ -224,8 +246,8 @@
       }
     }
     else if (move.type === 'action') {
-      var source = exports.get_permanent(state, move.source);
-      var target = exports.get_permanent(state, move.target);
+      var source = exports.get_card(state, move.source);
+      var target = exports.get_card(state, move.target);
 
       var action = null;
 
@@ -240,7 +262,7 @@
         throw 'Action '+move.action+' not found';
       }
 
-      if (!source.powered) {
+      if (source.type !== 'instant' && !source.powered) {
         throw 'Actor is powered down';
       }
 
@@ -262,6 +284,10 @@
           break;
         default:
           throw 'Action '+action.name+' unknown';
+      }
+
+      if (source.type === 'instant') {
+        player.hand.splice(player.hand.indexOf(source), 1);
       }
     }
     else if (move.type === 'toggle_power') {

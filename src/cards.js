@@ -84,7 +84,14 @@
     },{
       name: 'repair crew',
       type: 'instant',
-      //_draw_chances: 30,
+      actions: [
+        {
+          name: 'repair',
+          targeting: 'friendly',
+          amount: 2,
+        },
+      ],
+      _draw_chances: 30,
     },{
       name: 'repair bot',
       type: 'ship',
@@ -96,7 +103,6 @@
           amount: 3,
         },
       ],
-      _draw_chances: 30,
     }]);
   };
 
