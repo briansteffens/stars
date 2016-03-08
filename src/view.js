@@ -240,10 +240,14 @@ var View = React.createClass({
             shields = (
               <div className="shields">
                 <input type="button" value="-"
-                    onClick={that.shields.bind(null, card, -1)} />
+                    onClick={that.shields.bind(null, card, -1)}
+                    disabled={!my_turn || card.shields <= 0} />
                 {shields}
                 <input type="button" value="+"
-                    onClick={that.shields.bind(null, card, 1)} />
+                    onClick={that.shields.bind(null, card, 1)}
+                    disabled={!my_turn ||
+                              me.shields_total - me.shields_used <= 0 ||
+                              me.power_total - me.power_used <= 0} />
               </div>
             );
           }
