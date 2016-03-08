@@ -105,7 +105,7 @@
       name: 'shield hardware',
       type: 'shields',
       shields: 1,
-      _draw_chances: 200,
+      _draw_chances: 20,
     },{
       name: 'repair bot',
       type: 'ship',
@@ -151,7 +151,7 @@
       name: 'blue supergiant',
       type: 'generator',
       power: 10,
-      _draw_chances: 1000,
+      _draw_chances: 1,
     },{
       name: 'yellow dwarf',
       type: 'generator',
