@@ -23,6 +23,10 @@
         }
       }
 
+      if (typeof card.shields === 'undefined') {
+        card.shields = 0;
+      }
+
       if (typeof card.defense !== 'undefined') {
         card.hp = card.defense;
       }
@@ -46,7 +50,7 @@
       upkeep: 2,
       attack: 1,
       defense: 2,
-      _draw_chances: 8,
+      _draw_chances: 200,
     },{
       name: 'bomber',
       type: 'ship',
@@ -98,6 +102,11 @@
       ],
       _draw_chances: 7,
     },{
+      name: 'shield hardware',
+      type: 'shields',
+      shields: 1,
+      _draw_chances: 200,
+    },{
       name: 'repair bot',
       type: 'ship',
       upkeep: 1,
@@ -142,7 +151,7 @@
       name: 'blue supergiant',
       type: 'generator',
       power: 10,
-      _draw_chances: 1,
+      _draw_chances: 1000,
     },{
       name: 'yellow dwarf',
       type: 'generator',

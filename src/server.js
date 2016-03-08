@@ -48,10 +48,12 @@ var games = [{
         hand: [],
         deck: [],
         permanents: [],
-        scrap: 0,
+        scrap: 10,
         cant_play: [],
         power_used: 0,
         power_total: 10,
+        shields_used: 0,
+        shields_total: 0,
       },
       7: {
         user_id: 7,
@@ -62,6 +64,8 @@ var games = [{
         cant_play: [],
         power_used: 0,
         power_total: 0,
+        shields_used: 0,
+        shields_total: 0,
       },
     },
   },
@@ -301,7 +305,8 @@ wss.on('connection', function(ws) {
     else if (msg.type === 'yield' || msg.type === 'draw' ||
         msg.type === 'play' || msg.type === 'action' ||
         msg.type === 'defend' || msg.type === 'toggle_power' ||
-        msg.type === 'explore' || msg.type === 'scrap') {
+        msg.type === 'explore' || msg.type === 'scrap' ||
+        msg.type === 'shields') {
       msg = fill_in(msg);
       try {
         state.apply_move(game, msg);

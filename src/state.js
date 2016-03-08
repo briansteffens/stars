@@ -72,7 +72,9 @@
     var update_power = function(player, enforce) {
       player.power_used = 0;
       player.power_total = 0;
+      player.shields_used = 0;
 
+      // Permanent power
       for (var i = 0; i < player.permanents.length; i++) {
         var perm = player.permanents[i];
 
@@ -83,23 +85,31 @@
         if (perm.powered && typeof perm.upkeep !== 'undefined') {
           player.power_used += perm.upkeep;
         }
+
+        if (typeof perm.shields !== 'undefined') {
+          player.shields_used += perm.shields;
+          player.power_used += perm.shields;
+        }
       }
 
       if (!enforce) {
         return;
       }
 
-      // Depower stuff if upkeep exceeds total power
+      // Depower permanents if upkeep exceeds total power
       for (var i = 0; i < player.permanents.length; i++) {
         var perm = player.permanents[i];
 
-        if (perm.powered && typeof perm.upkeep !== 'undefined') {
-          if (player.power_used <= player.power_total) {
-            break;
-          }
-
+        if (player.power_used > player.power_total &&
+            perm.powered && typeof perm.upkeep !== 'undefined') {
           perm.powered = false;
           player.power_used -= perm.upkeep;
+        }
+
+        if (player.shields_used > player.shields_total ||
+            player.power_used > player.power_total) {
+          player.shields_used -= perm.shields;
+          perm.shields = 0;
         }
       }
     };
@@ -241,6 +251,9 @@
           player.scrap -= cost;
           player.permanents.push(remove_from_hand());
         }
+      } else if (card.type === 'shields') {
+        player.shields_total = Math.min(player.shields_total+card.shields, 10);
+        remove_from_hand();
       } else {
         throw 'Unplayable card type ' + card.type;
       }
@@ -306,6 +319,21 @@
 
       if (player.power_used > player.power_total) {
         throw 'Not enough available power';
+      }
+    } else if (move.type === 'shields') {
+      if (state.turn_player_id != player.user_id) {
+        throw 'Wrong turn';
+      }
+
+      var card = exports.get_player_permanent(state, player.user_id, move.card);
+
+      card.shields = Math.max(card.shields + move.delta, 0);
+
+      update_power(player, false);
+
+      if (player.power_used > player.power_total ||
+          player.shields_used > player.shields_total) {
+        throw 'Not enough available power or shields';
       }
     }
     else {

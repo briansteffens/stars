@@ -48,3 +48,7 @@ div.hand_separator {
   color: #0b3;
   font-weight: bold;
 }
+
+.permanent .shields input {
+  width: auto;
+}

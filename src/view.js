@@ -111,6 +111,13 @@ var View = React.createClass({
       card: card.copy_id,
     }));
   },
+  shields: function(card, delta, e) {
+    socket.send(JSON.stringify({
+      type: 'shields',
+      card: card.copy_id,
+      delta: delta,
+    }));
+  },
   defend: function(e) {
     socket.send(JSON.stringify({type: 'defend'}));
   },
@@ -180,6 +187,7 @@ var View = React.createClass({
       let power = '';
       let scrap = '';
       let play = '';
+      let shields = '';
 
       if (is_perm) {
         // Target button
@@ -220,6 +228,26 @@ var View = React.createClass({
           scrap = (<input type="button" value="scrap" disabled={!my_turn}
               onClick={that.scrap.bind(null, card)} />);
         }
+
+        // Shields
+        console.log('hey');
+        console.log(card);
+        if (card.shields !== undefined) {
+          console.log('hi');
+          shields = (<span>shields: {card.shields}</span>);
+
+          if (is_mine) {
+            shields = (
+              <div className="shields">
+                <input type="button" value="-"
+                    onClick={that.shields.bind(null, card, -1)} />
+                {shields}
+                <input type="button" value="+"
+                    onClick={that.shields.bind(null, card, 1)} />
+              </div>
+            );
+          }
+        }
       }
       else {
         // Play button
@@ -254,6 +282,7 @@ var View = React.createClass({
           {worth}
           {power}
           {play}
+          {shields}
           {actions}
         </div>
       );
@@ -288,6 +317,11 @@ var View = React.createClass({
           </span>);
     };
 
+    let render_shields = function(player) {
+      return (<span className="shields">
+          {player.shields_used}/{player.shields_total}</span>);
+    }
+
     let explore_possible = my_turn ? game.can_explore : 0;
 
     return (
@@ -303,6 +337,7 @@ var View = React.createClass({
         </div>
         <div>Scrap: {me.scrap}</div>
         <div>Power: {render_power(me)}</div>
+        <div>Shields: {render_shields(me)}</div>
         <div>
           You can draw {draw_possible} cards.
           <input type="button" onClick={this.draw} value="draw"
@@ -321,6 +356,7 @@ var View = React.createClass({
         <div>{enemy_permanents}</div>
         <div>Enemy scrap: {enemy.scrap}</div>
         <div>Enemy power: {render_power(enemy)}</div>
+        <div>Enemy shields: {render_shields(enemy)}</div>
         <div>Enemy hand: {enemy.hand.length} cards</div>
       </div>
     );
