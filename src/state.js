@@ -185,15 +185,19 @@
           targets.push(target);
         }
       }
-      console.log("TARGETS: " + targets);
 
       for (var i = 0; i < targets.length; i++) {
         var target = targets[i];
+        var shields = target.shields;
         for (var j = 0; j < state.attacks.length; j++) {
           if (state.attacks[j].target == target.copy_id) {
-            target.hp -= exports.get_permanent(state,
+            shields -= exports.get_permanent(state,
                 state.attacks[j].attacker).attack;
           }
+        }
+        // Apply damage if shields were pierced
+        if (shields < 0) {
+          target.hp += shields;
         }
         if (target.hp <= 0) {
           player.permanents.splice(player.permanents.indexOf(target), 1);
