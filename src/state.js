@@ -333,6 +333,16 @@
             target.hp = target.defense;
           }
           break;
+        case 'piracy':
+          if (target.name === 'mother ship') {
+            throw 'Cannot use this on the mother ship';
+          }
+          other_player.permanents.splice(
+              other_player.permanents.indexOf(target), 1);
+          target.powered = false;
+          target.shields = 0;
+          player.permanents.push(target);
+          break;
         default:
           throw 'Action '+action.name+' unknown';
       }

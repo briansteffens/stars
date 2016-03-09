@@ -194,6 +194,17 @@
       ],
       _draw_chances: 5,
     },{
+      name: 'piracy crew',
+      type: 'instant',
+      cost: 3,
+      actions: [
+        {
+          name: 'piracy',
+          targeting: 'enemy',
+        },
+      ],
+      _draw_chances: 100,
+    },{
       name: 'conversion kit: defense',
       type: 'instant',
       cost: 2,
