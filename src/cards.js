@@ -169,6 +169,18 @@
       ],
       _draw_chances: 4,
     },{
+      name: 'hull breaker',
+      type: 'instant',
+      cost: 6,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'enemy',
+          defense: -4,
+        },
+      ],
+      _draw_chances: 80,
+    },{
       name: 'repair bot',
       type: 'ship',
       upkeep: 1,
