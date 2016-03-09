@@ -131,6 +131,44 @@
       ],
       _draw_chances: 13,
     },{
+      name: 'weapons damager',
+      type: 'instant',
+      cost: 4,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'enemy',
+          attack: -1,
+        },
+      ],
+      _draw_chances: 11,
+    },{
+      name: 'hardware upgrade',
+      type: 'instant',
+      cost: 4,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'friendly',
+          attack: 1,
+          defense: 1,
+        },
+      ],
+      _draw_chances: 9,
+    },{
+      name: 'supreme hardware upgrade',
+      type: 'instant',
+      cost: 6,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'friendly',
+          attack: 2,
+          defense: 2,
+        },
+      ],
+      _draw_chances: 4,
+    },{
       name: 'repair bot',
       type: 'ship',
       upkeep: 1,

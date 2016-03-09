@@ -323,12 +323,14 @@
           if (target.name === 'mother ship') {
             throw 'Cannot use this on the mother ship';
           }
-          if (typeof action.attack !== 'undefined') {
+          if (typeof action.attack !== 'undefined' &&
+              typeof target.attack !== 'undefined') {
             target.attack += action.attack;
           }
-          if (typeof action.defense !== 'undefined') {
+          if (typeof action.defense !== 'undefined' &&
+              typeof target.defense !== 'undefined') {
             target.defense += action.defense;
-            target.hp = Math.min(target.defense, target.hp);
+            target.hp = target.defense;
           }
           break;
         default:
