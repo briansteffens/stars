@@ -319,6 +319,18 @@
                 other_player.permanents.indexOf(target), 1);
           }
           break;
+        case 'stats_delta':
+          if (target.name === 'mother ship') {
+            throw 'Cannot use this on the mother ship';
+          }
+          if (typeof action.attack !== 'undefined') {
+            target.attack += action.attack;
+          }
+          if (typeof action.defense !== 'undefined') {
+            target.defense += action.defense;
+            target.hp = Math.min(target.defense, target.hp);
+          }
+          break;
         default:
           throw 'Action '+action.name+' unknown';
       }

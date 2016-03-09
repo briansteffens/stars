@@ -119,6 +119,18 @@
       ],
       _draw_chances: 5,
     },{
+      name: 'weapons upgrade',
+      type: 'instant',
+      cost: 3,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'friendly',
+          attack: 1,
+        },
+      ],
+      _draw_chances: 13,
+    },{
       name: 'repair bot',
       type: 'ship',
       upkeep: 1,
