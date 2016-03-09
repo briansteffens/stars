@@ -325,11 +325,11 @@
           }
           if (typeof action.attack !== 'undefined' &&
               typeof target.attack !== 'undefined') {
-            target.attack += action.attack;
+            target.attack = Math.max(target.attack + action.attack, 0);
           }
           if (typeof action.defense !== 'undefined' &&
               typeof target.defense !== 'undefined') {
-            target.defense += action.defense;
+            target.defense = Math.max(target.defense + action.defense, 0);
             target.hp = target.defense;
           }
           break;
