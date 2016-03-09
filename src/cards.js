@@ -107,6 +107,18 @@
       shields: 1,
       _draw_chances: 20,
     },{
+      name: 'implosion bomb',
+      type: 'instant',
+      cost: 8,
+      actions: [
+        {
+          name: 'damage',
+          targeting: 'enemy',
+          amount: 100,
+        },
+      ],
+      _draw_chances: 5,
+    },{
       name: 'repair bot',
       type: 'ship',
       upkeep: 1,

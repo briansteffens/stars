@@ -287,6 +287,13 @@
         throw 'Actor already tapped';
       }
 
+      if (typeof source.cost !== 'undefined') {
+        player.scrap -= source.cost;
+        if (player.scrap < 0) {
+          throw 'Not enough scrap';
+        }
+      }
+
       source.tapped = true;
 
       switch (action.name) {
@@ -298,6 +305,19 @@
           break;
         case 'repair':
           target.hp = Math.min(target.hp + action.amount, target.defense);
+          break;
+        case 'damage':
+          if (target.name === 'mother ship') {
+            throw 'Cannot use this on the mother ship';
+          }
+          var shields = target.shields - action.amount;
+          if (shields < 0) {
+            target.hp += shields;
+          }
+          if (target.hp <= 0) {
+            other_player.permanents.splice(
+                other_player.permanents.indexOf(target), 1);
+          }
           break;
         default:
           throw 'Action '+action.name+' unknown';
