@@ -42,7 +42,7 @@
       cost: 1,
       upkeep: 1,
       defense: 2,
-      _draw_chances: 7,
+      _draw_chances: 13,
     },{
       name: 'fighter',
       type: 'ship',
@@ -50,7 +50,7 @@
       upkeep: 2,
       attack: 2,
       defense: 2,
-      _draw_chances: 13,
+      _draw_chances: 25,
     },{
       name: 'bomber',
       type: 'ship',
@@ -58,7 +58,7 @@
       upkeep: 3,
       attack: 4,
       defense: 2,
-      _draw_chances: 8,
+      _draw_chances: 18,
     },{
       name: 'glass cannon',
       type: 'ship',
@@ -66,7 +66,7 @@
       upkeep: 5,
       attack: 5,
       defense: 0,
-      _draw_chances: 1,
+      _draw_chances: 2,
     },{
       name: 'laser turret',
       type: 'ship',
@@ -74,7 +74,7 @@
       upkeep: 3,
       attack: 1,
       defense: 3,
-      _draw_chances: 4,
+      _draw_chances: 10,
     },{
       name: 'crude reactor',
       type: 'generator',

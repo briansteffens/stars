@@ -287,7 +287,7 @@
         throw 'Actor already tapped';
       }
 
-      if (typeof source.cost !== 'undefined') {
+      if (source.type === 'instant' && typeof source.cost !== 'undefined') {
         player.scrap -= source.cost;
         if (player.scrap < 0) {
           throw 'Not enough scrap';

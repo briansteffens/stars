@@ -60,7 +60,8 @@ var View = React.createClass({
   set_state: function(game_state) {
     this.setState({
       game: game_state,
-      attacker: this.state.attacker,
+      source: JSON.parse(JSON.stringify(this.state.source)),
+      action: JSON.parse(JSON.stringify(this.state.action)),
     });
   },
   yield: function(e) {
@@ -230,10 +231,7 @@ var View = React.createClass({
         }
 
         // Shields
-        console.log('hey');
-        console.log(card);
         if (card.shields !== undefined) {
-          console.log('hi');
           shields = (<span>shields: {card.shields}</span>);
 
           if (is_mine) {
