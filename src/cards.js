@@ -179,7 +179,7 @@
           defense: -4,
         },
       ],
-      _draw_chances: 80,
+      _draw_chances: 2,
     },{
       name: 'repair bot',
       type: 'ship',
@@ -193,6 +193,32 @@
         },
       ],
       _draw_chances: 5,
+    },{
+      name: 'conversion kit: defense',
+      type: 'instant',
+      cost: 2,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'friendly',
+          attack: -1,
+          defense: 1,
+        },
+      ],
+      _draw_chances: 13,
+    },{
+      name: 'conversion kit: attack',
+      type: 'instant',
+      cost: 2,
+      actions: [
+        {
+          name: 'stats_delta',
+          targeting: 'friendly',
+          attack: 1,
+          defense: -1,
+        },
+      ],
+      _draw_chances: 13,
     }]);
   };
 
