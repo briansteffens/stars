@@ -230,7 +230,7 @@ var View = React.createClass({
         }
 
         // Shields
-        if (card.shields !== undefined) {
+        if (card.shields !== undefined && card.type !== 'generator') {
           shields = (<span>shields: {card.shields}</span>);
 
           if (is_mine) {
