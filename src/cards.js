@@ -203,7 +203,7 @@
           targeting: ['enemy', 'ship'],
         },
       ],
-      _draw_chances: 100,
+      _draw_chances: 15,
     },{
       name: 'conversion kit: defense',
       type: 'instant',
@@ -243,7 +243,7 @@
           },
         },
       ],
-      _draw_chances: 200,
+      _draw_chances: 20,
     }]);
   };
 
@@ -267,12 +267,12 @@
       name: 'brown dwarf',
       type: 'generator',
       power: 3,
-      _draw_chances: 50,
+      _draw_chances: 35,
     },{
       name: 'white dwarf',
       type: 'generator',
       power: 4,
-      _draw_chances: 35,
+      _draw_chances: 20,
     },{
       name: 'blue supergiant',
       type: 'generator',
@@ -282,7 +282,7 @@
       name: 'yellow dwarf',
       type: 'generator',
       power: 5,
-      _draw_chances: 15,
+      _draw_chances: 10,
     }]);
   };
 
