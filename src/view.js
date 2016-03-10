@@ -187,6 +187,7 @@ var View = React.createClass({
       let scrap = '';
       let play = '';
       let shields = '';
+      let effects = '';
 
       if (is_perm) {
         // Target button
@@ -248,6 +249,21 @@ var View = React.createClass({
             );
           }
         }
+
+        // Effects
+        if (card.effects !== undefined) {
+          let eles = [];
+
+          for (let effect of card.effects) {
+            eles.push(
+              <div key={effect.name} className="effect">
+                {effect.name}
+              </div>
+            );
+          }
+
+          effects = (<div>{eles}</div>);
+        }
       }
       else {
         // Play button
@@ -274,6 +290,7 @@ var View = React.createClass({
         <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
           {target}
           <div className="title">{card.name+" "}</div>
+          {effects}
           {generates}
           <div>{stats}</div>
           {cost}
