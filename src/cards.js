@@ -1,7 +1,7 @@
 (function(exports){
   exports.fill_in = function(cards) {
     for (var i = 0; i < cards.length; i++) {
-      card = cards[i];
+      let card = cards[i];
 
       if (typeof card.actions === 'undefined') {
         card.actions = [];
@@ -230,6 +230,20 @@
         },
       ],
       _draw_chances: 13,
+    },{
+      name: 'overburner',
+      type: 'instant',
+      cost: 3,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: 'friendly',
+          effect: {
+            name: 'overburner',
+          },
+        },
+      ],
+      _draw_chances: 200,
     }]);
   };
 

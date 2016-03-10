@@ -69,6 +69,26 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
+    let effect_handlers = {
+      overburner: {
+        on_attach: function(ctx) {
+          ctx.effect.turn_counter = 2;
+          ctx.target.generates *= ctx.effect_turn_counter;
+          console.log('>>> ATTACHED');
+        },
+        on_turn_start: function(ctx) {
+          console.log('>>> TURN STARTED');
+          ctx.effect.turn_counter--;
+          if (ctx.effect.turn_counter < 0) {
+            ctx.player.permanents.splice(
+                ctx.player.permanents.indexOf(ctx.target), 1);
+            return;
+          }
+          ctx.target.generates *= ctx.effect_turn_counter;
+        },
+      },
+    };
+
     var update_power = function(player, enforce) {
       player.power_used = 0;
       player.power_total = 0;
@@ -114,7 +134,18 @@
       }
     };
 
-    var phase_main_start = function(player) {
+    let handle_effect_event = function(handler_name, ctx) {
+      if (!effect_handlers.hasOwnProperty(ctx.effect.name)) {
+        return;
+      }
+      let handler = effect_handlers[ctx.effect.name];
+      if (!handler.hasOwnProperty(handler_name)) {
+        return;
+      }
+      handler[handler_name](ctx);
+    };
+
+    var phase_main_start = function(player, other_player) {
       // untap
       for (var i = 0; i < player.permanents.length; i++) {
         player.permanents[i].tapped = false;
@@ -126,6 +157,21 @@
         if (player.permanents[i].name === 'exploratory drone' &&
             player.permanents[i].powered) {
           state.can_explore++;
+        }
+      }
+
+      // effect events
+      for (let perm of player.permanents) {
+        if (perm.effects === undefined) {
+          continue;
+        }
+        for (let effect of perm.effects) {
+          handle_effect_event('on_turn_start', {
+            target: perm,
+            effect: effect,
+            player: player,
+            other_player: other_player,
+          });
         }
       }
     };
@@ -174,7 +220,7 @@
         state.phase = 'defend';
       }
       else {
-        phase_main_start(other_player);
+        phase_main_start(other_player, player);
       }
     }
     else if (move.type === 'defend') {
@@ -210,7 +256,7 @@
       state.attacks = [];
       state.phase = 'main';
 
-      phase_main_start(player);
+      phase_main_start(player, other_player);
     }
     else if (move.type === 'play') {
       if (player.user_id != state.turn_player_id) {
@@ -342,6 +388,21 @@
           target.powered = false;
           target.shields = 0;
           player.permanents.push(target);
+          break;
+        case 'apply_effect':
+          if (target.name === 'mother ship') {
+            throw 'Cannot use this on the mother ship';
+          }
+          if (target.effects === undefined) {
+            target.effects = [];
+          }
+          target.effects.push(action.effect);
+          handle_effect_event('on_attach', {
+            target: target,
+            effect: action.effect,
+            player: player,
+            other_player: other_player,
+          });
           break;
         default:
           throw 'Action '+action.name+' unknown';
