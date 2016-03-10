@@ -181,10 +181,16 @@ var View = React.createClass({
         generates = (<div>generates {card.power}</div>);
       }
 
+      let scrap = '';
+      if (is_mine && card.type !== 'generator' &&
+          card.name !== 'mother ship' && card.type !== 'resource') {
+        scrap = (<input type="button" value="scrap" disabled={!my_turn}
+            onClick={that.scrap.bind(null, card)} />);
+      }
+
       let actions = [];
       let target = '';
       let power = '';
-      let scrap = '';
       let play = '';
       let shields = '';
       let effects = '';
@@ -221,12 +227,6 @@ var View = React.createClass({
               disabled={card.tapped || !can_power}
               onClick={that.toggle_power.bind(null, card)} />
           );
-        }
-
-        // Scrap button
-        if (is_mine && card.cost > 1) {
-          scrap = (<input type="button" value="scrap" disabled={!my_turn}
-              onClick={that.scrap.bind(null, card)} />);
         }
 
         // Shields
@@ -295,9 +295,9 @@ var View = React.createClass({
           <div>{stats}</div>
           {cost}
           {upkeep}
-          {scrap}
           {worth}
           {power}
+          {scrap}
           {play}
           {shields}
           {actions}

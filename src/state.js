@@ -38,25 +38,41 @@
     throw 'Permanent ' + copy_id + ' not found.';
   };
 
-  exports.get_card = function(state, copy_id) {
+  // Gets info about which player has a card and which array it's in
+  exports.get_card_info = function(state, copy_id) {
     for (var player_id in state.players) {
       if (!state.players.hasOwnProperty(player_id)) {
         continue;
       }
+
       var hand = state.players[player_id].hand;
       for (var i = 0; i < hand.length; i++) {
         if (hand[i].copy_id == copy_id) {
-          return hand[i];
+          return {
+            player_id: player_id,
+            collection: hand,
+            collection_name: 'hand',
+            card: hand[i],
+          };
         }
+      }
+
+      var ret = exports.get_player_permanent(state, player_id, copy_id);
+      if (ret !== null) {
+        return {
+          player_id: player_id,
+          collection: state.players[player_id].permanents,
+          collection_name: 'permanents',
+          card: ret,
+        };
       }
     }
 
-    var ret = exports.get_permanent(state, copy_id);
-    if (ret !== null) {
-      return ret;
-    }
-
     throw 'Permanent ' + copy_id + ' not found.';
+  };
+
+  exports.get_card = function(state, copy_id) {
+    return exports.get_card_info(state, copy_id).card;
   }
 
   exports.apply_move = function(game, move) {
@@ -186,9 +202,13 @@
         throw 'Can only scrap during your turn';
       }
 
-      var card = exports.get_permanent(state, move.card, player.user_id);
-      player.permanents.splice(player.permanents.indexOf(card), 1);
-      player.scrap += Math.floor(card.cost / 2);
+      let info = exports.get_card_info(state, move.card);
+      if (info.player_id != player.user_id) {
+        throw "Cannot scrap other player's card";
+      }
+
+      info.collection.splice(info.collection.indexOf(info.card), 1);
+      player.scrap += Math.floor(info.card.cost / 2);
     }
     else if (move.type === 'explore') {
       if (player.user_id != state.turn_player_id) {
