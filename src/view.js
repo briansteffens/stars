@@ -153,16 +153,11 @@ var View = React.createClass({
     let render_card = function(card, is_mine, is_perm) {
       let is_targeting = false;
       if (is_perm && my_turn && that.state.action !== null) {
-        switch (that.state.action.targeting) {
-          case 'friendly':
-            is_targeting = is_mine && card.hp !== undefined;
-            break;
-          case 'enemy':
-            is_targeting = !is_mine && card.hp !== undefined;
-            break;
-          default:
-            console.log('Unrecognized targeting:'+that.state.action.targeting);
-            return;
+        if (that.state.action.targeting.indexOf('friendly') >= 0) {
+          is_targeting = is_mine && card.hp !== undefined;
+        }
+        if (that.state.action.targeting.indexOf('enemy') >= 0) {
+          is_targeting = !is_mine && card.hp !== undefined;
         }
       }
 

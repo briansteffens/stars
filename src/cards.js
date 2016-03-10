@@ -18,7 +18,7 @@
         if (!found) {
           card.actions.push({
             name: 'attack',
-            targeting: 'enemy',
+            targeting: ['enemy'],
           });
         }
       }
@@ -96,7 +96,7 @@
       actions: [
         {
           name: 'repair',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           amount: 2,
         },
       ],
@@ -113,7 +113,7 @@
       actions: [
         {
           name: 'damage',
-          targeting: 'enemy',
+          targeting: ['enemy'],
           amount: 100,
         },
       ],
@@ -125,7 +125,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           attack: 1,
         },
       ],
@@ -137,7 +137,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'enemy',
+          targeting: ['enemy'],
           attack: -1,
         },
       ],
@@ -149,7 +149,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           attack: 1,
           defense: 1,
         },
@@ -162,7 +162,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           attack: 2,
           defense: 2,
         },
@@ -175,7 +175,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'enemy',
+          targeting: ['enemy'],
           defense: -4,
         },
       ],
@@ -188,7 +188,7 @@
       actions: [
         {
           name: 'repair',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           amount: 3,
         },
       ],
@@ -200,7 +200,7 @@
       actions: [
         {
           name: 'piracy',
-          targeting: 'enemy',
+          targeting: ['enemy'],
         },
       ],
       _draw_chances: 100,
@@ -211,7 +211,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           attack: -1,
           defense: 1,
         },
@@ -224,7 +224,7 @@
       actions: [
         {
           name: 'stats_delta',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           attack: 1,
           defense: -1,
         },
@@ -237,7 +237,7 @@
       actions: [
         {
           name: 'apply_effect',
-          targeting: 'friendly',
+          targeting: ['friendly'],
           effect: {
             name: 'overburner',
           },
