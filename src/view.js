@@ -153,11 +153,14 @@ var View = React.createClass({
     let render_card = function(card, is_mine, is_perm) {
       let is_targeting = false;
       if (is_perm && my_turn && that.state.action !== null) {
-        if (that.state.action.targeting.indexOf('friendly') >= 0) {
-          is_targeting = is_mine && card.hp !== undefined;
+        let targets = that.state.action.targeting;
+        if (targets.indexOf('friendly') >= 0) {
+          is_targeting = is_targeting ||
+            is_mine && targets.indexOf(card.type) >= 0;
         }
-        if (that.state.action.targeting.indexOf('enemy') >= 0) {
-          is_targeting = !is_mine && card.hp !== undefined;
+        if (targets.indexOf('enemy') >= 0) {
+          is_targeting = is_targeting ||
+            !is_mine && targets.indexOf(card.type) >= 0;
         }
       }
 

@@ -73,18 +73,19 @@
       overburner: {
         on_attach: function(ctx) {
           ctx.effect.turn_counter = 2;
-          ctx.target.generates *= ctx.effect_turn_counter;
-          console.log('>>> ATTACHED');
+          ctx.effect.old_generates = ctx.target.generates;
+          ctx.target.generates = ctx.effect.old_generates *
+            ctx.effect_turn_counter;
         },
         on_turn_start: function(ctx) {
-          console.log('>>> TURN STARTED');
           ctx.effect.turn_counter--;
-          if (ctx.effect.turn_counter < 0) {
+          if (ctx.effect.turn_counter <= 0) {
             ctx.player.permanents.splice(
                 ctx.player.permanents.indexOf(ctx.target), 1);
             return;
           }
-          ctx.target.generates *= ctx.effect_turn_counter;
+          ctx.target.generates = ctx.effect.old_generates *
+            ctx.effect_turn_counter;
         },
       },
     };
