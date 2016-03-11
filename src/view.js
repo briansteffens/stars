@@ -349,12 +349,17 @@ var View = React.createClass({
 
     let pregame = '';
     if (game.phase === 'pre-game') {
+      let enemy_ready = '';
+      if (enemy.ready) {
+        enemy_ready = (<span>the other player is ready</span>);
+      }
       pregame = (
         <div>
           <input type="button" onClick={this.mull} value="mull"
             disabled={me.ready} />
           <input type="button" onClick={this.ready} value="ready"
             disabled={me.ready} />
+          {enemy_ready}
         </div>
       );
     }
