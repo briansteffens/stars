@@ -125,6 +125,9 @@ var View = React.createClass({
   ready: function(e) {
     socket.send(JSON.stringify({type: 'ready'}));
   },
+  mull: function(e) {
+    socket.send(JSON.stringify({type: 'mull'}));
+  },
   render: function() {
     console.log(this.state);
 
@@ -347,8 +350,12 @@ var View = React.createClass({
     let pregame = '';
     if (game.phase === 'pre-game') {
       pregame = (
-        <input type="button" onClick={this.ready} value="ready"
-          disabled={me.ready} />
+        <div>
+          <input type="button" onClick={this.mull} value="mull"
+            disabled={me.ready} />
+          <input type="button" onClick={this.ready} value="ready"
+            disabled={me.ready} />
+        </div>
       );
     }
 

@@ -32,7 +32,7 @@ var games = [{
   },
   chats: [],
   moves: [],
-  explore_rng: seedrandom(Math.random()),
+  rng: seedrandom(Math.random()),
   state: {
     winner: undefined,
     turn: -1,

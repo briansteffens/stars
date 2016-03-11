@@ -7,7 +7,7 @@
   };
 
   exports.next_explore = function(game, state) {
-    var rand = Math.floor(explore_cards.length * game.explore_rng());
+    var rand = Math.floor(explore_cards.length * game.rng());
     var card = JSON.parse(JSON.stringify(explore_cards[rand]));
     card.copy_id = state.next_copy_id++;
     card.tapped = false;
@@ -197,9 +197,29 @@
       }
     };
 
+    var mull = function(player) {
+      // Add cards from hand back into deck
+      player.deck = player.deck.concat(player.hand);
+
+      // Shuffle deck
+      for (let i = player.deck.length - 1; i > 0; i -= 1) {
+        let j = Math.floor(Math.random() * (i + 1));
+        let temp = player.deck[i];
+        player.deck[i] = player.deck[j];
+        player.deck[j] = temp;
+      }
+
+      player.hand = player.deck.splice(0, 7);
+    };
+
     if (state.phase === 'pre-game') {
-      if (move.type === 'ready') {
-        console.log('READY');
+      if (move.type === 'mull') {
+        if (player.ready) {
+          throw 'Cannot mull when ready';
+        }
+
+        mull(player);
+      } else if (move.type === 'ready') {
         player.ready = true;
 
         if (other_player.ready) {
@@ -224,8 +244,7 @@
           phase_main_start(state.players[first_player_id],
             state.players[exports.next_player(game, first_player_id)]);
         }
-      }
-      else {
+      } else {
         throw 'Invalid move type during pre-game phase';
       }
     } else {
