@@ -198,6 +198,10 @@
     };
 
     var mull = function(player) {
+      if (player.mull_penalty >= 7) {
+        throw 'Cannot mull anymore';
+      }
+
       // Add cards from hand back into deck
       player.deck = player.deck.concat(player.hand);
 
@@ -209,7 +213,9 @@
         player.deck[j] = temp;
       }
 
-      player.hand = player.deck.splice(0, 7);
+      let cards = 7 - Math.max(0, player.mull_penalty);
+      player.hand = player.deck.splice(0, cards);
+      player.mull_penalty++;
     };
 
     if (state.phase === 'pre-game') {

@@ -55,6 +55,7 @@ var games = [{
         shields_used: 0,
         shields_total: 0,
         ready: false,
+        mull_penalty: -1,
       },
       7: {
         user_id: 7,
@@ -68,6 +69,7 @@ var games = [{
         shields_used: 0,
         shields_total: 0,
         ready: false,
+        mull_penalty: -1,
       },
     },
   },
