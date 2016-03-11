@@ -35,11 +35,11 @@ var games = [{
   explore_rng: seedrandom(Math.random()),
   state: {
     winner: undefined,
-    turn: 0,
-    turn_player_id: 3,
-    phase: 'main',
-    draw_possible: 1,
-    can_explore: 1,
+    turn: -1,
+    turn_player_id: null,
+    phase: 'pre-game',
+    draw_possible: 0,
+    can_explore: 0,
     attacks: [],
     next_copy_id: 0,
     players: {
@@ -54,6 +54,7 @@ var games = [{
         power_total: 0,
         shields_used: 0,
         shields_total: 0,
+        ready: false,
       },
       7: {
         user_id: 7,
@@ -66,6 +67,7 @@ var games = [{
         power_total: 0,
         shields_used: 0,
         shields_total: 0,
+        ready: false,
       },
     },
   },
@@ -302,11 +304,7 @@ wss.on('connection', function(ws) {
         }
       }
     }
-    else if (msg.type === 'yield' || msg.type === 'draw' ||
-        msg.type === 'play' || msg.type === 'action' ||
-        msg.type === 'defend' || msg.type === 'toggle_power' ||
-        msg.type === 'explore' || msg.type === 'scrap' ||
-        msg.type === 'shields') {
+    else {
       msg = fill_in(msg);
       try {
         state.apply_move(game, msg);
@@ -315,9 +313,6 @@ wss.on('connection', function(ws) {
       }
       send_state(player_id);
       send_state(state.next_player(game, player_id));
-    }
-    else {
-      console.log('unrecognized message type: %s', message);
     }
   });
 });

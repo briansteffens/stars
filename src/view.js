@@ -122,6 +122,9 @@ var View = React.createClass({
   defend: function(e) {
     socket.send(JSON.stringify({type: 'defend'}));
   },
+  ready: function(e) {
+    socket.send(JSON.stringify({type: 'ready'}));
+  },
   render: function() {
     console.log(this.state);
 
@@ -341,8 +344,17 @@ var View = React.createClass({
 
     let explore_possible = my_turn ? game.can_explore : 0;
 
+    let pregame = '';
+    if (game.phase === 'pre-game') {
+      pregame = (
+        <input type="button" onClick={this.ready} value="ready"
+          disabled={me.ready} />
+      );
+    }
+
     return (
       <div>
+        {pregame}
         <div>
           {gameover}
           It is <strong>{my_turn ? '' : 'not '}your turn</strong>.

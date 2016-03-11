@@ -161,6 +161,9 @@
     };
 
     var phase_main_start = function(player, other_player) {
+      state.attacks = [];
+      state.phase = 'main';
+
       // untap
       for (var i = 0; i < player.permanents.length; i++) {
         player.permanents[i].tapped = false;
@@ -194,285 +197,318 @@
       }
     };
 
-    if (move.type === 'draw') {
-      if (state.draw_possible <= 0) {
-        throw 'Cannot draw anymore cards this turn';
-      }
-      state.draw_possible--;
-      player.hand.push(player.deck.pop());
-    }
-    else if (move.type === 'scrap') {
-      if (player.user_id != state.turn_player_id) {
-        throw 'Can only scrap during your turn';
-      }
+    if (state.phase === 'pre-game') {
+      if (move.type === 'ready') {
+        console.log('READY');
+        player.ready = true;
 
-      let info = exports.get_card_info(state, move.card);
-      if (info.player_id != player.user_id) {
-        throw "Cannot scrap other player's card";
-      }
+        if (other_player.ready) {
+          // Start game
+          state.turn = 0;
+          state.turn_player_id = player.user_id;
 
-      info.collection.splice(info.collection.indexOf(info.card), 1);
-      player.scrap += Math.floor(info.card.cost / 2);
-    }
-    else if (move.type === 'explore') {
-      if (player.user_id != state.turn_player_id) {
-        throw 'Can only explore on your turn';
-      }
+          let first_player_id = null;
+          for (let player_id in state.players) {
+            if (state.players.hasOwnProperty(player_id)) {
+              first_player_id = player_id;
+              break;
+            }
+          }
 
-      if (state.phase !== 'main') {
-        throw 'Can only explore during main phase';
-      }
+          if (first_player_id === null) {
+            throw 'Unable to select a player to start';
+          }
 
-      if (state.can_explore <= 0) {
-        throw 'Player cannot explore anymore this turn';
-      }
-      player.hand.push(exports.next_explore(game, state));
-      state.can_explore--;
-    }
-    else if (move.type === 'yield') {
-      if (state.phase !== 'main') {
-        throw 'Can only yield in main phase';
-      }
+          state.turn_player_id = first_player_id;
 
-      state.turn++;
-
-      // Change player's turn
-      state.turn_player_id = other_player.user_id;
-
-      // Reset ability to play cards per turn
-      other_player.cant_play = [];
-
-      if (state.attacks.length > 0) {
-        state.phase = 'defend';
+          phase_main_start(state.players[first_player_id],
+            state.players[exports.next_player(game, first_player_id)]);
+        }
       }
       else {
-        phase_main_start(other_player, player);
+        throw 'Invalid move type during pre-game phase';
       }
-    }
-    else if (move.type === 'defend') {
-      var targets = [];
-      for (var i = 0; i < state.attacks.length; i++) {
-        var target = exports.get_permanent(state, state.attacks[i].target);
-        if (targets.indexOf(target) < 0) {
-          targets.push(target);
+    } else {
+      if (move.type === 'draw') {
+        if (state.draw_possible <= 0) {
+          throw 'Cannot draw anymore cards this turn';
         }
+        state.draw_possible--;
+        player.hand.push(player.deck.pop());
       }
-
-      for (var i = 0; i < targets.length; i++) {
-        var target = targets[i];
-        var shields = target.shields;
-        for (var j = 0; j < state.attacks.length; j++) {
-          if (state.attacks[j].target == target.copy_id) {
-            shields -= exports.get_permanent(state,
-                state.attacks[j].attacker).attack;
-          }
-        }
-        // Apply damage if shields were pierced
-        if (shields < 0) {
-          target.hp += shields;
-        }
-        if (target.hp <= 0) {
-          player.permanents.splice(player.permanents.indexOf(target), 1);
-          if (target.name === 'mother ship') {
-            state.winner = other_player.user_id;
-          }
-        }
-      }
-
-      state.attacks = [];
-      state.phase = 'main';
-
-      phase_main_start(player, other_player);
-    }
-    else if (move.type === 'play') {
-      if (player.user_id != state.turn_player_id) {
-        throw 'Can only play cards during your turn';
-      }
-
-      var index = null;
-      for (var i = 0; i < player.hand.length; i++) {
-        if (player.hand[i].copy_id == move.copy_id) {
-          index = i;
-          break;
-        }
-      }
-      if (index === null) {
-        throw 'Attempt to play ' + move.copy_id + ' not in hand.';
-      }
-
-      var card = player.hand[index];
-
-      var remove_from_hand = function() {
-        return player.hand.splice(index, 1)[0];
-      }
-
-      if (player.cant_play.indexOf(card.type) >= 0) {
-        console.log(card.type + ' has already been played this turn');
-        return;
-      }
-
-      if (card.type === 'resource') {
-        player.scrap += remove_from_hand().worth;
-      } else if (card.type === 'generator' || card.type === 'ship') {
-        // Mark a card type as played this turn
-        if (card.type === 'generator') {
-          player.cant_play.push(card.type);
+      else if (move.type === 'scrap') {
+        if (player.user_id != state.turn_player_id) {
+          throw 'Can only scrap during your turn';
         }
 
-        var cost = card.hasOwnProperty('cost') ? card.cost : 0;
-        if (card.cost > player.scrap) {
-          console.log('Player doesn\'t have enough scrap');
+        let info = exports.get_card_info(state, move.card);
+        if (info.player_id != player.user_id) {
+          throw "Cannot scrap other player's card";
+        }
+
+        info.collection.splice(info.collection.indexOf(info.card), 1);
+        player.scrap += Math.floor(info.card.cost / 2);
+      }
+      else if (move.type === 'explore') {
+        if (player.user_id != state.turn_player_id) {
+          throw 'Can only explore on your turn';
+        }
+
+        if (state.phase !== 'main') {
+          throw 'Can only explore during main phase';
+        }
+
+        if (state.can_explore <= 0) {
+          throw 'Player cannot explore anymore this turn';
+        }
+        player.hand.push(exports.next_explore(game, state));
+        state.can_explore--;
+      }
+      else if (move.type === 'yield') {
+        if (state.phase !== 'main') {
+          throw 'Can only yield in main phase';
+        }
+
+        state.turn++;
+
+        // Change player's turn
+        state.turn_player_id = other_player.user_id;
+
+        // Reset ability to play cards per turn
+        other_player.cant_play = [];
+
+        if (state.attacks.length > 0) {
+          state.phase = 'defend';
         }
         else {
-          player.scrap -= cost;
-          player.permanents.push(remove_from_hand());
-        }
-      } else if (card.type === 'shields') {
-        player.shields_total = Math.min(player.shields_total+card.shields, 10);
-        remove_from_hand();
-      } else {
-        throw 'Unplayable card type ' + card.type;
-      }
-    }
-    else if (move.type === 'action') {
-      var source = exports.get_card(state, move.source);
-      var target = exports.get_card(state, move.target);
-
-      var action = null;
-
-      for (var i = 0; i < source.actions.length; i++) {
-        if (source.actions[i].name === move.action) {
-          action = source.actions[i];
-          break;
+          phase_main_start(other_player, player);
         }
       }
-
-      if (action === null) {
-        throw 'Action '+move.action+' not found';
-      }
-
-      if (source.type !== 'instant' && !source.powered) {
-        throw 'Actor is powered down';
-      }
-
-      if (source.tapped) {
-        throw 'Actor already tapped';
-      }
-
-      if (source.type === 'instant' && typeof source.cost !== 'undefined') {
-        player.scrap -= source.cost;
-        if (player.scrap < 0) {
-          throw 'Not enough scrap';
-        }
-      }
-
-      source.tapped = true;
-
-      switch (action.name) {
-        case 'attack':
-          state.attacks.push({
-            attacker: source.copy_id,
-            target: target.copy_id,
-          });
-          break;
-        case 'repair':
-          target.hp = Math.min(target.hp + action.amount, target.defense);
-          break;
-        case 'damage':
-          if (target.name === 'mother ship') {
-            throw 'Cannot use this on the mother ship';
+      else if (move.type === 'defend') {
+        var targets = [];
+        for (var i = 0; i < state.attacks.length; i++) {
+          var target = exports.get_permanent(state, state.attacks[i].target);
+          if (targets.indexOf(target) < 0) {
+            targets.push(target);
           }
-          var shields = target.shields - action.amount;
+        }
+
+        for (var i = 0; i < targets.length; i++) {
+          var target = targets[i];
+          var shields = target.shields;
+          for (var j = 0; j < state.attacks.length; j++) {
+            if (state.attacks[j].target == target.copy_id) {
+              shields -= exports.get_permanent(state,
+                  state.attacks[j].attacker).attack;
+            }
+          }
+          // Apply damage if shields were pierced
           if (shields < 0) {
             target.hp += shields;
           }
           if (target.hp <= 0) {
+            player.permanents.splice(player.permanents.indexOf(target), 1);
+            if (target.name === 'mother ship') {
+              state.winner = other_player.user_id;
+            }
+          }
+        }
+
+        phase_main_start(player, other_player);
+      }
+      else if (move.type === 'play') {
+        if (player.user_id != state.turn_player_id) {
+          throw 'Can only play cards during your turn';
+        }
+
+        var index = null;
+        for (var i = 0; i < player.hand.length; i++) {
+          if (player.hand[i].copy_id == move.copy_id) {
+            index = i;
+            break;
+          }
+        }
+        if (index === null) {
+          throw 'Attempt to play ' + move.copy_id + ' not in hand.';
+        }
+
+        var card = player.hand[index];
+
+        var remove_from_hand = function() {
+          return player.hand.splice(index, 1)[0];
+        }
+
+        if (player.cant_play.indexOf(card.type) >= 0) {
+          console.log(card.type + ' has already been played this turn');
+          return;
+        }
+
+        if (card.type === 'resource') {
+          player.scrap += remove_from_hand().worth;
+        } else if (card.type === 'generator' || card.type === 'ship') {
+          // Mark a card type as played this turn
+          if (card.type === 'generator') {
+            player.cant_play.push(card.type);
+          }
+
+          var cost = card.hasOwnProperty('cost') ? card.cost : 0;
+          if (card.cost > player.scrap) {
+            console.log('Player doesn\'t have enough scrap');
+          }
+          else {
+            player.scrap -= cost;
+            player.permanents.push(remove_from_hand());
+          }
+        } else if (card.type === 'shields') {
+          player.shields_total = Math.min(player.shields_total+card.shields,
+              10);
+          remove_from_hand();
+        } else {
+          throw 'Unplayable card type ' + card.type;
+        }
+      }
+      else if (move.type === 'action') {
+        var source = exports.get_card(state, move.source);
+        var target = exports.get_card(state, move.target);
+
+        var action = null;
+
+        for (var i = 0; i < source.actions.length; i++) {
+          if (source.actions[i].name === move.action) {
+            action = source.actions[i];
+            break;
+          }
+        }
+
+        if (action === null) {
+          throw 'Action '+move.action+' not found';
+        }
+
+        if (source.type !== 'instant' && !source.powered) {
+          throw 'Actor is powered down';
+        }
+
+        if (source.tapped) {
+          throw 'Actor already tapped';
+        }
+
+        if (source.type === 'instant' && typeof source.cost !== 'undefined') {
+          player.scrap -= source.cost;
+          if (player.scrap < 0) {
+            throw 'Not enough scrap';
+          }
+        }
+
+        source.tapped = true;
+
+        switch (action.name) {
+          case 'attack':
+            state.attacks.push({
+              attacker: source.copy_id,
+              target: target.copy_id,
+            });
+            break;
+          case 'repair':
+            target.hp = Math.min(target.hp + action.amount, target.defense);
+            break;
+          case 'damage':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
+            var shields = target.shields - action.amount;
+            if (shields < 0) {
+              target.hp += shields;
+            }
+            if (target.hp <= 0) {
+              other_player.permanents.splice(
+                  other_player.permanents.indexOf(target), 1);
+            }
+            break;
+          case 'stats_delta':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
+            if (typeof action.attack !== 'undefined' &&
+                typeof target.attack !== 'undefined') {
+              target.attack = Math.max(target.attack + action.attack, 0);
+            }
+            if (typeof action.defense !== 'undefined' &&
+                typeof target.defense !== 'undefined') {
+              target.defense = Math.max(target.defense + action.defense, 0);
+              target.hp = target.defense;
+            }
+            break;
+          case 'piracy':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
             other_player.permanents.splice(
                 other_player.permanents.indexOf(target), 1);
-          }
-          break;
-        case 'stats_delta':
-          if (target.name === 'mother ship') {
-            throw 'Cannot use this on the mother ship';
-          }
-          if (typeof action.attack !== 'undefined' &&
-              typeof target.attack !== 'undefined') {
-            target.attack = Math.max(target.attack + action.attack, 0);
-          }
-          if (typeof action.defense !== 'undefined' &&
-              typeof target.defense !== 'undefined') {
-            target.defense = Math.max(target.defense + action.defense, 0);
-            target.hp = target.defense;
-          }
-          break;
-        case 'piracy':
-          if (target.name === 'mother ship') {
-            throw 'Cannot use this on the mother ship';
-          }
-          other_player.permanents.splice(
-              other_player.permanents.indexOf(target), 1);
-          target.powered = false;
-          target.shields = 0;
-          player.permanents.push(target);
-          break;
-        case 'apply_effect':
-          if (target.name === 'mother ship') {
-            throw 'Cannot use this on the mother ship';
-          }
-          if (target.effects === undefined) {
-            target.effects = [];
-          }
-          target.effects.push(action.effect);
-          handle_effect_event('on_attach', {
-            target: target,
-            effect: action.effect,
-            player: player,
-            other_player: other_player,
-          });
-          break;
-        default:
-          throw 'Action '+action.name+' unknown';
+            target.powered = false;
+            target.shields = 0;
+            player.permanents.push(target);
+            break;
+          case 'apply_effect':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
+            if (target.effects === undefined) {
+              target.effects = [];
+            }
+            target.effects.push(action.effect);
+            handle_effect_event('on_attach', {
+              target: target,
+              effect: action.effect,
+              player: player,
+              other_player: other_player,
+            });
+            break;
+          default:
+            throw 'Action '+action.name+' unknown';
+        }
+
+        if (source.type === 'instant') {
+          player.hand.splice(player.hand.indexOf(source), 1);
+        }
       }
+      else if (move.type === 'toggle_power') {
+        if (state.turn_player_id != player.user_id) {
+          throw 'Wrong turn';
+        }
 
-      if (source.type === 'instant') {
-        player.hand.splice(player.hand.indexOf(source), 1);
+        var card = exports.get_player_permanent(state, player.user_id,
+            move.card);
+
+        if (card.tapped) {
+          throw 'Cannot toggle power of tapped card';
+        }
+
+        card.powered = !card.powered;
+        update_power(player, false);
+
+        if (player.power_used > player.power_total) {
+          throw 'Not enough available power';
+        }
+      } else if (move.type === 'shields') {
+        if (state.turn_player_id != player.user_id) {
+          throw 'Wrong turn';
+        }
+
+        var card = exports.get_player_permanent(state, player.user_id,
+            move.card);
+
+        card.shields = Math.max(card.shields + move.delta, 0);
+
+        update_power(player, false);
+
+        if (player.power_used > player.power_total ||
+            player.shields_used > player.shields_total) {
+          throw 'Not enough available power or shields';
+        }
       }
-    }
-    else if (move.type === 'toggle_power') {
-      if (state.turn_player_id != player.user_id) {
-        throw 'Wrong turn';
+      else {
+        throw 'Unrecognized move type ' + move.type;
       }
-
-      var card = exports.get_player_permanent(state, player.user_id, move.card);
-
-      if (card.tapped) {
-        throw 'Cannot toggle power of tapped card';
-      }
-
-      card.powered = !card.powered;
-      update_power(player, false);
-
-      if (player.power_used > player.power_total) {
-        throw 'Not enough available power';
-      }
-    } else if (move.type === 'shields') {
-      if (state.turn_player_id != player.user_id) {
-        throw 'Wrong turn';
-      }
-
-      var card = exports.get_player_permanent(state, player.user_id, move.card);
-
-      card.shields = Math.max(card.shields + move.delta, 0);
-
-      update_power(player, false);
-
-      if (player.power_used > player.power_total ||
-          player.shields_used > player.shields_total) {
-        throw 'Not enough available power or shields';
-      }
-    }
-    else {
-      throw 'Unrecognized move type ' + move.type;
     }
 
     update_power(player, true);
