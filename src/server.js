@@ -38,7 +38,7 @@ var games = [{
     turn: 0,
     turn_player_id: 3,
     phase: 'main',
-    draw_possible: 7,
+    draw_possible: 1,
     can_explore: 1,
     attacks: [],
     next_copy_id: 0,
@@ -222,7 +222,7 @@ wss.on('connection', function(ws) {
   // Add implicit properties to a move originating from a client
   var fill_in = function(move) {
     move.user_id = player_id;
-    move.turn = state.current_turn(game);
+    move.turn = state.turn;
     return move;
   };
 

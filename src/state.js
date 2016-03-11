@@ -166,6 +166,9 @@
         player.permanents[i].tapped = false;
       }
 
+      // reset draw count
+      state.draw_possible = 1;
+
       // reset explore count
       state.can_explore = 1;
       for (var i = 0; i < player.permanents.length; i++) {
@@ -195,6 +198,7 @@
       if (state.draw_possible <= 0) {
         throw 'Cannot draw anymore cards this turn';
       }
+      state.draw_possible--;
       player.hand.push(player.deck.pop());
     }
     else if (move.type === 'scrap') {
@@ -231,6 +235,9 @@
       }
 
       state.turn++;
+
+      // Change player's turn
+      state.turn_player_id = other_player.user_id;
 
       // Reset ability to play cards per turn
       other_player.cant_play = [];
@@ -471,11 +478,9 @@
     update_power(player, true);
     update_power(other_player, true);
 
+    // Accept move and replace old state with new one
     game.moves.push(move);
     game.state = state;
-
-    state.turn_player_id = exports.whose_turn(game);
-    state.draw_possible = exports.draw_possible(game, state.turn_player_id);
   };
 
   // Strip out secrets from a state for sending to the given player
@@ -499,75 +504,5 @@
 
   exports.next_player = function(game, player_id) {
     return game.player_ids[(game.player_ids[0] == player_id) | 0];
-  };
-
-  exports.whose_turn = function(game) {
-    if (game.moves.length == 0) {
-      return game.player_ids[0];
-    }
-
-    var last_move = game.moves[game.moves.length - 1];
-    if (last_move.type === 'yield') {
-      return exports.next_player(game, last_move.user_id);
-    } else {
-      return last_move.user_id;
-    }
-  };
-
-  exports.current_turn = function(game) {
-    if (game.moves.length == 0) {
-      return 0;
-    }
-
-    var last_move = game.moves[game.moves.length - 1];
-
-    var ret = last_move.turn;
-
-    if (last_move.type === 'yield') {
-      ret++;
-    }
-
-    return ret;
-  };
-
-  exports.is_first_turn = function(game) {
-    return exports.current_turn(game) < 2;
-  };
-
-  exports.moves_in_turn = function(game, turn_index) {
-    var ret = [];
-
-    for (var i = 0; i < game.moves.length; i++) {
-      if (game.moves[i].turn < turn_index) {
-        continue;
-      }
-
-      if (game.moves[i].turn > turn_index) {
-        break;
-      }
-
-      ret.push(game.moves[i]);
-    }
-
-    return ret;
-  };
-
-  exports.draw_possible = function(game, player_id) {
-    if (exports.whose_turn(game) != player_id || game.state.phase !== 'main') {
-      return 0;
-    }
-
-    var moves = exports.moves_in_turn(game, exports.current_turn(game));
-
-    var possible_to_draw = exports.is_first_turn(game) ? 7 : 1;
-
-    for (var i = 0; i < moves.length; i++) {
-      if (moves[i].type === 'draw') {
-        possible_to_draw -= 1;
-      }
-    }
-
-    return Math.min(possible_to_draw,
-        game.state.players[player_id].deck.length);
   };
 })(typeof exports === 'undefined' ? this['state'] = {} : exports);
