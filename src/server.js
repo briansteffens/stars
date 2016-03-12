@@ -1,3 +1,116 @@
+var express = require('express');
+
+var passport = require('passport');
+var Strategy = require('passport-local').Strategy;
+
+var user_list = {
+  3: 'brian',
+  7: 'jeremy',
+  13: 'levi',
+};
+
+passport.use(new Strategy(function(username, password, cb) {
+  if (password !== 'password') {
+    return cb('Wrong password');
+  }
+
+  let user_id = null;
+
+  for (let user_id in user_list) {
+    if (user_list.hasOwnProperty(user_id)) {
+      console.log(user_list[user_id]);
+      if (user_list[user_id] == username) {
+        return cb(null, {
+          id: user_id,
+          username: user_list[user_id],
+        });
+      }
+    }
+  }
+
+  return cb('Wrong username');
+}));
+
+passport.serializeUser(function(user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(user_id, cb) {
+  cb(null, {
+    id: user_id,
+    username: user_list[user_id]
+  });
+});
+
+var app = express();
+
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+
+//app.use(require('morgan')('combined'));
+app.use(require('cookie-parser')());
+app.use(require('body-parser').urlencoded({ extended: true}));
+app.use(require('express-session')({secret: 'keyboard cat', resave: false,
+  saveUnitialized: false}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/', function(req, res) {
+  res.redirect('/games');
+});
+
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
+app.get('/games', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+  res.render('games', {user: req.user});
+});
+
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/login?fail=1' }),
+  function(req, res) {
+    res.redirect('/');
+  }
+);
+
+app.get('/game_list', function(req, res) {
+  var game_list = [];
+
+  for (var i = 0; i < games.length; i++) {
+    for (var j = 0; j < games[i].player_ids.length; j++) {
+      if (games[i].player_ids[j] == req.user.id) {
+        var game_temp = {
+          id: games[i].id,
+          name: games[i].name,
+          players: [],
+        };
+        for (var k = 0; k < games[i].player_ids.length; k++) {
+          game_temp.players.push({
+            user_id: games[i].player_ids[k],
+          });
+        }
+        game_list.push(game_temp);
+        continue;
+      }
+    }
+  }
+
+  for (var x = 0; x < game_list.length; x++) {
+    for (var y = 0; y < game_list[x].players.length; y++) {
+      console.log(game_list[x].players[y]);
+    }
+  }
+
+  res.json({'games': game_list});
+});
+
+app.listen(80);
+
 var fs = require('fs');
 var seedrandom = require('seedrandom');
 
@@ -10,15 +123,6 @@ var sessions = {
   },
   'b': {
     user_id: 7,
-  },
-};
-
-var users = {
-  3: {
-    username: 'brian',
-  },
-  7: {
-    username: 'evilbrian',
   },
 };
 
@@ -104,9 +208,7 @@ function next_mother_ship() {
 games[0].state.players[3].permanents.push(next_mother_ship());
 games[0].state.players[7].permanents.push(next_mother_ship());
 
-console.log(games[0].state.players[3]);
-console.log(games[0].state.players[7]);
-
+/*
 require('http').createServer(function(req, res) {
   var url = require('url').parse(req.url, true);
   console.log("request: " + req.method + " " + req.url);
@@ -265,7 +367,7 @@ wss.on('connection', function(ws) {
     if (msg.type === 'hello') {
       console.log('session %s says hello', msg.session_id);
       session = sessions[msg.session_id];
-      user = users[session.user_id];
+      user = user_list[session.user_id];
       outer: for (var i = 0; i < games.length; i++) {
         for (var j = 0; j < games[i].player_ids.length; j++) {
           if (games[i].player_ids[j] == session.user_id) {
@@ -318,3 +420,4 @@ wss.on('connection', function(ws) {
     }
   });
 });
+*/

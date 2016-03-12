@@ -11,6 +11,14 @@ install_node:
 server_dependencies:
   npm.installed:
     - pkgs:
+      - seedrandom
       - ws
       - cookie
-      - seedrandom
+      - cookie-parser
+      - body-parser
+      - express
+      - express-session
+      - html
+      - ejs
+      - passport
+      - passport-local
