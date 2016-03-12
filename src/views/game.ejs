@@ -14,5 +14,10 @@
     <div id="chat"></div>
     <script type="text/babel" src="/view.js"></script>
     <script src="/socket.js"></script>
+    <script>
+      window.onload = function() {
+        connect_socket('<%= token %>');
+      };
+    </script>
   </body>
 </html>

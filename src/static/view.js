@@ -139,6 +139,9 @@ var View = React.createClass({
 
     var that = this;
 
+    console.log("ASDF");
+    console.log(game_info);
+    console.log(game_info.user_id);
     var me = game.players[game_info.user_id];
 
     var enemy = null;

@@ -122,7 +122,7 @@ app.get('/game/:game_id', function(req, res) {
   if (game === null) {
     return res.status(404).send('Not found');
   }
-  res.render('game', {user: req.user});
+  res.render('game', {user: req.user,token: 'a'});
 });
 
 app.listen(80);
@@ -133,11 +133,13 @@ var seedrandom = require('seedrandom');
 var cards = require('./cards.js');
 var state = require('./state.js');
 
-var sessions = {
+var tokens = {
   'a': {
+    game_id: 0,
     user_id: 3,
   },
   'b': {
+    game_id: 0,
     user_id: 7,
   },
 };
@@ -226,7 +228,7 @@ games[0].state.players[7].permanents.push(next_mother_ship());
 
 var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
-  var session = undefined;
+  var token_data = undefined;
   var game = undefined;
   var player_id = undefined;
   var user = undefined;
@@ -268,31 +270,40 @@ wss.on('connection', function(ws) {
   };
 
   ws.on('message', function(message) {
-    console.log('session %s: %s', session, message);
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
-      console.log('session %s says hello', msg.session_id);
-      session = sessions[msg.session_id];
-      user = user_list[session.user_id];
+      console.log('session %s says hello', msg.token);
+      token_data = tokens[msg.token];
+      if (token_data === undefined) {
+        throw 'Invalid token';
+      }
+      user = {
+        id: token_data.user_id,
+        username: user_list[token_data.user_id],
+      };
       outer: for (var i = 0; i < games.length; i++) {
-        for (var j = 0; j < games[i].player_ids.length; j++) {
-          if (games[i].player_ids[j] == session.user_id) {
-            game = games[i];
-            player_id = game.player_ids[j];
-            break outer;
+        if (games[i].id == token_data.game_id) {
+          game = games[i];
+          for (var j = 0; j < game.player_ids.length; j++) {
+            if (game.player_ids[j] == token_data.user_id) {
+              player_id = game.player_ids[j];
+              break outer;
+            }
           }
         }
       }
-      if (typeof game === 'undefined') {
+
+      if (player_id === undefined) {
         console.log('Game not found.');
         send({type: 'error', text: 'Game not found'});
         return;
       }
+
       game.sockets[player_id] = ws;
-      console.log('user_id %s connected to game %s', session.user_id, game.id);
+      console.log('user_id %s connected to game %s', user.id, game.id);
       send({
         type: 'greetings',
-        user_id: session.user_id,
+        user_id: user.id,
         username: user.username,
       });
       send({type: 'chats', chats: game.chats});
