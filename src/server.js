@@ -226,7 +226,7 @@ function next_mother_ship() {
 games[0].state.players[3].permanents.push(next_mother_ship());
 games[0].state.players[7].permanents.push(next_mother_ship());
 
-var wss = new require('ws').Server({port: 8080});
+var wss = new require('ws').Server({port: 8081});
 wss.on('connection', function(ws) {
   var token_data = undefined;
   var game = undefined;
