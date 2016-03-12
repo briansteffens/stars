@@ -1,6 +1,12 @@
 stars
 =====
 
+# Edit hosts file
+
+```bash
+sudo su -c "echo '192.168.1.203 stars.local' >> /etc/hosts"
+```
+
 # Install dependencies
 
 Arch:
@@ -29,4 +35,4 @@ cd /vagrant
 sudo nodejs src/server.js
 ```
 
-Now visit http://192.168.1.203/ in a browser.
+Now visit https://stars.local/ in a browser.
