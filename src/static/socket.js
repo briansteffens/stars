@@ -14,7 +14,7 @@ var socket = undefined;
 var view = undefined;
 
 function connect_socket(token) {
-  socket = new WebSocket('ws://' + location.hostname + ':8081');
+  socket = new WebSocket('wss://' + location.hostname + '/ws/');
   socket.onerror = function(error) {
     console.log("WebSocket error: " + error);
   };

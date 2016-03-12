@@ -125,7 +125,7 @@ app.get('/game/:game_id', function(req, res) {
   res.render('game', {user: req.user,token: 'a'});
 });
 
-app.listen(80);
+app.listen(8080);
 
 var fs = require('fs');
 var seedrandom = require('seedrandom');

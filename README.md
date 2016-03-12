@@ -32,7 +32,7 @@ vagrant up
 ```bash
 vagrant ssh
 cd /vagrant
-sudo nodejs src/server.js
+nodejs --use-strict src/server.js
 ```
 
 Now visit https://stars.local/ in a browser.
