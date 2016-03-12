@@ -56,6 +56,8 @@ app.use(require('express-session')({secret: 'keyboard cat', resave: false,
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(express.static('src/static'));
+
 app.get('/', function(req, res) {
   res.redirect('/games');
 });
@@ -107,6 +109,20 @@ app.get('/game_list', function(req, res) {
   }
 
   res.json({'games': game_list});
+});
+
+app.get('/game/:game_id', function(req, res) {
+  let game = null;
+  for (let i = 0; i < games.length; i++) {
+    if (games[i].id == req.params.game_id) {
+      game = games[i];
+      break;
+    }
+  }
+  if (game === null) {
+    return res.status(404).send('Not found');
+  }
+  res.render('game', {user: req.user});
 });
 
 app.listen(80);
@@ -207,116 +223,6 @@ function next_mother_ship() {
 }
 games[0].state.players[3].permanents.push(next_mother_ship());
 games[0].state.players[7].permanents.push(next_mother_ship());
-
-/*
-require('http').createServer(function(req, res) {
-  var url = require('url').parse(req.url, true);
-  console.log("request: " + req.method + " " + req.url);
-
-  var serveStatic = function(fn, headers, content_type) {
-    if (typeof headers === 'undefined') {
-      headers = {};
-    }
-    if (typeof content_type === 'undefined') {
-      headers['Content-Type'] = 'text/html';
-    } else {
-      headers['Content-Type'] = content_type;
-    }
-    headers['Content-Length'] = fs.statSync(fn).size;
-    res.writeHead(200, headers);
-    return fs.createReadStream(fn).pipe(res);
-  };
-
-  if (url.pathname === '/') {
-    if (!(url.query.session in sessions)) {
-      console.log('Bad session');
-      res.writeHead(500);
-      res.end();
-    }
-    return serveStatic('src/index.html', {
-      'Set-Cookie': 'session_id=' + url.query.session,
-    });
-  }
-
-  try {
-    var cookies = require('cookie').parse(req.headers.cookie);
-  } catch (err) {
-    console.log("EX in cookie parse: " + err);
-    res.writeHead(400);
-    res.end();
-    return;
-  }
-
-  var session = sessions[cookies.session_id];
-
-  if (url.pathname === '/games') {
-    var game_list = [];
-
-    for (var i = 0; i < games.length; i++) {
-      for (var j = 0; j < games[i].player_ids.length; j++) {
-        if (games[i].player_ids[j] == session.user_id) {
-          var game_temp = {
-            id: games[i].id,
-            name: games[i].name,
-            players: [],
-          };
-          for (var k = 0; k < games[i].player_ids.length; k++) {
-            game_temp.players.push({
-              user_id: games[i].player_ids[k],
-            });
-          }
-          game_list.push(game_temp);
-          continue;
-        }
-      }
-    }
-    console.log(game_list);
-    for (var x = 0; x < game_list.length; x++) {
-      for (var y = 0; y < game_list[x].players.length; y++) {
-        console.log(game_list[x].players[y]);
-      }
-    }
-    var json = JSON.stringify({'games': game_list});
-
-    res.writeHead(200, {
-      'Content-Type': 'application/json',
-      'Content-Length': json.length,
-    });
-
-    res.end(json);
-  }
-  else if (url.pathname.startsWith('/game/socket.js')) {
-    return serveStatic('src/socket.js');
-  }
-  else if (url.pathname.startsWith('/game/style.css')) {
-    return serveStatic('src/style.css', {}, 'text/css');
-  }
-  else if (url.pathname.startsWith('/game/view.js')) {
-    return serveStatic('src/view.js');
-  }
-  else if (url.pathname.startsWith('/game/')) {
-    var game_id = url.pathname.replace('/game/', '');
-    var game = undefined;
-    for (var i = 0; i < games.length; i++) {
-      if (games[i].id == game_id) {
-        game = games[i];
-        break;
-      }
-    }
-    if (typeof game === 'undefined') {
-      res.writeHead(404);
-      res.end();
-    }
-    return serveStatic('src/game.html');
-  }
-  else if (url.pathname.startsWith('/state.js')) {
-    return serveStatic('src/state.js');
-  }
-  else {
-    res.writeHead(404);
-    res.end();
-  }
-}).listen(80);
 
 var wss = new require('ws').Server({port: 8080});
 wss.on('connection', function(ws) {
@@ -420,4 +326,3 @@ wss.on('connection', function(ws) {
     }
   });
 });
-*/
