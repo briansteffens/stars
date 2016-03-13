@@ -10,6 +10,8 @@
   <body>
     <div id="gamelist"></div>
     <script type="text/babel">
+      var user_id = <%= user.id %>;
+
       function ajax_req(method, url, cb) {
         let xhttp = new XMLHttpRequest();
 
@@ -49,12 +51,27 @@
         },
         render: function() {
           let games = [];
-          for (let i = 0; i < this.state.games.length; i++) {
+          for (let game of this.state.games) {
+            // Look up the other user
+            var other_user = null;
+            for (let player of game.players) {
+              if (player.user_id != user_id) {
+                for (let user of this.state.users) {
+                  if (user.id == player.user_id) {
+                    other_user = user;
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+
             games.push(
-              <div key={i}>
-                {this.state.games[i].name}
-                <a href={"game/" + this.state.games[i].id}>join</a>
-              </div>
+              <tr key={game.id}>
+                <td>{game.name}</td>
+                <td>{other_user.username}</td>
+                <td><a href={"game/" + game.id}>join</a></td>
+              </tr>
             );
           }
 
@@ -70,7 +87,18 @@
           return (
             <div>
               <strong>games</strong>
-              {games}
+              <table>
+                <thead>
+                  <tr>
+                    <th>game name</th>
+                    <th>playing against</th>
+                    <th>join game</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {games}
+                </tbody>
+              </table>
               <hr />
               <strong>users</strong>
               {users}
