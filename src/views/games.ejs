@@ -53,24 +53,22 @@
           });
         },
         render: function() {
-          let users_already_playing = [];
-          let games = [];
-          for (let game of this.state.games) {
-            // Look up the other user
-            var other_user = null;
+          let get_other_player = function(that, game) {
             for (let player of game.players) {
               if (player.user_id != user_id) {
-                for (let user of this.state.users) {
+                for (let user of that.state.users) {
                   if (user.id == player.user_id) {
-                    other_user = user;
-                    break;
+                    return user;
                   }
                 }
-                break;
               }
             }
+            return null;
+          }
 
-            users_already_playing.push(parseInt(other_user.id));
+          let games = [];
+          for (let game of this.state.games) {
+            var other_user = get_other_player(this, game);
 
             let winner = 'undecided';
             if (game.winner !== undefined) {
@@ -94,8 +92,16 @@
 
           let users = [];
           for (let user of this.state.users) {
-            let already_playing =
-              users_already_playing.indexOf(parseInt(user.id)) >= 0;
+            let already_playing = false;
+            for (let game of this.state.games) {
+              let other_user = get_other_player(this, game);
+              if (other_user.id == user.id) {
+                if (game.winner === undefined) {
+                  already_playing = true;
+                  break;
+                }
+              }
+            }
 
             users.push(
               <div key={user.id}>
