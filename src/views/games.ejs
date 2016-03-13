@@ -11,6 +11,7 @@
     <div id="gamelist"></div>
     <script type="text/babel">
       var user_id = <%= user.id %>;
+      var username = '<%= user.username %>';
 
       function ajax_req(method, url, cb) {
         let xhttp = new XMLHttpRequest();
@@ -71,11 +72,22 @@
 
             users_already_playing.push(parseInt(other_user.id));
 
+            let winner = 'undecided';
+            if (game.winner !== undefined) {
+              winner = game.winner == user_id ? username : other_user.username;
+            }
+
+            let join_link = '';
+            if (game.winner === undefined) {
+              join_link = (<a href={"game/" + game.id}>join</a>);
+            }
+
             games.push(
               <tr key={game.id}>
                 <td>{game.name}</td>
                 <td>{other_user.username}</td>
-                <td><a href={"game/" + game.id}>join</a></td>
+                <td>{winner}</td>
+                <td>{join_link}</td>
               </tr>
             );
           }
@@ -103,7 +115,8 @@
                   <tr>
                     <th>game name</th>
                     <th>playing against</th>
-                    <th>join game</th>
+                    <th>winner</th>
+                    <th>join</th>
                   </tr>
                 </thead>
                 <tbody>
