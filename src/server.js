@@ -1,7 +1,7 @@
 var express = require('express');
-
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
+var crypto = require('crypto');
 
 var user_list = {
   3: 'brian',
@@ -18,7 +18,6 @@ passport.use(new Strategy(function(username, password, cb) {
 
   for (let user_id in user_list) {
     if (user_list.hasOwnProperty(user_id)) {
-      console.log(user_list[user_id]);
       if (user_list[user_id] == username) {
         return cb(null, {
           id: user_id,
@@ -81,6 +80,10 @@ app.post('/login',
 );
 
 app.get('/game_list', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+
   var game_list = [];
 
   for (var i = 0; i < games.length; i++) {
@@ -111,18 +114,63 @@ app.get('/game_list', function(req, res) {
   res.json({'games': game_list});
 });
 
+let expire_tokens = function(tokens) {
+  let to_delete = [];
+
+  for (let token in tokens) {
+    if (tokens.hasOwnProperty(token)) {
+      if (Date.now() - tokens[token].created > 5 * 60 * 1000) {
+        to_delete.push(token);
+      }
+    }
+  }
+
+  for (let token in to_delete) {
+    delete tokens[token];
+  }
+};
+
 app.get('/game/:game_id', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+
   let game = null;
+
   for (let i = 0; i < games.length; i++) {
     if (games[i].id == req.params.game_id) {
       game = games[i];
       break;
     }
   }
-  if (game === null) {
+
+  if (game === null ||
+      game.state.players[req.user.id] === undefined) {
     return res.status(404).send('Not found');
   }
-  res.render('game', {user: req.user,token: 'a'});
+
+  expire_tokens(tokens);
+
+  let random_base64 = function(len) {
+    return crypto.randomBytes(Math.ceil(len * 3 / 4))
+      .toString('base64')
+      .slice(0, len)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  }
+
+  let token = random_base64(10);
+
+  tokens[token] = {
+    game_id: game.id,
+    user_id: req.user.id,
+    created: Date.now(),
+  };
+
+  res.render('game', {
+    user: req.user,
+    token: token
+  });
 });
 
 app.listen(8080);
@@ -133,16 +181,7 @@ var seedrandom = require('seedrandom');
 var cards = require('./cards.js');
 var state = require('./state.js');
 
-var tokens = {
-  'a': {
-    game_id: 0,
-    user_id: 3,
-  },
-  'b': {
-    game_id: 0,
-    user_id: 7,
-  },
-};
+var tokens = {};
 
 var games = [{
   id: 0,
@@ -273,7 +312,9 @@ wss.on('connection', function(ws) {
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
       console.log('session %s says hello', msg.token);
+      expire_tokens(tokens);
       token_data = tokens[msg.token];
+      delete tokens[msg.token];
       if (token_data === undefined) {
         throw 'Invalid token';
       }
