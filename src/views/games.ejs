@@ -10,29 +10,46 @@
   <body>
     <div id="gamelist"></div>
     <script type="text/babel">
+      function ajax_req(method, url, cb) {
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+          if (xhttp.readyState < 4) {
+            return;
+          }
+          if (xhttp.status != 200) {
+            console.log('Error making AJAX call: %s', xhttp.status);
+            return;
+          }
+          cb(JSON.parse(xhttp.responseText));
+        };
+
+        xhttp.open(method, url, true);
+        xhttp.send();
+      }
+
       var GameList = React.createClass({
         getInitialState: function() { 
-          return {games: []};
+          return {
+            games: [],
+            users: [],
+          };
         },
         refresh: function(e) {
-          var xhttp = new XMLHttpRequest();
-          var this_ = this;
-          xhttp.onreadystatechange = function() {
-            if (xhttp.readyState < 4) {
-              return;
-            }
-            if (xhttp.status != 200) {
-              console.log('Error reading game list: %s', xhttp.status);
-              return;
-            }
-            this_.setState(JSON.parse(xhttp.responseText)); 
-          };
-          xhttp.open('GET', 'game_list', true);
-          xhttp.send();
+          let this_ = this;
+
+          ajax_req('GET', 'game_list', function(res_games) {
+            ajax_req('GET', 'users', function(res_users) {
+              this_.setState({
+                games: res_games.games,
+                users: res_users.users,
+              });
+            });
+          });
         },
         render: function() {
-          var games = [];
-          for (var i = 0; i < this.state.games.length; i++) {
+          let games = [];
+          for (let i = 0; i < this.state.games.length; i++) {
             games.push(
               <div key={i}>
                 {this.state.games[i].name}
@@ -40,9 +57,23 @@
               </div>
             );
           }
+
+          let users = [];
+          for (let user of this.state.users) {
+            users.push(
+              <div key={user.id}>
+                {user.username}
+              </div>
+            );
+          }
+
           return (
             <div>
+              <strong>games</strong>
               {games}
+              <hr />
+              <strong>users</strong>
+              {users}
               <input type="button" value="refresh" onClick={this.refresh} />
             </div>
           );

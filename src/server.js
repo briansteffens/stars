@@ -2,6 +2,10 @@ var express = require('express');
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
+var seedrandom = require('seedrandom');
+
+var cards = require('./cards.js');
+var state = require('./state.js');
 
 var user_list = {
   3: 'brian',
@@ -78,6 +82,23 @@ app.post('/login',
     res.redirect('/');
   }
 );
+
+app.get('/users', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+
+  let users = [];
+
+  for (let user_id of Object.keys(user_list)) {
+    users.push({
+      id: user_id,
+      username: user_list[user_id],
+    });
+  }
+
+  res.json({users: users});
+});
 
 app.get('/game_list', function(req, res) {
   if (req.user === undefined) {
@@ -175,12 +196,6 @@ app.get('/game/:game_id', function(req, res) {
 
 app.listen(8080);
 
-var fs = require('fs');
-var seedrandom = require('seedrandom');
-
-var cards = require('./cards.js');
-var state = require('./state.js');
-
 var tokens = {};
 
 var games = [{
@@ -237,7 +252,6 @@ var games = [{
 }];
 
 var all_cards = cards.all();
-
 var random_pool = cards.pool(all_cards);
 
 function random_card() {
