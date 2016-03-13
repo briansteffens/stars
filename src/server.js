@@ -119,13 +119,13 @@ let expire_tokens = function(tokens) {
 
   for (let token in tokens) {
     if (tokens.hasOwnProperty(token)) {
-      if (Date.now() - tokens[token].created > 5 * 60 * 1000) {
+      if (Date.now() - tokens[token].created > 60 * 1000) {
         to_delete.push(token);
       }
     }
   }
 
-  for (let token in to_delete) {
+  for (let token of to_delete) {
     delete tokens[token];
   }
 };
