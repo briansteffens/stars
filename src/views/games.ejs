@@ -40,16 +40,19 @@
         refresh: function(e) {
           let this_ = this;
 
-          ajax_req('GET', 'game_list', function(res_games) {
-            ajax_req('GET', 'users', function(res_users) {
-              this_.setState({
-                games: res_games.games,
-                users: res_users.users,
-              });
-            });
+          ajax_req('GET', 'games/info', function(res) {
+            this_.setState(res);
+          });
+        },
+        start: function(enemy_id) {
+          let this_ = this;
+
+          ajax_req('GET', 'games/start/' + enemy_id, function(res) {
+            this_.setState(res);
           });
         },
         render: function() {
+          let users_already_playing = [];
           let games = [];
           for (let game of this.state.games) {
             // Look up the other user
@@ -66,6 +69,8 @@
               }
             }
 
+            users_already_playing.push(parseInt(other_user.id));
+
             games.push(
               <tr key={game.id}>
                 <td>{game.name}</td>
@@ -77,9 +82,15 @@
 
           let users = [];
           for (let user of this.state.users) {
+            let already_playing =
+              users_already_playing.indexOf(parseInt(user.id)) >= 0;
+
             users.push(
               <div key={user.id}>
                 {user.username}
+                <input type="button" value="start game"
+                  onClick={this.start.bind(null, user.id)}
+                  disabled={already_playing} />
               </div>
             );
           }

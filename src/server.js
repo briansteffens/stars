@@ -7,11 +7,35 @@ var seedrandom = require('seedrandom');
 var cards = require('./cards.js');
 var state = require('./state.js');
 
+var tokens = {};
+var games = [];
+
+var all_cards = cards.all();
+var random_pool = cards.pool(all_cards);
+
 var user_list = {
   3: 'brian',
   7: 'jeremy',
   13: 'levi',
 };
+
+function random_base64(len) {
+  return crypto.randomBytes(Math.ceil(len * 3 / 4))
+    .toString('base64')
+    .slice(0, len)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+function generate_id(len, collision_check) {
+  let id = null;
+
+  do {
+    id = random_base64(len);
+  } while (collision_check(id));
+
+  return id;
+}
 
 passport.use(new Strategy(function(username, password, cb) {
   if (password !== 'password') {
@@ -83,33 +107,11 @@ app.post('/login',
   }
 );
 
-app.get('/users', function(req, res) {
-  if (req.user === undefined) {
-    return res.redirect('/login');
-  }
-
-  let users = [];
-
-  for (let user_id of Object.keys(user_list)) {
-    users.push({
-      id: user_id,
-      username: user_list[user_id],
-    });
-  }
-
-  res.json({users: users});
-});
-
-app.get('/game_list', function(req, res) {
-  if (req.user === undefined) {
-    return res.redirect('/login');
-  }
-
+let games_info = function(user_id) {
   var game_list = [];
-
   for (var i = 0; i < games.length; i++) {
     for (var j = 0; j < games[i].player_ids.length; j++) {
-      if (games[i].player_ids[j] == req.user.id) {
+      if (games[i].player_ids[j] == user_id) {
         var game_temp = {
           id: games[i].id,
           name: games[i].name,
@@ -126,13 +128,117 @@ app.get('/game_list', function(req, res) {
     }
   }
 
-  for (var x = 0; x < game_list.length; x++) {
-    for (var y = 0; y < game_list[x].players.length; y++) {
-      console.log(game_list[x].players[y]);
+  let users = [];
+  for (let other_user_id of Object.keys(user_list)) {
+    if (other_user_id != user_id) {
+      users.push({
+        id: other_user_id,
+        username: user_list[other_user_id],
+      });
     }
   }
 
-  res.json({'games': game_list});
+  return {
+    games: game_list,
+    users: users,
+  };
+};
+
+app.get('/games/info', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+
+  res.json(games_info(req.user.id));
+});
+
+app.get('/games/start/:enemy_id', function(req, res) {
+  if (req.user === undefined) {
+    return res.redirect('/login');
+  }
+
+  let game = {
+    id: null,
+    name: 'The first game ever!',
+    player_ids: [req.user.id, req.params.enemy_id],
+    sockets: {},
+    chats: [],
+    moves: [],
+    rng: seedrandom(Math.random()),
+    state: {
+      winner: undefined,
+      turn: -1,
+      turn_player_id: null,
+      phase: 'pre-game',
+      draw_possible: 0,
+      can_explore: 0,
+      attacks: [],
+      next_copy_id: 0,
+      players: {},
+    },
+  };
+
+  game.id = generate_id(5, function(id) {
+    for (let g of games) {
+      if (g.id == id) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  game.sockets[req.user.id] = undefined;
+  game.sockets[req.params.enemy_id] = undefined;
+
+  let make_player = function(id) {
+    return {
+      user_id: id,
+      hand: [],
+      deck: [],
+      permanents: [],
+      scrap: 0,
+      cant_play: [],
+      power_used: 0,
+      power_total: 0,
+      shields_used: 0,
+      shields_total: 0,
+      ready: false,
+      mull_penalty: -1,
+    };
+  }
+
+  game.state.players[req.user.id] = make_player(req.user.id);
+  game.state.players[req.params.enemy_id] = make_player(req.params.enemy_id);
+
+  let random_card = function() {
+    return random_pool[Math.floor(Math.random() * random_pool.length)];
+  }
+
+  let next_card = function() {
+    var card = JSON.parse(JSON.stringify(random_card()));
+    card.copy_id = game.state.next_copy_id++;
+    card.tapped = false;
+    card.powered = false;
+    return card;
+  }
+
+  for (var i = 0; i < 50; i++) {
+    game.state.players[req.user.id].deck.push(next_card());
+    game.state.players[req.params.enemy_id].deck.push(next_card());
+  }
+
+  let next_mother_ship = function() {
+    var ret = cards.mother_ship();
+    ret.copy_id = game.state.next_copy_id++;
+    return ret;
+  }
+
+  game.state.players[req.user.id].permanents.push(next_mother_ship());
+  game.state.players[req.params.enemy_id].permanents.push(next_mother_ship());
+
+  games.push(game);
+
+  res.json(games_info(req.user.id));
 });
 
 let expire_tokens = function(tokens) {
@@ -172,15 +278,9 @@ app.get('/game/:game_id', function(req, res) {
 
   expire_tokens(tokens);
 
-  let random_base64 = function(len) {
-    return crypto.randomBytes(Math.ceil(len * 3 / 4))
-      .toString('base64')
-      .slice(0, len)
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-  }
-
-  let token = random_base64(10);
+  let token = generate_id(10, function(id) {
+    return tokens.hasOwnProperty(id);
+  });
 
   tokens[token] = {
     game_id: game.id,
@@ -195,89 +295,6 @@ app.get('/game/:game_id', function(req, res) {
 });
 
 app.listen(8080);
-
-var tokens = {};
-
-var games = [{
-  id: 0,
-  name: 'The first game ever!',
-  player_ids: [3, 7],
-  sockets: {
-    3: undefined,
-    7: undefined,
-  },
-  chats: [],
-  moves: [],
-  rng: seedrandom(Math.random()),
-  state: {
-    winner: undefined,
-    turn: -1,
-    turn_player_id: null,
-    phase: 'pre-game',
-    draw_possible: 0,
-    can_explore: 0,
-    attacks: [],
-    next_copy_id: 0,
-    players: {
-      3: {
-        user_id: 3,
-        hand: [],
-        deck: [],
-        permanents: [],
-        scrap: 0,
-        cant_play: [],
-        power_used: 0,
-        power_total: 0,
-        shields_used: 0,
-        shields_total: 0,
-        ready: false,
-        mull_penalty: -1,
-      },
-      7: {
-        user_id: 7,
-        hand: [],
-        deck: [],
-        permanents: [],
-        scrap: 0,
-        cant_play: [],
-        power_used: 0,
-        power_total: 0,
-        shields_used: 0,
-        shields_total: 0,
-        ready: false,
-        mull_penalty: -1,
-      },
-    },
-  },
-}];
-
-var all_cards = cards.all();
-var random_pool = cards.pool(all_cards);
-
-function random_card() {
-  return random_pool[Math.floor(Math.random() * random_pool.length)];
-}
-
-function next_card() {
-  var card = JSON.parse(JSON.stringify(random_card()));
-  card.copy_id = games[0].state.next_copy_id++;
-  card.tapped = false;
-  card.powered = false;
-  return card;
-}
-
-for (var i = 0; i < 50; i++) {
-  games[0].state.players[3].deck.push(next_card());
-  games[0].state.players[7].deck.push(next_card());
-}
-
-function next_mother_ship() {
-  var ret = cards.mother_ship();
-  ret.copy_id = games[0].state.next_copy_id++;
-  return ret;
-}
-games[0].state.players[3].permanents.push(next_mother_ship());
-games[0].state.players[7].permanents.push(next_mother_ship());
 
 var wss = new require('ws').Server({port: 8081});
 wss.on('connection', function(ws) {
@@ -301,7 +318,6 @@ wss.on('connection', function(ws) {
     if (typeof socket === 'undefined') {
       return;
     }
-    console.log(payload);
     socket.send(JSON.stringify(payload), function ack(error) {
       if (typeof error === 'undefined') {
         return;
@@ -325,7 +341,6 @@ wss.on('connection', function(ws) {
   ws.on('message', function(message) {
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
-      console.log('session %s says hello', msg.token);
       expire_tokens(tokens);
       token_data = tokens[msg.token];
       delete tokens[msg.token];

@@ -19,7 +19,6 @@ function connect_socket(token) {
     console.log("WebSocket error: " + error);
   };
   socket.onopen = function(e) {
-    console.log("WebSocket open");
     socket.send(JSON.stringify({
       type: 'hello',
       token: token,
