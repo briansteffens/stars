@@ -41,7 +41,7 @@
       type: 'ship',
       cost: 1,
       upkeep: 1,
-      defense: 2,
+      defense: 3,
       _draw_chances: 13,
     },{
       name: 'fighter',
@@ -49,7 +49,7 @@
       cost: 2,
       upkeep: 2,
       attack: 2,
-      defense: 2,
+      defense: 3,
       _draw_chances: 25,
     },{
       name: 'bomber',
@@ -57,7 +57,7 @@
       cost: 4,
       upkeep: 3,
       attack: 4,
-      defense: 2,
+      defense: 3,
       _draw_chances: 18,
     },{
       name: 'glass cannon',
@@ -75,6 +75,14 @@
       attack: 1,
       defense: 3,
       _draw_chances: 10,
+    },{
+      name: 'reaper',
+      type: 'ship',
+      cost: 13,
+      upkeep: 7,
+      attack: 9,
+      defense: 7,
+      _draw_chances: 11,
     },{
       name: 'crude reactor',
       type: 'generator',
