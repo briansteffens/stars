@@ -277,7 +277,8 @@
         }
 
         info.collection.splice(info.collection.indexOf(info.card), 1);
-        player.scrap += Math.floor(info.card.cost / 2);
+        let cost = info.card.cost !== undefined ? info.card.cost : 0;
+        player.scrap += Math.floor(cost / 2);
       }
       else if (move.type === 'explore') {
         if (player.user_id != state.turn_player_id) {
