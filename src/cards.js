@@ -248,10 +248,43 @@
           targeting: ['friendly', 'enemy', 'generator'],
           effect: {
             name: 'overburner',
+            type: 'overburner',
           },
         },
       ],
       _draw_chances: 20,
+    },{
+      name: 'time bomb',
+      type: 'instant',
+      cost: 2,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: ['enemy', 'ship'],
+          effect: {
+            name: 'time bomb',
+            type: 'time_bomb',
+            damage: 4,
+          },
+        },
+      ],
+      _draw_chances: 18,
+    },{
+      name: 'massive time bomb',
+      type: 'instant',
+      cost: 6,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: ['enemy', 'ship'],
+          effect: {
+            name: 'massive time bomb',
+            type: 'time_bomb',
+            damage: 12,
+          },
+        }
+      ],
+      _draw_chances: 6,
     }]);
   };
 

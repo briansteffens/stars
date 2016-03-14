@@ -102,6 +102,21 @@
           ctx.target.power = ctx.effect.old_power * ctx.effect.turn_counter;
         },
       },
+      time_bomb: {
+        on_attach: function(ctx) {
+          ctx.effect.turn_counter = 2;
+        },
+        on_turn_start: function(ctx) {
+          ctx.effect.turn_counter--;
+          if (ctx.effect.turn_counter <= 0) {
+            ctx.target.hp -= ctx.effect.damage;
+            if (ctx.target.hp <= 0) {
+              ctx.player.permanents.splice(
+                  ctx.player.permanents.indexOf(ctx.target), 1);
+            }
+          }
+        },
+      },
     };
 
     var update_power = function(player, enforce) {
@@ -150,10 +165,10 @@
     };
 
     let handle_effect_event = function(handler_name, ctx) {
-      if (!effect_handlers.hasOwnProperty(ctx.effect.name)) {
+      if (!effect_handlers.hasOwnProperty(ctx.effect.type)) {
         return;
       }
-      let handler = effect_handlers[ctx.effect.name];
+      let handler = effect_handlers[ctx.effect.type];
       if (!handler.hasOwnProperty(handler_name)) {
         return;
       }
