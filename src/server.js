@@ -74,9 +74,9 @@ var app = express();
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-//app.use(require('morgan')('combined'));
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true}));
+app.use(require('body-parser').json());
 app.use(require('express-session')({secret: 'keyboard cat', resave: false,
   saveUnitialized: false}));
 
@@ -152,15 +152,15 @@ app.get('/games/info', function(req, res) {
   res.json(games_info(req.user.id));
 });
 
-app.get('/games/start/:enemy_id', function(req, res) {
+app.post('/games/new', function(req, res) {
   if (req.user === undefined) {
     return res.redirect('/login');
   }
 
   let game = {
     id: null,
-    name: 'The first game ever!',
-    player_ids: [req.user.id, req.params.enemy_id],
+    name: req.body.name,
+    player_ids: [req.user.id, req.body.against],
     sockets: {},
     chats: [],
     moves: [],
@@ -188,7 +188,7 @@ app.get('/games/start/:enemy_id', function(req, res) {
   });
 
   game.sockets[req.user.id] = undefined;
-  game.sockets[req.params.enemy_id] = undefined;
+  game.sockets[req.body.against] = undefined;
 
   let make_player = function(id) {
     return {
@@ -208,7 +208,7 @@ app.get('/games/start/:enemy_id', function(req, res) {
   }
 
   game.state.players[req.user.id] = make_player(req.user.id);
-  game.state.players[req.params.enemy_id] = make_player(req.params.enemy_id);
+  game.state.players[req.body.against] = make_player(req.body.against);
 
   let random_card = function() {
     return random_pool[Math.floor(Math.random() * random_pool.length)];
@@ -224,7 +224,7 @@ app.get('/games/start/:enemy_id', function(req, res) {
 
   for (var i = 0; i < 50; i++) {
     game.state.players[req.user.id].deck.push(next_card());
-    game.state.players[req.params.enemy_id].deck.push(next_card());
+    game.state.players[req.body.against].deck.push(next_card());
   }
 
   let next_mother_ship = function() {
@@ -234,7 +234,7 @@ app.get('/games/start/:enemy_id', function(req, res) {
   }
 
   game.state.players[req.user.id].permanents.push(next_mother_ship());
-  game.state.players[req.params.enemy_id].permanents.push(next_mother_ship());
+  game.state.players[req.body.against].permanents.push(next_mother_ship());
 
   games.push(game);
 

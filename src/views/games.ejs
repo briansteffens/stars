@@ -13,7 +13,7 @@
       var user_id = <%= user.id %>;
       var username = '<%= user.username %>';
 
-      function ajax_req(method, url, cb) {
+      function ajax_req(method, url, data, cb) {
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
@@ -28,7 +28,12 @@
         };
 
         xhttp.open(method, url, true);
-        xhttp.send();
+        xhttp.setRequestHeader('Content-Type', 'application/json');
+        if (data !== null) {
+          xhttp.send(JSON.stringify(data));
+        } else {
+          xhttp.send();
+        }
       }
 
       var GameList = React.createClass({
@@ -41,14 +46,17 @@
         refresh: function(e) {
           let this_ = this;
 
-          ajax_req('GET', 'games/info', function(res) {
+          ajax_req('GET', 'games/info', null, function(res) {
             this_.setState(res);
           });
         },
-        start: function(enemy_id) {
+        new_game: function(e) {
           let this_ = this;
 
-          ajax_req('GET', 'games/start/' + enemy_id, function(res) {
+          ajax_req('POST', 'games/new', {
+            name: this.refs.new_game_name.value,
+            against: parseInt(this.refs.new_game_vs.value),
+          }, function(res) {
             this_.setState(res);
           });
         },
@@ -90,7 +98,7 @@
             );
           }
 
-          let users = [];
+          let against = [];
           for (let user of this.state.users) {
             let already_playing = false;
             for (let game of this.state.games) {
@@ -103,19 +111,14 @@
               }
             }
 
-            users.push(
-              <div key={user.id}>
-                {user.username}
-                <input type="button" value="start game"
-                  onClick={this.start.bind(null, user.id)}
-                  disabled={already_playing} />
-              </div>
+            against.push(
+              <option key={user.id} value={user.id}>{user.username}</option>
             );
           }
 
-          return (
-            <div>
-              <strong>games</strong>
+          let game_table = '';
+          if (games.length > 0) {
+            game_table = (
               <table>
                 <thead>
                   <tr>
@@ -129,10 +132,19 @@
                   {games}
                 </tbody>
               </table>
-              <hr />
-              <strong>users</strong>
-              {users}
-              <input type="button" value="refresh" onClick={this.refresh} />
+            );
+          }
+
+          return (
+            <div>
+              {game_table}
+              <label htmlFor="new_game_name">new game name</label>
+              <input id="new_game_name" ref="new_game_name" />
+              <label htmlFor="new_game_vs">play against</label>
+              <select id="new_game_vs" ref="new_game_vs">
+                {against}
+              </select>
+              <input type="button" value="new game" onClick={this.new_game} />
             </div>
           );
         },
