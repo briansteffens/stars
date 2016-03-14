@@ -117,6 +117,21 @@
           }
         },
       },
+      weapon_jammer: {
+        on_attach: function(ctx) {
+          ctx.effect.turn_counter = ctx.effect.turns;
+          ctx.effect.old_attack = ctx.target.attack;
+          ctx.target.attack = 0;
+        },
+        on_turn_start: function(ctx) {
+          ctx.effect.turn_counter--;
+          if (ctx.effect.turn_counter < 0) {
+            ctx.target.attack = ctx.effect.old_attack;
+            ctx.target.effects.splice(
+                ctx.target.effects.indexOf(ctx.effect), 1);
+          }
+        },
+      },
     };
 
     var update_power = function(player, enforce) {

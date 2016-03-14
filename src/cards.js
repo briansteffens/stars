@@ -285,6 +285,54 @@
         }
       ],
       _draw_chances: 6,
+    },{
+      name: 'brief weapon jammer',
+      type: 'instant',
+      cost: 3,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: ['enemy', 'ship'],
+          effect: {
+            name: 'weapon jammer',
+            type: 'weapon_jammer',
+            turns: 1,
+          },
+        },
+      ],
+      _draw_chances: 30,
+    },{
+      name: 'weapon jammer',
+      type: 'instant',
+      cost: 5,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: ['enemy', 'ship'],
+          effect: {
+            name: 'weapon jammer',
+            type: 'weapon_jammer',
+            turns: 2,
+          },
+        },
+      ],
+      _draw_chances: 20,
+    },{
+      name: 'long weapon jammer',
+      type: 'instant',
+      cost: 7,
+      actions: [
+        {
+          name: 'apply_effect',
+          targeting: ['enemy', 'ship'],
+          effect: {
+            name: 'weapon jammer',
+            type: 'weapon_jammer',
+            turns: 3,
+          },
+        },
+      ],
+      _draw_chances: 10,
     }]);
   };
 
