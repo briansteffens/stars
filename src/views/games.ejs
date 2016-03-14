@@ -80,7 +80,8 @@
 
             let winner = 'undecided';
             if (game.state.winner !== undefined) {
-              winner = game.winner == user_id ? username : other_user.username;
+              winner = game.state.winner == user_id ?
+                username : other_user.username;
             }
 
             let join_link = '';
