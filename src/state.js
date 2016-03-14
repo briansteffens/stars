@@ -218,7 +218,12 @@
       player.mull_penalty++;
     };
 
-    if (state.phase === 'pre-game') {
+    if (move.type === 'forfeit') {
+      if (state.winner !== undefined) {
+        throw 'Cannot forfeit a finished game';
+      }
+      state.winner = other_player.user_id;
+    } else if (state.phase === 'pre-game') {
       if (move.type === 'mull') {
         if (player.ready) {
           throw 'Cannot mull when ready';

@@ -116,6 +116,9 @@ let games_info = function(user_id) {
           id: games[i].id,
           name: games[i].name,
           players: [],
+          state: {
+            winner: games[i].state.winner,
+          },
         };
         for (var k = 0; k < games[i].player_ids.length; k++) {
           game_temp.players.push({

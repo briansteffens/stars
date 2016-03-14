@@ -128,6 +128,12 @@ var View = React.createClass({
   mull: function(e) {
     socket.send(JSON.stringify({type: 'mull'}));
   },
+  forfeit: function(e) {
+    if (!confirm('Forfeit the game?')) {
+      return;
+    }
+    socket.send(JSON.stringify({type: 'forfeit'}));
+  },
   render: function() {
     var game = this.state.game;
 
@@ -372,6 +378,8 @@ var View = React.createClass({
             disabled={!my_turn || game.phase !== 'defend'} />
           <input type="button" onClick={this.yield} value="yield"
             disabled={!my_turn || game.phase !== 'main'} />
+          <input type="button" onClick={this.forfeit} value="forfeit"
+            disabled={game.winner !== undefined} />
         </div>
         <div>Scrap: {me.scrap}</div>
         <div>Power: {render_power(me)}</div>

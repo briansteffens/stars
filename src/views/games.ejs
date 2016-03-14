@@ -79,12 +79,12 @@
             var other_user = get_other_player(this, game);
 
             let winner = 'undecided';
-            if (game.winner !== undefined) {
+            if (game.state.winner !== undefined) {
               winner = game.winner == user_id ? username : other_user.username;
             }
 
             let join_link = '';
-            if (game.winner === undefined) {
+            if (game.state.winner === undefined) {
               join_link = (<a href={"game/" + game.id}>join</a>);
             }
 
@@ -104,11 +104,15 @@
             for (let game of this.state.games) {
               let other_user = get_other_player(this, game);
               if (other_user.id == user.id) {
-                if (game.winner === undefined) {
+                if (game.state.winner === undefined) {
                   already_playing = true;
                   break;
                 }
               }
+            }
+
+            if (already_playing) {
+              continue;
             }
 
             against.push(
