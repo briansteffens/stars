@@ -87,6 +87,13 @@ var View = React.createClass({
       source: source,
     });
   },
+  target_cancel: function(e) {
+    this.setState({
+      game: clone(this.state.game),
+      action: null,
+      source: null
+    });
+  },
   target_finish: function(target, e) {
     socket.send(JSON.stringify({
       type: 'action',
@@ -94,11 +101,7 @@ var View = React.createClass({
       action: this.state.action.name,
       target: target.copy_id,
     }));
-    this.setState({
-      game: clone(this.state.game),
-      action: null,
-      source: null,
-    });
+    this.target_cancel(e);
   },
   toggle_power: function(card, e) {
     socket.send(JSON.stringify({
@@ -367,6 +370,14 @@ var View = React.createClass({
       );
     }
 
+    let cancel_target_button = '';
+    if (this.state.action !== null) {
+      cancel_target_button = (
+        <input type="button" onClick={this.target_cancel}
+          value="cancel action" />
+      );
+    }
+
     return (
       <div>
         {pregame}
@@ -380,6 +391,7 @@ var View = React.createClass({
             disabled={!my_turn || game.phase !== 'main'} />
           <input type="button" onClick={this.forfeit} value="forfeit"
             disabled={game.winner !== undefined} />
+          {cancel_target_button}
         </div>
         <div>Scrap: {me.scrap}</div>
         <div>Power: {render_power(me)}</div>
