@@ -332,7 +332,18 @@
           },
         },
       ],
-      _draw_chances: 10,
+      _draw_chances: 7,
+    },{
+      name: 'cleanse',
+      type: 'instant',
+      cost: 4,
+      actions: [
+        {
+          name: 'cleanse',
+          targeting: ['friendly', 'enemy', 'ship'],
+        },
+      ],
+      _draw_chances: 15,
     }]);
   };
 

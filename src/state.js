@@ -101,6 +101,9 @@
           }
           ctx.target.power = ctx.effect.old_power * ctx.effect.turn_counter;
         },
+        on_detach: function(ctx) {
+          ctx.target.power = ctx.effect.old_power;
+        },
       },
       time_bomb: {
         on_attach: function(ctx) {
@@ -116,6 +119,7 @@
             }
           }
         },
+        on_detach: function(ctx) {},
       },
       weapon_jammer: {
         on_attach: function(ctx) {
@@ -130,6 +134,9 @@
             ctx.target.effects.splice(
                 ctx.target.effects.indexOf(ctx.effect), 1);
           }
+        },
+        on_detach: function(ctx) {
+          ctx.target.attack = ctx.effect.old_attack;
         },
       },
     };
@@ -523,6 +530,22 @@
               player: player,
               other_player: other_player,
             });
+            break;
+          case 'cleanse':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
+            if (target.effects !== undefined) {
+              for (let effect of target.effects) {
+                handle_effect_event('on_detach', {
+                  target: target,
+                  effect: effect,
+                  player: player,
+                  other_player: other_player,
+                });
+              }
+              target.effects = [];
+            }
             break;
           default:
             throw 'Action '+action.name+' unknown';
