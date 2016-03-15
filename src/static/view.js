@@ -194,8 +194,7 @@ var View = React.createClass({
       }
 
       let scrap = '';
-      if (is_mine && card.type !== 'generator' &&
-          card.name !== 'mother ship' && card.type !== 'resource') {
+      if (is_mine && (card.type === 'ship' || card.type === 'instant')) {
         scrap = (<input type="button" value="scrap" disabled={!my_turn}
             onClick={that.scrap.bind(null, card)} />);
       }
@@ -206,6 +205,7 @@ var View = React.createClass({
       let play = '';
       let shields = '';
       let effects = '';
+      let mass = '';
 
       if (is_perm) {
         // Target button
@@ -219,7 +219,10 @@ var View = React.createClass({
           for (let i = 0; i < card.actions.length; i++) {
             let action = card.actions[i];
             let can_attack = is_perm && my_turn && that.state.action === null &&
-                card.powered && !card.tapped;
+                !card.tapped;
+            if (card.type !== 'black_hole') {
+              can_attack = can_attack && card.powered;
+            }
             actions.push(
               <input type="button" value={action.name} key={action.name}
                 onClick={that.target_start.bind(null, card, action)}
@@ -242,7 +245,8 @@ var View = React.createClass({
         }
 
         // Shields
-        if (card.shields !== undefined && card.type !== 'generator') {
+        if (card.shields !== undefined && card.type !== 'generator' &&
+            card.type !== 'black_hole') {
           shields = (<span>shields: {card.shields}</span>);
 
           if (is_mine) {
@@ -276,6 +280,11 @@ var View = React.createClass({
 
           effects = (<div>{eles}</div>);
         }
+
+        // Mass
+        if (card.mass !== undefined) {
+          mass = (<div>mass: {card.mass}</div>);
+        }
       }
       else {
         // Play button
@@ -305,6 +314,7 @@ var View = React.createClass({
           {effects}
           {generates}
           <div>{stats}</div>
+          {mass}
           {cost}
           {upkeep}
           {worth}

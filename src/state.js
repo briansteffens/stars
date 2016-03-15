@@ -85,6 +85,57 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
+    let consume = function(source, target_id) {
+      let info = exports.get_card_info(state, target_id);
+      info.collection.splice(info.collection.indexOf(info.card), 1);
+      if (info.card.mass !== undefined) {
+        source.mass += info.card.mass;
+      } else if (info.card.power !== undefined) {
+        source.mass += info.card.power;
+      } else {
+        source.mass++;
+      }
+      source.tapped = true;
+    }
+
+    let permanent_handlers = {
+      black_hole: {
+        on_turn_end: function(ctx) {
+          if (!ctx.permanent.tapped) {
+            let consumable = function(player) {
+              let ret = [];
+              for (let perm of player.permanents) {
+                if (perm.name !== 'mother ship' &&
+                    perm.copy_id !== ctx.permanent.copy_id) {
+                  ret.push(perm);
+                }
+              }
+              return ret;
+            }
+
+            let options = consumable(player).concat(consumable(other_player));
+            if (options.length == 0) {
+              console.log('Nothing left to consume');
+            } else {
+              let index = Math.floor(game.rng() * options.length);
+              consume(ctx.permanent, options[index].copy_id);
+            }
+          }
+        },
+      },
+    };
+
+    let handle_permanent_event = function(handler_name, ctx) {
+      if (!permanent_handlers.hasOwnProperty(ctx.permanent.type)) {
+        return;
+      }
+      let handler = permanent_handlers[ctx.permanent.type];
+      if (!handler.hasOwnProperty(handler_name)) {
+        return;
+      }
+      handler[handler_name](ctx);
+    };
+
     let effect_handlers = {
       overburner: {
         on_attach: function(ctx) {
@@ -195,6 +246,16 @@
         return;
       }
       handler[handler_name](ctx);
+    };
+
+    let on_turn_end = function() {
+      for (let permanent of player.permanents) {
+        handle_permanent_event('on_turn_end', {
+          permanent: permanent,
+          player: player,
+          other_player: other_player,
+        });
+      }
     };
 
     var phase_main_start = function(player, other_player) {
@@ -313,6 +374,10 @@
           throw "Cannot scrap other player's card";
         }
 
+        if (info.card.type !== 'ship' && info.card.type !== 'instant') {
+          throw 'Cannot scrap this card type';
+        }
+
         info.collection.splice(info.collection.indexOf(info.card), 1);
         let cost = info.card.cost !== undefined ? info.card.cost : 0;
         player.scrap += Math.floor(cost / 2);
@@ -336,6 +401,8 @@
         if (state.phase !== 'main') {
           throw 'Can only yield in main phase';
         }
+
+        on_turn_end();
 
         state.turn++;
 
@@ -413,7 +480,7 @@
 
         if (card.type === 'resource') {
           player.scrap += remove_from_hand().worth;
-        } else if (card.type === 'generator' || card.type === 'ship') {
+        } else if (['generator','ship','black_hole'].indexOf(card.type) >= 0) {
           // Mark a card type as played this turn
           if (card.type === 'generator') {
             player.cant_play.push(card.type);
@@ -452,7 +519,8 @@
           throw 'Action '+move.action+' not found';
         }
 
-        if (source.type !== 'instant' && !source.powered) {
+        if (source.type !== 'black_hole' && source.type !== 'instant' &&
+            !source.powered) {
           throw 'Actor is powered down';
         }
 
@@ -547,6 +615,12 @@
               target.effects = [];
             }
             break;
+          case 'consume':
+            if (target.name === 'mother ship') {
+              throw 'Cannot use this on the mother ship';
+            }
+            consume(source, target.copy_id);
+            break;
           default:
             throw 'Action '+action.name+' unknown';
         }
@@ -580,6 +654,10 @@
 
         var card = exports.get_player_permanent(state, player.user_id,
             move.card);
+
+        if (card.type == 'black_hole') {
+          throw 'Cannot shield a black hole';
+        }
 
         card.shields = Math.max(card.shields + move.delta, 0);
 

@@ -344,6 +344,18 @@
         },
       ],
       _draw_chances: 15,
+    },{
+      name: 'black hole',
+      type: 'black_hole',
+      cost: 2,
+      mass: 1,
+      actions: [
+        {
+          name: 'consume',
+          targeting: ['friendly', 'enemy', 'ship', 'generator', 'black_hole'],
+        },
+      ],
+      _draw_chances: 200,
     }]);
   };
 
