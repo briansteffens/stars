@@ -30,6 +30,12 @@
   border: solid 2px #afc;
 }
 
+.black_hole {
+  background-color: #000;
+  border: solid 2px #aaa;
+  color: #fff;
+}
+
 div.player_separator {
   background-color: #cde;
   border: solid 2px #def;

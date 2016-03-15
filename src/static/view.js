@@ -187,6 +187,9 @@ var View = React.createClass({
       if (card.type === 'generator') {
         classes += ' generator';
       }
+      if (card.type === 'black_hole') {
+        classes += ' black_hole';
+      }
 
       let generates = '';
       if (card.power !== undefined) {
