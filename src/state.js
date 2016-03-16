@@ -272,10 +272,14 @@
 
       // reset explore count
       state.can_explore = 1;
+      let chance = 1.0;
       for (var i = 0; i < player.permanents.length; i++) {
         if (player.permanents[i].name === 'exploratory drone' &&
             player.permanents[i].powered) {
-          state.can_explore++;
+          chance /= 2;
+          if (game.rng() < chance) {
+            state.can_explore++;
+          }
         }
       }
 
