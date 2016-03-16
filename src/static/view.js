@@ -197,7 +197,8 @@ var View = React.createClass({
       }
 
       let scrap = '';
-      if (is_mine && (card.type === 'ship' || card.type === 'instant')) {
+      if (is_mine && (card.type === 'ship' || card.type === 'instant') &&
+          card.name !== 'mother ship') {
         scrap = (<input type="button" value="scrap" disabled={!my_turn}
             onClick={that.scrap.bind(null, card)} />);
       }

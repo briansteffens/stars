@@ -374,7 +374,8 @@
           throw "Cannot scrap other player's card";
         }
 
-        if (info.card.type !== 'ship' && info.card.type !== 'instant') {
+        if ((info.card.type !== 'ship' && info.card.type !== 'instant') ||
+            info.card.name === 'mother ship') {
           throw 'Cannot scrap this card type';
         }
 
