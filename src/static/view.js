@@ -333,8 +333,22 @@ var View = React.createClass({
     let render_permanents = function(perms, are_mine) {
       let ret = [];
 
-      for (let i = 0; i < perms.length; i++) {
-        ret.push(render_card(perms[i], are_mine, true));
+      for (let perm of perms) {
+        if (perm.name === 'mother ship') {
+          ret.push(render_card(perm, are_mine, true));
+        }
+      }
+
+      for (let perm of perms) {
+        if (perm.name !== 'mother ship' && perm.types.contains('generator')) {
+          ret.push(render_card(perm, are_mine, true));
+        }
+      }
+
+      for (let perm of perms) {
+        if (perm.name !== 'mother ship' && !perm.types.contains('generator')) {
+          ret.push(render_card(perm, are_mine, true));
+        }
       }
 
       return ret;
