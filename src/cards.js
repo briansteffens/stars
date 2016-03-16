@@ -300,7 +300,7 @@
           },
         },
       ],
-      _draw_chances: 30,
+      _draw_chances: 15,
     },{
       name: 'weapon jammer',
       type: 'instant',
@@ -316,7 +316,7 @@
           },
         },
       ],
-      _draw_chances: 20,
+      _draw_chances: 10,
     },{
       name: 'long weapon jammer',
       type: 'instant',
@@ -347,7 +347,7 @@
     },{
       name: 'black hole',
       type: 'black_hole',
-      cost: 2,
+      cost: 5,
       mass: 1,
       actions: [
         {
@@ -355,7 +355,7 @@
           targeting: ['friendly', 'enemy', 'ship', 'generator', 'black_hole'],
         },
       ],
-      _draw_chances: 200,
+      _draw_chances: 5,
     }]);
   };
 
