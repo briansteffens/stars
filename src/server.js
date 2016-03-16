@@ -4,6 +4,7 @@ var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
 var seedrandom = require('seedrandom');
 
+require('./static/common.js');
 var cards = require('./cards.js');
 var state = require('./state.js');
 
@@ -314,15 +315,15 @@ wss.on('connection', function(ws) {
   };
 
   var send = function(payload, to_player) {
-    if (typeof to_player === 'undefined') {
+    if (to_player === undefined) {
       to_player = player_id;
     }
     var socket = game.sockets[to_player];
-    if (typeof socket === 'undefined') {
+    if (socket === undefined) {
       return;
     }
     socket.send(JSON.stringify(payload), function ack(error) {
-      if (typeof error === 'undefined') {
+      if (error === undefined) {
         return;
       }
       if (error.message === 'not opened') {
@@ -393,7 +394,7 @@ wss.on('connection', function(ws) {
       };
       game.chats.splice(0, 0, newMessage.chat);
       for (var i = 0; i < game.player_ids.length; i++) {
-        if (typeof game.sockets[game.player_ids[i]] !== 'undefined') {
+        if (game.sockets[game.player_ids[i]] !== undefined) {
           send(newMessage, game.player_ids[i]);
         }
       }

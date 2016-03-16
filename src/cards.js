@@ -38,14 +38,14 @@
   exports.all = function() {
     return exports.fill_in([{
       name: 'exploratory drone',
-      type: 'ship',
+      types: ['ship'],
       cost: 1,
       upkeep: 1,
       defense: 3,
       _draw_chances: 13,
     },{
       name: 'fighter',
-      type: 'ship',
+      types: ['ship'],
       cost: 2,
       upkeep: 2,
       attack: 2,
@@ -53,7 +53,7 @@
       _draw_chances: 25,
     },{
       name: 'bomber',
-      type: 'ship',
+      types: ['ship'],
       cost: 4,
       upkeep: 3,
       attack: 4,
@@ -61,7 +61,7 @@
       _draw_chances: 18,
     },{
       name: 'glass cannon',
-      type: 'ship',
+      types: ['ship'],
       cost: 5,
       upkeep: 5,
       attack: 5,
@@ -69,7 +69,7 @@
       _draw_chances: 2,
     },{
       name: 'laser turret',
-      type: 'ship',
+      types: ['ship'],
       cost: 1,
       upkeep: 3,
       attack: 1,
@@ -77,7 +77,7 @@
       _draw_chances: 10,
     },{
       name: 'reaper',
-      type: 'ship',
+      types: ['ship'],
       cost: 13,
       upkeep: 7,
       attack: 9,
@@ -85,22 +85,22 @@
       _draw_chances: 11,
     },{
       name: 'crude reactor',
-      type: 'generator',
+      types: ['generator'],
       power: 1,
       _draw_chances: 18,
     },{
       name: 'reactor',
-      type: 'generator',
+      types: ['generator'],
       power: 2,
       _draw_chances: 12,
     },{
       name: 'scrap',
-      type: 'resource',
+      types: ['resource'],
       worth: 1,
       _draw_chances: 19,
     },{
       name: 'repair crew',
-      type: 'instant',
+      types: ['instant'],
       actions: [
         {
           name: 'repair',
@@ -111,12 +111,12 @@
       _draw_chances: 7,
     },{
       name: 'shield hardware',
-      type: 'shields',
+      types: ['shields'],
       shields: 1,
       _draw_chances: 20,
     },{
       name: 'implosion bomb',
-      type: 'instant',
+      types: ['instant'],
       cost: 8,
       actions: [
         {
@@ -128,7 +128,7 @@
       _draw_chances: 5,
     },{
       name: 'weapons upgrade',
-      type: 'instant',
+      types: ['instant'],
       cost: 3,
       actions: [
         {
@@ -140,7 +140,7 @@
       _draw_chances: 13,
     },{
       name: 'weapons damager',
-      type: 'instant',
+      types: ['instant'],
       cost: 4,
       actions: [
         {
@@ -152,7 +152,7 @@
       _draw_chances: 11,
     },{
       name: 'hardware upgrade',
-      type: 'instant',
+      types: ['instant'],
       cost: 4,
       actions: [
         {
@@ -165,7 +165,7 @@
       _draw_chances: 9,
     },{
       name: 'supreme hardware upgrade',
-      type: 'instant',
+      types: ['instant'],
       cost: 6,
       actions: [
         {
@@ -178,7 +178,7 @@
       _draw_chances: 4,
     },{
       name: 'hull breaker',
-      type: 'instant',
+      types: ['instant'],
       cost: 6,
       actions: [
         {
@@ -190,7 +190,7 @@
       _draw_chances: 2,
     },{
       name: 'repair bot',
-      type: 'ship',
+      types: ['ship'],
       upkeep: 1,
       defense: 2,
       actions: [
@@ -203,7 +203,7 @@
       _draw_chances: 5,
     },{
       name: 'piracy crew',
-      type: 'instant',
+      types: ['instant'],
       cost: 3,
       actions: [
         {
@@ -214,7 +214,7 @@
       _draw_chances: 15,
     },{
       name: 'conversion kit: defense',
-      type: 'instant',
+      types: ['instant'],
       cost: 2,
       actions: [
         {
@@ -227,7 +227,7 @@
       _draw_chances: 13,
     },{
       name: 'conversion kit: attack',
-      type: 'instant',
+      types: ['instant'],
       cost: 2,
       actions: [
         {
@@ -240,7 +240,7 @@
       _draw_chances: 13,
     },{
       name: 'overburner',
-      type: 'instant',
+      types: ['instant'],
       cost: 3,
       actions: [
         {
@@ -248,14 +248,14 @@
           targeting: ['friendly', 'enemy', 'generator'],
           effect: {
             name: 'overburner',
-            type: 'overburner',
+            types: ['overburner'],
           },
         },
       ],
       _draw_chances: 20,
     },{
       name: 'time bomb',
-      type: 'instant',
+      types: ['instant'],
       cost: 2,
       actions: [
         {
@@ -263,7 +263,7 @@
           targeting: ['enemy', 'ship'],
           effect: {
             name: 'time bomb',
-            type: 'time_bomb',
+            types: ['time_bomb'],
             damage: 4,
           },
         },
@@ -271,7 +271,7 @@
       _draw_chances: 18,
     },{
       name: 'massive time bomb',
-      type: 'instant',
+      types: ['instant'],
       cost: 6,
       actions: [
         {
@@ -279,7 +279,7 @@
           targeting: ['enemy', 'ship'],
           effect: {
             name: 'massive time bomb',
-            type: 'time_bomb',
+            types: ['time_bomb'],
             damage: 12,
           },
         }
@@ -287,7 +287,7 @@
       _draw_chances: 6,
     },{
       name: 'brief weapon jammer',
-      type: 'instant',
+      types: ['instant'],
       cost: 3,
       actions: [
         {
@@ -295,7 +295,7 @@
           targeting: ['enemy', 'ship'],
           effect: {
             name: 'weapon jammer',
-            type: 'weapon_jammer',
+            types: ['weapon_jammer'],
             turns: 1,
           },
         },
@@ -303,7 +303,7 @@
       _draw_chances: 15,
     },{
       name: 'weapon jammer',
-      type: 'instant',
+      types: ['instant'],
       cost: 5,
       actions: [
         {
@@ -311,7 +311,7 @@
           targeting: ['enemy', 'ship'],
           effect: {
             name: 'weapon jammer',
-            type: 'weapon_jammer',
+            types: ['weapon_jammer'],
             turns: 2,
           },
         },
@@ -319,7 +319,7 @@
       _draw_chances: 10,
     },{
       name: 'long weapon jammer',
-      type: 'instant',
+      types: ['instant'],
       cost: 7,
       actions: [
         {
@@ -327,7 +327,7 @@
           targeting: ['enemy', 'ship'],
           effect: {
             name: 'weapon jammer',
-            type: 'weapon_jammer',
+            types: ['weapon_jammer'],
             turns: 3,
           },
         },
@@ -335,7 +335,7 @@
       _draw_chances: 7,
     },{
       name: 'cleanse',
-      type: 'instant',
+      types: ['instant'],
       cost: 4,
       actions: [
         {
@@ -346,7 +346,7 @@
       _draw_chances: 15,
     },{
       name: 'black hole',
-      type: 'black_hole',
+      types: ['black_hole'],
       cost: 5,
       mass: 1,
       actions: [
@@ -362,37 +362,37 @@
   exports.explore = function() {
     return exports.fill_in([{
       name: 'asteroid',
-      type: 'resource',
+      types: ['resource'],
       worth: 2,
       _draw_chances: 150,
     },{
       name: 'rocky planet',
-      type: 'resource',
+      types: ['resource'],
       worth: 4,
       _draw_chances: 40,
     },{
       name: 'ship wreckage',
-      type: 'resource',
+      types: ['resource'],
       worth: 3,
       _draw_chances: 80,
     },{
       name: 'brown dwarf',
-      type: 'generator',
+      types: ['generator'],
       power: 3,
       _draw_chances: 35,
     },{
       name: 'white dwarf',
-      type: 'generator',
+      types: ['generator'],
       power: 4,
       _draw_chances: 20,
     },{
       name: 'blue supergiant',
-      type: 'generator',
+      types: ['generator'],
       power: 10,
       _draw_chances: 1,
     },{
       name: 'yellow dwarf',
-      type: 'generator',
+      types: ['generator'],
       power: 5,
       _draw_chances: 10,
     }]);
@@ -401,7 +401,7 @@
   exports.mother_ship = function() {
     return exports.fill_in([{
       name: 'mother ship',
-      type: 'ship',
+      types: ['ship'],
       defense: 20,
     }])[0];
   };

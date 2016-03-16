@@ -74,7 +74,7 @@ var View = React.createClass({
     socket.send(JSON.stringify({type: 'explore'}));
   },
   play: function(card, e) {
-    if (card.type === 'instant') {
+    if (card.types.indexOf('instant') >= 0) {
       this.target_start(card, card.actions[0], e);
     } else {
       socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
@@ -140,7 +140,7 @@ var View = React.createClass({
   render: function() {
     var game = this.state.game;
 
-    if (typeof game_info === 'undefined' || game === null) {
+    if (game_info === undefined || game === null) {
       return (<i>Connecting..</i>);
     }
 
@@ -166,29 +166,28 @@ var View = React.createClass({
       let is_targeting = false;
       if (is_perm && my_turn && that.state.action !== null) {
         let targets = that.state.action.targeting;
-        if (targets.indexOf('friendly') >= 0) {
+        if (targets.contains('friendly')) {
           is_targeting = is_targeting ||
-            is_mine && targets.indexOf(card.type) >= 0;
+            is_mine && targets.intersect(card.types).length > 0;
         }
-        if (targets.indexOf('enemy') >= 0) {
+        if (targets.contains('enemy')) {
           is_targeting = is_targeting ||
-            !is_mine && targets.indexOf(card.type) >= 0;
+            !is_mine && targets.intersect(card.types).length > 0;
         }
       }
 
-      let or_zero = function(v) { return typeof v !== 'undefined' ? v : 0 };
+      let or_zero = function(v) { return v !== undefined ? v : 0 };
 
       let stats = '';
-      if (card.type === 'ship') {
+      if (card.types.contains('ship')) {
         stats = or_zero(card.attack) + '/' + or_zero(card.hp);
       }
 
       let classes = 'permanent';
-      if (card.type === 'generator') {
-        classes += ' generator';
-      }
-      if (card.type === 'black_hole') {
-        classes += ' black_hole';
+      for (let cls of ['generator', 'black_hole']) {
+        if (card.types.contains(cls)) {
+          classes += ' ' + cls;
+        }
       }
 
       let generates = '';
@@ -197,7 +196,7 @@ var View = React.createClass({
       }
 
       let scrap = '';
-      if (is_mine && (card.type === 'ship' || card.type === 'instant') &&
+      if (is_mine && (card.types.intersect(['ship','instant']).length > 0) &&
           card.name !== 'mother ship') {
         scrap = (<input type="button" value="scrap" disabled={!my_turn}
             onClick={that.scrap.bind(null, card)} />);
@@ -224,7 +223,7 @@ var View = React.createClass({
             let action = card.actions[i];
             let can_attack = is_perm && my_turn && that.state.action === null &&
                 !card.tapped;
-            if (card.type !== 'black_hole') {
+            if (!card.types.contains('black_hole')) {
               can_attack = can_attack && card.powered;
             }
             actions.push(
@@ -249,8 +248,8 @@ var View = React.createClass({
         }
 
         // Shields
-        if (card.shields !== undefined && card.type !== 'generator' &&
-            card.type !== 'black_hole') {
+        if (card.shields !== undefined &&
+            card.types.intersect(['generator','black_hole']).length == 0) {
           shields = (<span>shields: {card.shields}</span>);
 
           if (is_mine) {
@@ -350,7 +349,7 @@ var View = React.createClass({
     }
 
     let gameover = '';
-    if (typeof game.winner !== 'undefined') {
+    if (game.winner !== undefined) {
       let outcome = game.winner == game_info.user_id ? 'won' : 'lost';
       gameover = (<h3>Game over! You {outcome}!</h3>);
     }

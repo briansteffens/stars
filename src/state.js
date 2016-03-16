@@ -76,7 +76,7 @@
   }
 
   exports.apply_move = function(game, move) {
-    if (typeof game.state.winner !== 'undefined') {
+    if (game.state.winner !== undefined) {
       console.log('game already finished');
       return;
     }
@@ -126,14 +126,16 @@
     };
 
     let handle_permanent_event = function(handler_name, ctx) {
-      if (!permanent_handlers.hasOwnProperty(ctx.permanent.type)) {
-        return;
+      for (let type of ctx.permanent.types) {
+        if (!permanent_handlers.hasOwnProperty(type)) {
+          return;
+        }
+        let handler = permanent_handlers[type];
+        if (!handler.hasOwnProperty(handler_name)) {
+          return;
+        }
+        handler[handler_name](ctx);
       }
-      let handler = permanent_handlers[ctx.permanent.type];
-      if (!handler.hasOwnProperty(handler_name)) {
-        return;
-      }
-      handler[handler_name](ctx);
     };
 
     let effect_handlers = {
@@ -201,15 +203,15 @@
       for (var i = 0; i < player.permanents.length; i++) {
         var perm = player.permanents[i];
 
-        if (typeof perm.power !== 'undefined') {
+        if (perm.power !== undefined) {
           player.power_total += perm.power;
         }
 
-        if (perm.powered && typeof perm.upkeep !== 'undefined') {
+        if (perm.powered && perm.upkeep !== undefined) {
           player.power_used += perm.upkeep;
         }
 
-        if (typeof perm.shields !== 'undefined') {
+        if (perm.shields !== undefined) {
           player.shields_used += perm.shields;
           player.power_used += perm.shields;
         }
@@ -224,7 +226,7 @@
         var perm = player.permanents[i];
 
         if (player.power_used > player.power_total &&
-            perm.powered && typeof perm.upkeep !== 'undefined') {
+            perm.powered && perm.upkeep !== undefined) {
           perm.powered = false;
           player.power_used -= perm.upkeep;
         }
@@ -238,14 +240,16 @@
     };
 
     let handle_effect_event = function(handler_name, ctx) {
-      if (!effect_handlers.hasOwnProperty(ctx.effect.type)) {
-        return;
+      for (let type of ctx.effect.types) {
+        if (!effect_handlers.hasOwnProperty(type)) {
+          return;
+        }
+        let handler = effect_handlers[type];
+        if (!handler.hasOwnProperty(handler_name)) {
+          return;
+        }
+        handler[handler_name](ctx);
       }
-      let handler = effect_handlers[ctx.effect.type];
-      if (!handler.hasOwnProperty(handler_name)) {
-        return;
-      }
-      handler[handler_name](ctx);
     };
 
     let on_turn_end = function() {
@@ -378,7 +382,7 @@
           throw "Cannot scrap other player's card";
         }
 
-        if ((info.card.type !== 'ship' && info.card.type !== 'instant') ||
+        if (info.card.types.intersect(['ship','instant']).length == 0 ||
             info.card.name === 'mother ship') {
           throw 'Cannot scrap this card type';
         }
@@ -478,17 +482,19 @@
           return player.hand.splice(index, 1)[0];
         }
 
-        if (player.cant_play.indexOf(card.type) >= 0) {
-          console.log(card.type + ' has already been played this turn');
-          return;
+        if (player.cant_play.intersect(card.types).length > 0) {
+          throw 'Card has already been played this turn';
         }
 
-        if (card.type === 'resource') {
+        let is_generator_ship_or_black_hole =
+          card.types.intersect(['generator','ship','black_hole']).length > 0;
+
+        if (card.types.contains('resource')) {
           player.scrap += remove_from_hand().worth;
-        } else if (['generator','ship','black_hole'].indexOf(card.type) >= 0) {
+        } else if (is_generator_ship_or_black_hole) {
           // Mark a card type as played this turn
-          if (card.type === 'generator') {
-            player.cant_play.push(card.type);
+          if (card.types.contains('generator')) {
+            player.cant_play = player.cant_play.concat(card.types);
           }
 
           var cost = card.hasOwnProperty('cost') ? card.cost : 0;
@@ -499,12 +505,12 @@
             player.scrap -= cost;
             player.permanents.push(remove_from_hand());
           }
-        } else if (card.type === 'shields') {
+        } else if (card.types.contains('shields')) {
           player.shields_total = Math.min(player.shields_total+card.shields,
               10);
           remove_from_hand();
         } else {
-          throw 'Unplayable card type ' + card.type;
+          throw 'Unplayable card type ' + card.types;
         }
       }
       else if (move.type === 'action') {
@@ -524,7 +530,7 @@
           throw 'Action '+move.action+' not found';
         }
 
-        if (source.type !== 'black_hole' && source.type !== 'instant' &&
+        if (source.types.intersect(['black_hole','instant']).length == 0 &&
             !source.powered) {
           throw 'Actor is powered down';
         }
@@ -533,7 +539,7 @@
           throw 'Actor already tapped';
         }
 
-        if (source.type === 'instant' && typeof source.cost !== 'undefined') {
+        if (source.types.contains('instant') && source.cost !== undefined) {
           player.scrap -= source.cost;
           if (player.scrap < 0) {
             throw 'Not enough scrap';
@@ -569,12 +575,10 @@
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
-            if (typeof action.attack !== 'undefined' &&
-                typeof target.attack !== 'undefined') {
+            if (action.attack !== undefined && target.attack !== undefined) {
               target.attack = Math.max(target.attack + action.attack, 0);
             }
-            if (typeof action.defense !== 'undefined' &&
-                typeof target.defense !== 'undefined') {
+            if (action.defense !== undefined && target.defense !== undefined) {
               target.defense = Math.max(target.defense + action.defense, 0);
               target.hp = target.defense;
             }
@@ -630,7 +634,7 @@
             throw 'Action '+action.name+' unknown';
         }
 
-        if (source.type === 'instant') {
+        if (source.types.contains('instant')) {
           player.hand.splice(player.hand.indexOf(source), 1);
         }
       }
@@ -660,7 +664,7 @@
         var card = exports.get_player_permanent(state, player.user_id,
             move.card);
 
-        if (card.type == 'black_hole') {
+        if (card.types.contains('black_hole')) {
           throw 'Cannot shield a black hole';
         }
 
@@ -708,4 +712,4 @@
   exports.next_player = function(game, player_id) {
     return game.player_ids[(game.player_ids[0] == player_id) | 0];
   };
-})(typeof exports === 'undefined' ? this['state'] = {} : exports);
+})(exports === undefined ? this['state'] = {} : exports);
