@@ -625,6 +625,9 @@
             }
             consume(source, target.copy_id);
             break;
+          case 'reactor_upgrade':
+            target.power += action.amount;
+            break;
           default:
             throw 'Action '+action.name+' unknown';
         }

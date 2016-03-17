@@ -85,19 +85,31 @@
       _draw_chances: 11,
     },{
       name: 'crude reactor',
-      types: ['generator'],
+      types: ['generator', 'reactor'],
       power: 1,
       _draw_chances: 25,
     },{
       name: 'reactor',
-      types: ['generator'],
+      types: ['generator', 'reactor'],
       power: 2,
       _draw_chances: 18,
     },{
       name: 'superior reactor',
-      types: ['generator'],
+      types: ['generator', 'reactor'],
       power: 3,
       _draw_chances: 12,
+    },{
+      name: 'reactor upgrade',
+      types: ['instant'],
+      cost: 2,
+      actions: [
+        {
+          name: 'reactor_upgrade',
+          targeting: ['friendly', 'reactor'],
+          amount: 1,
+        },
+      ],
+      _draw_chances: 30,
     },{
       name: 'scrap',
       types: ['resource'],
