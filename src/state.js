@@ -170,6 +170,8 @@
               ctx.player.permanents.splice(
                   ctx.player.permanents.indexOf(ctx.target), 1);
             }
+            ctx.target.effects.splice(
+                ctx.target.effects.indexOf(ctx.effect), 1);
           }
         },
         on_detach: function(ctx) {},
