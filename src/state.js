@@ -623,6 +623,9 @@
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
+            if (source.copy_id === target.copy_id) {
+              throw 'Cannot consume itself';
+            }
             consume(source, target.copy_id);
             break;
           case 'reactor_upgrade':
