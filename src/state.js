@@ -344,22 +344,17 @@
           state.turn = 0;
           state.turn_player_id = player.user_id;
 
-          let first_player_id = null;
+          let player_ids = [];
           for (let player_id in state.players) {
             if (state.players.hasOwnProperty(player_id)) {
-              first_player_id = player_id;
-              break;
+              player_ids.push(player_id);
             }
           }
 
-          if (first_player_id === null) {
-            throw 'Unable to select a player to start';
-          }
+          state.turn_player_id = player_ids[Math.floor(game.rng() * 2)];
 
-          state.turn_player_id = first_player_id;
-
-          phase_main_start(state.players[first_player_id],
-            state.players[exports.next_player(game, first_player_id)]);
+          phase_main_start(state.players[state.turn_player_id],
+            state.players[exports.next_player(game, state.turn_player_id)]);
         }
       } else {
         throw 'Invalid move type during pre-game phase';
