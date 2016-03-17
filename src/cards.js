@@ -87,11 +87,16 @@
       name: 'crude reactor',
       types: ['generator'],
       power: 1,
-      _draw_chances: 18,
+      _draw_chances: 25,
     },{
       name: 'reactor',
       types: ['generator'],
       power: 2,
+      _draw_chances: 18,
+    },{
+      name: 'superior reactor',
+      types: ['generator'],
+      power: 3,
       _draw_chances: 12,
     },{
       name: 'scrap',
