@@ -369,8 +369,11 @@ var View = React.createClass({
     }
 
     let render_power = function(player) {
-      return (<span className="power">{player.power_used}/{player.power_total}
-          </span>);
+      return (
+        <span className="power">
+          {player.power_total - player.power_used}/{player.power_total}
+        </span>
+      );
     };
 
     let render_shields = function(player) {
