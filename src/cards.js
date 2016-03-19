@@ -381,7 +381,7 @@
       name: 'asteroid',
       types: ['resource'],
       worth: 2,
-      _draw_chances: 150,
+      _draw_chances: 140,
     },{
       name: 'rocky planet',
       types: ['resource'],
@@ -396,12 +396,12 @@
       name: 'brown dwarf',
       types: ['generator'],
       power: 3,
-      _draw_chances: 35,
+      _draw_chances: 40,
     },{
       name: 'white dwarf',
       types: ['generator'],
       power: 4,
-      _draw_chances: 20,
+      _draw_chances: 25,
     },{
       name: 'blue supergiant',
       types: ['generator'],
@@ -411,7 +411,7 @@
       name: 'yellow dwarf',
       types: ['generator'],
       power: 5,
-      _draw_chances: 10,
+      _draw_chances: 15,
     }]);
   };
 
