@@ -240,6 +240,14 @@ app.post('/games/new', function(req, res) {
   game.state.players[req.user.id].permanents.push(next_mother_ship());
   game.state.players[req.body.against].permanents.push(next_mother_ship());
 
+  for (let player_id of [req.user.id, req.body.against]) {
+    state.apply_move(game, {
+      type: 'mull',
+      user_id: player_id,
+      turn: game.state.turn,
+    });
+  }
+
   games.push(game);
 
   res.json(games_info(req.user.id));
