@@ -483,6 +483,10 @@ var Chat = React.createClass({
   },
   add: function(msg) {
     this.setState({chats: [msg, ...this.state.chats]});
+    window.requestAnimationFrame(function() {
+      let messages = document.getElementById("messages");
+      messages.scrollTop = messages.scrollHeight;
+    });
   },
   send: function(e) {
     e.preventDefault();
@@ -498,18 +502,24 @@ var Chat = React.createClass({
       var chat = this.state.chats[i];
       chats.push(
         <div key={i}>
-          [{chat.timestamp}]
           <strong>{chat.username}</strong>:
+          &nbsp;
           {chat.text}
         </div>
       );
     }
     return (
-      <form onSubmit={this.send}>
-        {chats}
-        <input type="text" placeholder="enter a message" ref="message" />
-        <input type="submit" value="send" />
-      </form>
+      <div className="chat">
+        <div id="messages" className="messages">
+          {chats}
+        </div>
+        <form onSubmit={this.send}>
+          <button className="submit">send</button>
+          <span>
+            <input type="text" placeholder="enter a message" ref="message" />
+          </span>
+        </form>
+      </div>
     );
   },
 });
