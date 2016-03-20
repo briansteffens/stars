@@ -13,16 +13,25 @@ body {
   position: fixed;
   background-color: #fff;
   width: 100%;
-  text-align: center;
 }
 
 #hud {
   border-bottom: solid 2px #aaa;
 }
 
-#enemy-hud {
+#hud-bottom {
+  display: flex;
   border-top: solid 2px #aaa;
+  height: 250px;
   bottom: 0px;
+}
+
+#hud-bottom div {
+  flex: 1;
+}
+
+#hud-bottom .log {
+  border-left: solid 2px #aaa;
 }
 
 .hud .stats {
@@ -88,19 +97,23 @@ div.hand_separator {
   font-style: italic;
 }
 
+.chat_container {
+  position: relative;
+}
+
 .chat {
-  position: fixed;
+  position: absolute;
   right: 0;
-  bottom: 20px;
-  background-color: #fff;
-  height: 300px;
-  border: solid 2px #aaa;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  border-left: solid 2px #aaa;
 }
 
 .chat .messages {
   overflow-y: scroll;
-  height: 265px;
-  width: 300px;
+  height: 220px;
+  width: 100%;
 }
 
 .chat form {

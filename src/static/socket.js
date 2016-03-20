@@ -9,7 +9,6 @@ var game = {
 };
 
 var game_info = undefined;
-var chat = undefined;
 var socket = undefined;
 var view = undefined;
 
@@ -27,11 +26,11 @@ function connect_socket(token) {
   socket.onmessage = function(e) {
     var msg = JSON.parse(e.data);
     if (msg.type === 'chat') {
-      chat.add(msg.chat);
+      view.add(msg.chat);
     }
     else if (msg.type === 'chats') {
       for (var i = msg.chats.length - 1; i >= 0; i--) {
-        chat.add(msg.chats[i]);
+        view.add(msg.chats[i]);
       }
     }
     else if (msg.type === 'greetings') {

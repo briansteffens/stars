@@ -4,6 +4,7 @@ var View = React.createClass({
       game: null,
       source: null,
       action: null,
+      chats: [],
     };
   },
   get_permanent: function(copy_id) {
@@ -54,14 +55,23 @@ var View = React.createClass({
       }
     }
   },
-  componentDidUpdate: function() {
-    setTimeout(this.render_canvas());
+  componentDidMount: function() {
+    setTimeout(start_socket);
   },
+/*  componentDidUpdate: function() {
+    setTimeout(function() {
+      this.render_canvas();
+
+      document.getElementById('hud-spacer').style.height =
+        document.getElementById('hud').offsetHeight + 'px';
+    });
+  },*/
   set_state: function(game_state) {
     this.setState({
       game: game_state,
-      source: JSON.parse(JSON.stringify(this.state.source)),
-      action: JSON.parse(JSON.stringify(this.state.action)),
+      source: clone(this.state.source),
+      action: clone(this.state.action),
+      chats: clone(this.state.chats),
     });
   },
   yield: function(e) {
@@ -85,6 +95,7 @@ var View = React.createClass({
       game: clone(this.state.game),
       action: action,
       source: source,
+      chats: clone(this.state.chats),
     });
   },
   target_cancel: function(e) {
@@ -136,6 +147,26 @@ var View = React.createClass({
       return;
     }
     socket.send(JSON.stringify({type: 'forfeit'}));
+  },
+  send: function(e) {
+    e.preventDefault();
+    socket.send(JSON.stringify({
+      type: 'chat',
+      text: this.refs.message.value,
+    }));
+    this.refs.message.value = '';
+  },
+  add: function(msg) {
+    this.setState({
+      game: clone(this.state.game),
+      action: clone(this.state.action),
+      source: clone(this.state.source),
+      chats: [msg, ...this.state.chats],
+    });
+    window.requestAnimationFrame(function() {
+      let messages = document.getElementById("messages");
+      messages.scrollTop = messages.scrollHeight;
+    });
   },
   render: function() {
     var game = this.state.game;
@@ -450,6 +481,34 @@ var View = React.createClass({
       );
     }
 
+    let chats = [];
+    for (let i = this.state.chats.length - 1; i >= 0; i--) {
+      let chat = this.state.chats[i];
+      chats.push(
+        <div key={i}>
+          <strong>{chat.username}</strong>:
+          &nbsp;
+          {chat.text}
+        </div>
+      );
+    }
+
+    let chat = (
+      <div className="chat_container">
+        <div className="chat">
+          <div id="messages" className="messages">
+            {chats}
+          </div>
+          <form onSubmit={this.send}>
+            <button className="submit">send</button>
+            <span>
+              <input type="text" placeholder="enter a message" ref="message" />
+            </span>
+          </form>
+        </div>
+      </div>
+    );
+
     return (
       <div>
         {hud}
@@ -460,10 +519,10 @@ var View = React.createClass({
         <div>{permanents}</div>
         <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
-        <div id="enemy-hud-spacer" />
-        <div id="enemy-hud" className="hud">
-          Hand: {enemy.hand.length} cards
+        <div id="hud-bottom-spacer" />
+        <div id="hud-bottom" className="hud">
           <div className="stats">
+            Hand: {enemy.hand.length} cards
             &nbsp;
             Scrap: {enemy.scrap}
             &nbsp;
@@ -471,60 +530,16 @@ var View = React.createClass({
             &nbsp;
             Shields: {render_shields(enemy)}
           </div>
+          {chat}
+          <div className="log">
+            Here is the log
+          </div>
         </div>
       </div>
     );
   },
 });
 
-var Chat = React.createClass({
-  getInitialState: function() {
-    return {chats: []};
-  },
-  add: function(msg) {
-    this.setState({chats: [msg, ...this.state.chats]});
-    window.requestAnimationFrame(function() {
-      let messages = document.getElementById("messages");
-      messages.scrollTop = messages.scrollHeight;
-    });
-  },
-  send: function(e) {
-    e.preventDefault();
-    socket.send(JSON.stringify({
-      type: 'chat',
-      text: this.refs.message.value,
-    }));
-    this.refs.message.value = '';
-  },
-  render: function() {
-    var chats = [];
-    for (var i = this.state.chats.length - 1; i >= 0; i--) {
-      var chat = this.state.chats[i];
-      chats.push(
-        <div key={i}>
-          <strong>{chat.username}</strong>:
-          &nbsp;
-          {chat.text}
-        </div>
-      );
-    }
-    return (
-      <div className="chat">
-        <div id="messages" className="messages">
-          {chats}
-        </div>
-        <form onSubmit={this.send}>
-          <button className="submit">send</button>
-          <span>
-            <input type="text" placeholder="enter a message" ref="message" />
-          </span>
-        </form>
-      </div>
-    );
-  },
-});
-
-chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
 view = ReactDOM.render(<View />, document.getElementById('view'));
 
 var body_el = document.getElementsByTagName('body').item(0);
@@ -534,6 +549,6 @@ body_el.onresize = function() {
   document.getElementById('hud-spacer').style.height =
     document.getElementById('hud').offsetHeight + 'px';
 
-  document.getElementById('enemy-hud-spacer').style.height =
-    document.getElementById('enemy-hud').offsetHeight + 'px';
+  document.getElementById('hud-bottom-spacer').style.height =
+    document.getElementById('hud-bottom').offsetHeight + 'px';
 }
