@@ -390,13 +390,13 @@ var View = React.createClass({
         enemy_ready = (<span>the other player is ready</span>);
       }
       pregame = (
-        <div>
+        <span>
           <input type="button" onClick={this.mull} value="mull"
             disabled={me.ready} />
           <input type="button" onClick={this.ready} value="ready"
             disabled={me.ready} />
           {enemy_ready}
-        </div>
+        </span>
       );
     }
 
@@ -408,44 +408,70 @@ var View = React.createClass({
       );
     }
 
-    return (
-      <div>
-        {pregame}
-        <div>
+    let hud = '';
+    if (pregame !== '') {
+      hud = (<div className="hud">{pregame}</div>);
+    } else {
+      let defend = '';
+      if (my_turn && game.phase === 'defend') {
+        defend = (
+          <input type="button" onClick={this.defend} value="defend"
+            disabled={!my_turn || game.phase !== 'defend'} />
+        );
+      }
+
+      hud = (
+        <div id="hud" className="hud">
+          {pregame}
           {gameover}
           It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
           Phase: <strong>{game.phase}</strong>
-          <input type="button" onClick={this.defend} value="defend"
-            disabled={!my_turn || game.phase !== 'defend'} />
+          {defend}
           <input type="button" onClick={this.yield} value="yield"
             disabled={!my_turn || game.phase !== 'main'} />
           <input type="button" onClick={this.forfeit} value="forfeit"
             disabled={game.winner !== undefined} />
           {cancel_target_button}
+          <div className="stats">
+            <input type="button" onClick={this.draw}
+              value={'draw (' + draw_possible + ')'}
+              disabled={!draw_possible} />
+            <input type="button" onClick={this.explore}
+              value={'explore (' + explore_possible + ')'}
+              disabled={!explore_possible} />
+            &nbsp;
+            Scrap: {me.scrap}
+            &nbsp;
+            Power: {render_power(me)}
+            &nbsp;
+            Shields: {render_shields(me)}
+          </div>
         </div>
-        <div>Scrap: {me.scrap}</div>
-        <div>Power: {render_power(me)}</div>
-        <div>Shields: {render_shields(me)}</div>
-        <div>
-          You can draw {draw_possible} cards.
-          <input type="button" onClick={this.draw} value="draw"
-            disabled={!draw_possible} />
-        </div>
-        <div>
-          You can explore {explore_possible} times.
-          <input type="button" onClick={this.explore} value="explore"
-            disabled={!explore_possible} />
-        </div>
+      );
+    }
+
+    return (
+      <div>
+        {hud}
+        <div id="hud-spacer" />
         <div>Your hand:</div>
         <div>{hand}</div>
         <div className="hand_separator"></div>
         <div>{permanents}</div>
         <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
-        <div>Enemy scrap: {enemy.scrap}</div>
-        <div>Enemy power: {render_power(enemy)}</div>
-        <div>Enemy shields: {render_shields(enemy)}</div>
-        <div>Enemy hand: {enemy.hand.length} cards</div>
+        <div id="enemy-hud-spacer" />
+        <div id="enemy-hud" className="hud">
+          Hand: {enemy.hand.length} cards
+          <div className="stats">
+            &nbsp;
+            Scrap: {enemy.scrap}
+            &nbsp;
+            Power: {render_power(enemy)}
+            &nbsp;
+            Shields: {render_shields(enemy)}
+          </div>
+        </div>
       </div>
     );
   },
@@ -492,4 +518,12 @@ chat = ReactDOM.render(<Chat />, document.getElementById('chat'));
 view = ReactDOM.render(<View />, document.getElementById('view'));
 
 var body_el = document.getElementsByTagName('body').item(0);
-body_el.onresize = view.render_canvas;
+body_el.onresize = function() {
+  view.render_canvas();
+
+  document.getElementById('hud-spacer').style.height =
+    document.getElementById('hud').offsetHeight + 'px';
+
+  document.getElementById('enemy-hud-spacer').style.height =
+    document.getElementById('enemy-hud').offsetHeight + 'px';
+}

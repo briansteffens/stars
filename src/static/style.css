@@ -1,8 +1,32 @@
+body {
+  margin: 0px;
+}
+
 #canvas {
   position: absolute;
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+.hud {
+  position: fixed;
+  background-color: #fff;
+  width: 100%;
+  text-align: center;
+}
+
+#hud {
+  border-bottom: solid 2px #aaa;
+}
+
+#enemy-hud {
+  border-top: solid 2px #aaa;
+  bottom: 0px;
+}
+
+.hud .stats {
+  float: right;
 }
 
 .permanent {
