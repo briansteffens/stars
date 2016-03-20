@@ -58,14 +58,6 @@ var View = React.createClass({
   componentDidMount: function() {
     setTimeout(start_socket);
   },
-/*  componentDidUpdate: function() {
-    setTimeout(function() {
-      this.render_canvas();
-
-      document.getElementById('hud-spacer').style.height =
-        document.getElementById('hud').offsetHeight + 'px';
-    });
-  },*/
   set_state: function(game_state) {
     this.setState({
       game: game_state,
@@ -73,6 +65,7 @@ var View = React.createClass({
       action: clone(this.state.action),
       chats: clone(this.state.chats),
     });
+    body_el.onresize();
   },
   yield: function(e) {
     socket.send(JSON.stringify({type: 'yield'}));
@@ -441,7 +434,7 @@ var View = React.createClass({
 
     let hud = '';
     if (pregame !== '') {
-      hud = (<div className="hud">{pregame}</div>);
+      hud = (<div id="hud" className="hud">{pregame}</div>);
     } else {
       let defend = '';
       if (my_turn && game.phase === 'defend') {
