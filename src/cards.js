@@ -439,6 +439,7 @@
       name: 'rocky planet',
       types: ['resource'],
       worth: 4,
+      image: 'rocky_planet.png',
       _draw_chances: 40,
     },{
       name: 'ship wreckage',
