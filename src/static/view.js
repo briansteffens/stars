@@ -248,7 +248,7 @@ var View = React.createClass({
       }
 
       return (
-        <img key={card.copy_id} src="/img/black_hole.png" className={cls}
+        <img key={card.copy_id} src={'/img/' + card.image} className={cls}
           onClick={that.select.bind(that, card)} />
       );
     };

@@ -3,11 +3,11 @@
     for (var i = 0; i < cards.length; i++) {
       let card = cards[i];
 
-      if (typeof card.actions === 'undefined') {
+      if (card.actions === undefined) {
         card.actions = [];
       }
 
-      if (typeof card.attack !== 'undefined') {
+      if (card.attack !== undefined) {
         var found = false;
         for (var j = 0; j < card.actions.length; j++) {
           if (card.actions[j].name === 'attack') {
@@ -23,12 +23,16 @@
         }
       }
 
-      if (typeof card.shields === 'undefined') {
+      if (card.shields === undefined) {
         card.shields = 0;
       }
 
-      if (typeof card.defense !== 'undefined') {
+      if (card.defense !== undefined) {
         card.hp = card.defense;
+      }
+
+      if (card.image === undefined) {
+        card.image = 'black_hole.png';
       }
     }
 
@@ -420,6 +424,7 @@
           targeting: ['friendly', 'enemy', 'ship', 'generator', 'black_hole'],
         },
       ],
+      image: 'black_hole.png',
       _draw_chances: 5,
     }]);
   };
@@ -444,7 +449,8 @@
       name: 'brown dwarf',
       types: ['generator'],
       power: 3,
-      _draw_chances: 40,
+      image: 'brown_dwarf.png',
+      _draw_chances: 400,
     },{
       name: 'white dwarf',
       types: ['generator'],
