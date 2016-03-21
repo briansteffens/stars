@@ -1,5 +1,7 @@
 body {
   margin: 0px;
+  background-size: cover;
+  background-image: url('img/background_1.jpg');
 }
 
 #canvas {
@@ -11,17 +13,18 @@ body {
 
 .hud {
   position: fixed;
-  background-color: #fff;
   width: 100%;
+  background-color: #333;
+  color: #fff;
 }
 
 #hud {
-  border-bottom: solid 2px #aaa;
+  border-bottom: solid 2px #bbb;
 }
 
 #hud-bottom {
   display: flex;
-  border-top: solid 2px #aaa;
+  border-top: solid 2px #bbb;
   height: 250px;
   bottom: 0px;
 }
@@ -74,6 +77,7 @@ div.player_separator {
   border: solid 2px #def;
   padding: 1px;
   margin: 23px 0px;
+  visibility: hidden;
 }
 
 div.hand_separator {
@@ -81,6 +85,7 @@ div.hand_separator {
   border: solid 2px #eee;
   padding: 1px;
   margin: 8px 0px;
+  visibility: hidden;
 }
 
 .power {
@@ -140,4 +145,23 @@ div.hand_separator {
 
 .chat form button {
   float: right;
+}
+
+img.card {
+  width: 210px;
+  height: 200px;
+}
+
+img.sel {
+  filter: brightness(1.2) sepia(100%);
+}
+
+img.card:hover {
+  filter: brightness(1.5) sepia(200%) contrast(200%) drop-shadow(0px 0px 20px blue);
+}
+
+._black_hole {
+  position: absolute;
+  top: 300px;
+  left: 800px;
 }

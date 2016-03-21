@@ -83,6 +83,24 @@ var View = React.createClass({
       socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
     }
   },
+  update_state: function(fields) {
+    let new_state = {};
+
+    for (let field of ['game','action','source','chats','selection']) {
+      if (fields[field] !== undefined) {
+        new_state[field] = fields[field];
+      } else {
+        new_state[field] = clone(this.state[field]);
+      }
+    }
+
+    this.setState(new_state);
+  },
+  select: function(card, e) {
+    this.update_state({
+      selection: card.copy_id,
+    });
+  },
   target_start: function(source, action, e) {
     this.setState({
       game: clone(this.state.game),
@@ -187,7 +205,7 @@ var View = React.createClass({
     var draw_possible = my_turn ? game.draw_possible : 0;
 
     let render_card = function(card, is_mine, is_perm) {
-      let is_targeting = false;
+      /*let is_targeting = false;
       if (is_perm && my_turn && that.state.action !== null) {
         let targets = that.state.action.targeting;
         if (targets.contains('friendly')) {
@@ -198,122 +216,12 @@ var View = React.createClass({
           is_targeting = is_targeting ||
             !is_mine && targets.intersect(card.types).length > 0;
         }
-      }
+      }*/
 
-      let or_zero = function(v) { return v !== undefined ? v : 0 };
 
-      let stats = '';
-      if (card.types.contains('ship')) {
-        stats = or_zero(card.attack) + '/' + or_zero(card.hp);
-      }
-
-      let classes = 'permanent';
-      for (let cls of ['generator', 'black_hole']) {
-        if (card.types.contains(cls)) {
-          classes += ' ' + cls;
-        }
-      }
-
-      let generates = '';
-      if (card.power !== undefined) {
-        generates = (<div>generates {card.power}</div>);
-      }
-
-      let scrap = '';
-      if (is_mine && (card.types.intersect(['ship','instant']).length > 0) &&
-          card.name !== 'mother ship') {
-        scrap = (<input type="button" value="scrap" disabled={!my_turn}
-            onClick={that.scrap.bind(null, card)} />);
-      }
-
-      let actions = [];
-      let target = '';
-      let power = '';
       let play = '';
-      let shields = '';
-      let effects = '';
-      let mass = '';
 
-      if (is_perm) {
-        // Target button
-        if (is_targeting) {
-          target = (<input type="button" value="target"
-              onClick={that.target_finish.bind(null, card)} />);
-        }
-
-        // Action buttons
-        if (is_mine) {
-          for (let i = 0; i < card.actions.length; i++) {
-            let action = card.actions[i];
-            let can_attack = is_perm && my_turn && that.state.action === null &&
-                !card.tapped;
-            if (!card.types.contains('black_hole')) {
-              can_attack = can_attack && card.powered;
-            }
-            actions.push(
-              <input type="button" value={action.name} key={action.name}
-                onClick={that.target_start.bind(null, card, action)}
-                disabled={!can_attack} />
-            );
-          }
-        }
-
-        // Power button
-        if (is_mine && card.upkeep !== undefined) {
-          let can_power = card.powered ||
-                          me.power_used + card.upkeep <= me.power_total;
-
-          power = (
-            <input type="button"
-              value={card.powered ? "power off" : "power on"}
-              disabled={card.tapped || !can_power}
-              onClick={that.toggle_power.bind(null, card)} />
-          );
-        }
-
-        // Shields
-        if (card.shields !== undefined &&
-            card.types.intersect(['generator','black_hole']).length == 0) {
-          shields = (<span>shields: {card.shields}</span>);
-
-          if (is_mine) {
-            shields = (
-              <div className="shields">
-                <input type="button" value="-"
-                    onClick={that.shields.bind(null, card, -1)}
-                    disabled={!my_turn || card.shields <= 0} />
-                {shields}
-                <input type="button" value="+"
-                    onClick={that.shields.bind(null, card, 1)}
-                    disabled={!my_turn ||
-                              me.shields_total - me.shields_used <= 0 ||
-                              me.power_total - me.power_used <= 0} />
-              </div>
-            );
-          }
-        }
-
-        // Effects
-        if (card.effects !== undefined) {
-          let eles = [];
-
-          for (let effect of card.effects) {
-            eles.push(
-              <div key={effect.name} className="effect">
-                {effect.name}
-              </div>
-            );
-          }
-
-          effects = (<div>{eles}</div>);
-        }
-
-        // Mass
-        if (card.mass !== undefined) {
-          mass = (<div>mass: {card.mass}</div>);
-        }
-      }
-      else {
+      if (!is_perm) {
         // Play button
         play = (<input type="button" onClick={that.play.bind(that, card)}
             value="play" />);
@@ -334,23 +242,14 @@ var View = React.createClass({
         worth = (<div>worth: {card.worth}</div>);
       }
 
+      let cls = 'card';
+      if (that.state.selection && that.state.selection == card.copy_id) {
+        cls += ' sel';
+      }
+
       return (
-        <div key={card.copy_id} id={'perm_' + card.copy_id} className={classes}>
-          {target}
-          <div className="title">{card.name+" "}</div>
-          {effects}
-          {generates}
-          <div>{stats}</div>
-          {mass}
-          {cost}
-          {upkeep}
-          {worth}
-          {power}
-          {scrap}
-          {play}
-          {shields}
-          {actions}
-        </div>
+        <img key={card.copy_id} src="/img/black_hole.png" className={cls}
+          onClick={that.select.bind(that, card)} />
       );
     };
 
@@ -502,6 +401,175 @@ var View = React.createClass({
       </div>
     );
 
+    let render_selection = function() {
+      if (!that.state.selection) {
+        return (<div />);
+      }
+
+      let card = null;
+      let is_mine = null;
+      let is_perm = null;
+      for (let owner of [me, enemy]) {
+        for (let container_name of ['permanents', 'hand']) {
+          for (let test of owner[container_name]) {
+            if (test.copy_id == that.state.selection) {
+              card = test;
+              is_mine = owner === me;
+              is_perm = container_name === 'permanents';
+              break;
+            }
+          }
+        }
+      }
+      if (card === null) {
+        console.log('Cannot find card container');
+        return (<div />);
+      }
+
+      let is_targeting = false;
+      if (is_perm && my_turn && that.state.action !== null) {
+        let targets = that.state.action.targeting;
+        if (targets.contains('friendly')) {
+          is_targeting = is_targeting ||
+            is_mine && targets.intersect(card.types).length > 0;
+        }
+        if (targets.contains('enemy')) {
+          is_targeting = is_targeting ||
+            !is_mine && targets.intersect(card.types).length > 0;
+        }
+      }
+
+      let actions = [];
+      let target = '';
+      let power = '';
+      let play = '';
+      let shields = '';
+      let effects = '';
+      let mass = '';
+
+      if (is_perm) {
+        // Target button
+        if (is_targeting) {
+          target = (<input type="button" value="target"
+              onClick={that.target_finish.bind(null, card)} />);
+        }
+
+        // Action buttons
+        if (is_mine) {
+          for (let i = 0; i < card.actions.length; i++) {
+            let action = card.actions[i];
+            let can_attack = is_perm && my_turn && that.state.action === null &&
+                !card.tapped;
+            if (!card.types.contains('black_hole')) {
+              can_attack = can_attack && card.powered;
+            }
+            actions.push(
+              <input type="button" value={action.name} key={action.name}
+                onClick={that.target_start.bind(null, card, action)}
+                disabled={!can_attack} />
+            );
+          }
+        }
+
+        // Power button
+        if (is_mine && card.upkeep !== undefined) {
+          let can_power = card.powered ||
+                          me.power_used + card.upkeep <= me.power_total;
+
+          power = (
+            <input type="button"
+              value={card.powered ? "power off" : "power on"}
+              disabled={card.tapped || !can_power}
+              onClick={that.toggle_power.bind(null, card)} />
+          );
+        }
+
+        // Shields
+        if (card.shields !== undefined &&
+            card.types.intersect(['generator','black_hole']).length == 0) {
+          shields = (<span>shields: {card.shields}</span>);
+
+          if (is_mine) {
+            shields = (
+              <div className="shields">
+                <input type="button" value="-"
+                    onClick={that.shields.bind(null, card, -1)}
+                    disabled={!my_turn || card.shields <= 0} />
+                {shields}
+                <input type="button" value="+"
+                    onClick={that.shields.bind(null, card, 1)}
+                    disabled={!my_turn ||
+                              me.shields_total - me.shields_used <= 0 ||
+                              me.power_total - me.power_used <= 0} />
+              </div>
+            );
+          }
+        }
+
+        // Effects
+        if (card.effects !== undefined) {
+          let eles = [];
+
+          for (let effect of card.effects) {
+            eles.push(
+              <div key={effect.name} className="effect">
+                {effect.name}
+              </div>
+            );
+          }
+
+          effects = (<div>{eles}</div>);
+        }
+
+        // Mass
+        if (card.mass !== undefined) {
+          mass = (<div>mass: {card.mass}</div>);
+        }
+      }
+
+      let or_zero = function(v) { return v !== undefined ? v : 0 };
+
+      let stats = '';
+      if (card.types.contains('ship')) {
+        stats = or_zero(card.attack) + '/' + or_zero(card.hp);
+      }
+
+      let classes = 'permanent';
+      for (let cls of ['generator', 'black_hole']) {
+        if (card.types.contains(cls)) {
+          classes += ' ' + cls;
+        }
+      }
+
+      let generates = '';
+      if (card.power !== undefined) {
+        generates = (<div>generates {card.power}</div>);
+      }
+
+      let scrap = '';
+      if (is_mine && (card.types.intersect(['ship','instant']).length > 0) &&
+          card.name !== 'mother ship') {
+        scrap = (<input type="button" value="scrap" disabled={!my_turn}
+            onClick={that.scrap.bind(null, card)} />);
+      }
+
+      return (
+        <div>
+          {target}
+          <div className="title">{card.name+" "}</div>
+          {effects}
+          {generates}
+          <div>{stats}</div>
+          {mass}
+          {power}
+          {scrap}
+          {play}
+          {shields}
+          {actions}
+        </div>
+      );
+    }
+
     return (
       <div>
         {hud}
@@ -514,7 +582,17 @@ var View = React.createClass({
         <div>{enemy_permanents}</div>
         <div id="hud-bottom-spacer" />
         <div id="hud-bottom" className="hud">
+          {render_selection()}
+          {chat}
+          <div className="log">
+            Here is the log
+          </div>
+        </div>
+      </div>
+    );
+    /*
           <div className="stats">
+            Selection: {selection}
             Hand: {enemy.hand.length} cards
             &nbsp;
             Scrap: {enemy.scrap}
@@ -523,13 +601,7 @@ var View = React.createClass({
             &nbsp;
             Shields: {render_shields(enemy)}
           </div>
-          {chat}
-          <div className="log">
-            Here is the log
-          </div>
-        </div>
-      </div>
-    );
+    */
   },
 });
 
