@@ -437,10 +437,16 @@
       _draw_chances: 140,
     },{
       name: 'rocky planet',
-      types: ['resource'],
+      types: ['generator'],
       worth: 4,
       image: 'rocky_planet.png',
       _draw_chances: 40,
+    },{
+      name: 'desert planet',
+      types: ['generator'],
+      worth: 3,
+      image: 'desert_planet.png',
+      _draw_chances: 45,
     },{
       name: 'ship wreckage',
       types: ['resource'],
@@ -451,21 +457,30 @@
       types: ['generator'],
       power: 3,
       image: 'brown_dwarf.png',
-      _draw_chances: 400,
+      _draw_chances: 40,
     },{
       name: 'white dwarf',
       types: ['generator'],
       power: 4,
+      image: 'white_dwarf.png',
       _draw_chances: 25,
     },{
       name: 'blue supergiant',
       types: ['generator'],
       power: 10,
+      image: 'blue_supergiant.png',
+      _draw_chances: 1,
+    },{
+      name: 'red giant',
+      types: ['generator'],
+      power: 7,
+      image: 'red_giant.png',
       _draw_chances: 1,
     },{
       name: 'yellow dwarf',
       types: ['generator'],
       power: 5,
+      image: 'yellow_dwarf.png',
       _draw_chances: 15,
     }]);
   };
