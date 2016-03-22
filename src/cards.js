@@ -451,7 +451,7 @@
       name: 'ship wreckage',
       types: ['resource'],
       worth: 3,
-      _draw_chances: 80,
+      _draw_chances: 100,
     },{
       name: 'brown dwarf',
       types: ['generator'],

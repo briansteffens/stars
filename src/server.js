@@ -12,6 +12,7 @@ var tokens = {};
 var games = [];
 
 var all_cards = cards.all();
+var explore_cards = cards.explore();
 var random_pool = cards.pool(all_cards);
 
 var user_list = {
@@ -218,8 +219,19 @@ app.post('/games/new', function(req, res) {
     return random_pool[Math.floor(Math.random() * random_pool.length)];
   }
 
-  let next_card = function() {
-    var card = JSON.parse(JSON.stringify(random_card()));
+  let find_card = function(name) {
+    for (let coll of [all_cards, explore_cards]) {
+      for (let card of coll) {
+        if (card.name == name) {
+          return card;
+        }
+      }
+    }
+    throw 'Cannot find card ['+name+']';
+  }
+
+  let next_card = function(card) {
+    var card = JSON.parse(JSON.stringify(card));
     card.copy_id = game.state.next_copy_id++;
     card.tapped = false;
     card.powered = false;
@@ -227,8 +239,8 @@ app.post('/games/new', function(req, res) {
   }
 
   for (var i = 0; i < 50; i++) {
-    game.state.players[req.user.id].deck.push(next_card());
-    game.state.players[req.body.against].deck.push(next_card());
+    game.state.players[req.user.id].deck.push(next_card(random_card()));
+    game.state.players[req.body.against].deck.push(next_card(random_card()));
   }
 
   let next_mother_ship = function() {
@@ -240,12 +252,21 @@ app.post('/games/new', function(req, res) {
   game.state.players[req.user.id].permanents.push(next_mother_ship());
   game.state.players[req.body.against].permanents.push(next_mother_ship());
 
-  for (let player_id of [req.user.id, req.body.against]) {
-    state.apply_move(game, {
-      type: 'mull',
-      user_id: player_id,
-      turn: game.state.turn,
-    });
+  // Initial hand (debug)
+  let initial = ['blue supergiant','brown dwarf','desert planet','red giant',
+    'rocky planet','white dwarf','yellow dwarf'];
+  for (let name of initial) {
+    game.state.players[req.user.id].hand.push(next_card(find_card(name)));
+  }
+
+  if (game.state.players[req.user.id].hand.length == 0) {
+    for (let player_id of [req.user.id, req.body.against]) {
+      state.apply_move(game, {
+        type: 'mull',
+        user_id: player_id,
+        turn: game.state.turn,
+      });
+    }
   }
 
   games.push(game);
