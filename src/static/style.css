@@ -37,6 +37,29 @@ body {
   border-left: solid 2px #aaa;
 }
 
+#hud-bottom #hand {
+  border-left: solid 2px #aaa;
+}
+
+#hud-bottom #hand #cards {
+  overflow-y: scroll;
+  height: 215px;
+}
+
+#hud-bottom #hand #cards div {
+  border-bottom: solid 2px #aaa;
+}
+
+#hud-bottom #hand #cards div:after {
+  clear: both;
+  content: "";
+  display: block;
+}
+
+#hud-bottom #hand #cards div button {
+  float: right;
+}
+
 .hud .stats {
   float: right;
 }
@@ -157,11 +180,9 @@ img.sel {
 }
 
 img.card:hover {
-  filter: brightness(1.5) sepia(200%) contrast(200%) drop-shadow(0px 0px 20px blue);
+  filter: drop-shadow(0px 0px 20px blue);
 }
 
-._black_hole {
-  position: absolute;
-  top: 300px;
-  left: 800px;
+img.sel:hover {
+  filter: brightness(1.5) sepia(200%) drop-shadow(0px 0px 20px blue);
 }

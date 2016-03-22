@@ -202,53 +202,16 @@ var View = React.createClass({
     }
 
     var my_turn = game.turn_player_id == game_info.user_id;
-    var draw_possible = my_turn ? game.draw_possible : 0;
 
     let render_card = function(card, is_mine, is_perm) {
-      /*let is_targeting = false;
-      if (is_perm && my_turn && that.state.action !== null) {
-        let targets = that.state.action.targeting;
-        if (targets.contains('friendly')) {
-          is_targeting = is_targeting ||
-            is_mine && targets.intersect(card.types).length > 0;
-        }
-        if (targets.contains('enemy')) {
-          is_targeting = is_targeting ||
-            !is_mine && targets.intersect(card.types).length > 0;
-        }
-      }*/
-
-
-      let play = '';
-
-      if (!is_perm) {
-        // Play button
-        play = (<input type="button" onClick={that.play.bind(that, card)}
-            value="play" />);
-      }
-
-      let upkeep = '';
-      if (card.upkeep !== undefined) {
-        upkeep = (<div>upkeep: {card.upkeep}</div>);
-      }
-
-      let cost = '';
-      if (card.cost !== undefined) {
-        cost = (<div>cost: {card.cost}</div>);
-      }
-
-      let worth = '';
-      if (card.worth !== undefined) {
-        worth = (<div>worth: {card.worth}</div>);
-      }
-
       let cls = 'card';
       if (that.state.selection && that.state.selection == card.copy_id) {
         cls += ' sel';
       }
 
       return (
-        <img key={card.copy_id} src={'/img/' + card.image} className={cls}
+        <img id={'perm_' + card.copy_id} key={card.copy_id}
+          src={'/img/' + card.image} className={cls}
           onClick={that.select.bind(that, card)} />
       );
     };
@@ -280,11 +243,6 @@ var View = React.createClass({
     let permanents = render_permanents(me.permanents, true);
     let enemy_permanents = render_permanents(enemy.permanents);
 
-    var hand = [];
-    for (let i = 0; i < me.hand.length; i++) {
-      hand.push(render_card(me.hand[i], true, false));
-    }
-
     let gameover = '';
     if (game.winner !== undefined) {
       let outcome = game.winner == game_info.user_id ? 'won' : 'lost';
@@ -303,8 +261,6 @@ var View = React.createClass({
       return (<span className="shields">
           {player.shields_used}/{player.shields_total}</span>);
     }
-
-    let explore_possible = my_turn ? game.can_explore : 0;
 
     let pregame = '';
     if (game.phase === 'pre-game') {
@@ -356,12 +312,6 @@ var View = React.createClass({
             disabled={game.winner !== undefined} />
           {cancel_target_button}
           <div className="stats">
-            <input type="button" onClick={this.draw}
-              value={'draw (' + draw_possible + ')'}
-              disabled={!draw_possible} />
-            <input type="button" onClick={this.explore}
-              value={'explore (' + explore_possible + ')'}
-              disabled={!explore_possible} />
             &nbsp;
             Scrap: {me.scrap}
             &nbsp;
@@ -527,6 +477,21 @@ var View = React.createClass({
         }
       }
 
+      let upkeep = '';
+      if (card.upkeep !== undefined) {
+        upkeep = (<div>upkeep: {card.upkeep}</div>);
+      }
+
+      let cost = '';
+      if (card.cost !== undefined) {
+        cost = (<div>cost: {card.cost}</div>);
+      }
+
+      let worth = '';
+      if (card.worth !== undefined) {
+        worth = (<div>worth: {card.worth}</div>);
+      }
+
       let or_zero = function(v) { return v !== undefined ? v : 0 };
 
       let stats = '';
@@ -566,6 +531,45 @@ var View = React.createClass({
           {play}
           {shields}
           {actions}
+          {upkeep}
+          {cost}
+          {worth}
+        </div>
+      );
+    }
+
+    let render_hand = function() {
+      let hand = [];
+
+      for (let card of me.hand) {
+        let scrap = '';
+        if (card.types.intersect(['ship','instant']).length > 0) {
+          scrap = (<button onClick={that.scrap.bind(null, card)}
+            disabled={!my_turn}>scrap</button>);
+        }
+
+        hand.push(
+          <div key={card.copy_id}>
+            {card.name}
+            <button onClick={that.play.bind(that, card)} disabled={!my_turn}>
+              play</button>
+            {scrap}
+          </div>
+        );
+      }
+
+      let draw_possible = my_turn ? game.draw_possible : 0;
+      let explore_possible = my_turn ? game.can_explore : 0;
+
+      return (
+        <div id="hand">
+          <input type="button" onClick={that.draw}
+            value={'draw (' + draw_possible + ')'}
+            disabled={!draw_possible} />
+          <input type="button" onClick={that.explore}
+            value={'explore (' + explore_possible + ')'}
+            disabled={!explore_possible} />
+          <div id="cards">{hand}</div>
         </div>
       );
     }
@@ -574,15 +578,13 @@ var View = React.createClass({
       <div>
         {hud}
         <div id="hud-spacer" />
-        <div>Your hand:</div>
-        <div>{hand}</div>
-        <div className="hand_separator"></div>
         <div>{permanents}</div>
         <div className="player_separator"></div>
         <div>{enemy_permanents}</div>
         <div id="hud-bottom-spacer" />
         <div id="hud-bottom" className="hud">
           {render_selection()}
+          {render_hand()}
           {chat}
           <div className="log">
             Here is the log
