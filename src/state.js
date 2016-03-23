@@ -85,6 +85,14 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
+    let log = function(message) {
+      state.log.push({
+        message: message,
+        turn: move.turn,
+        player_id: player.id,
+      });
+    }
+
     let consume = function(source, target_id) {
       let info = exports.get_card_info(state, target_id);
       info.collection.splice(info.collection.indexOf(info.card), 1);
@@ -324,6 +332,8 @@
       let cards = 7 - Math.max(0, player.mull_penalty);
       player.hand = player.deck.splice(0, cards);
       player.mull_penalty++;
+
+      log('Player drew ' + cards + ' cards');
     };
 
     if (move.type === 'forfeit') {

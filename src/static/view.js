@@ -59,13 +59,7 @@ var View = React.createClass({
     setTimeout(start_socket);
   },
   set_state: function(game_state) {
-    this.setState({
-      game: game_state,
-      source: clone(this.state.source),
-      action: clone(this.state.action),
-      chats: clone(this.state.chats),
-    });
-    body_el.onresize();
+    this.update_state({game: game_state});
   },
   yield: function(e) {
     socket.send(JSON.stringify({type: 'yield'}));
@@ -90,11 +84,22 @@ var View = React.createClass({
       if (fields[field] !== undefined) {
         new_state[field] = fields[field];
       } else {
-        new_state[field] = clone(this.state[field]);
+        try {
+          new_state[field] = clone(this.state[field]);
+        } catch (e) {
+          new_state[field] = this.state[field];
+        }
       }
     }
 
     this.setState(new_state);
+
+    body_el.onresize();
+
+    window.requestAnimationFrame(function() {
+      let log = document.getElementById("log");
+      log.scrollTop = log.scrollHeight;
+    });
   },
   select: function(card, e) {
     this.update_state({
@@ -102,18 +107,15 @@ var View = React.createClass({
     });
   },
   target_start: function(source, action, e) {
-    this.setState({
-      game: clone(this.state.game),
+    this.update_state({
       action: action,
       source: source,
-      chats: clone(this.state.chats),
     });
   },
   target_cancel: function(e) {
-    this.setState({
-      game: clone(this.state.game),
+    this.update_state({
       action: null,
-      source: null
+      source: null,
     });
   },
   target_finish: function(target, e) {
@@ -168,10 +170,7 @@ var View = React.createClass({
     this.refs.message.value = '';
   },
   add: function(msg) {
-    this.setState({
-      game: clone(this.state.game),
-      action: clone(this.state.action),
-      source: clone(this.state.source),
+    this.update_state({
       chats: [msg, ...this.state.chats],
     });
     window.requestAnimationFrame(function() {
@@ -574,6 +573,17 @@ var View = React.createClass({
       );
     }
 
+    let render_log = function() {
+      let log = [];
+      console.log(that.state);
+      for (let index = 0; index < game.log.length; index++) {
+        let entry = game.log[index];
+        log.push(<div key={index}>{entry.message}</div>);
+      }
+
+      return (<div id="log">{log}</div>);
+    }
+
     return (
       <div>
         {hud}
@@ -586,9 +596,7 @@ var View = React.createClass({
           {render_selection()}
           {render_hand()}
           {chat}
-          <div className="log">
-            Here is the log
-          </div>
+          {render_log()}
         </div>
       </div>
     );

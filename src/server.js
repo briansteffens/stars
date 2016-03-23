@@ -180,6 +180,7 @@ app.post('/games/new', function(req, res) {
       attacks: [],
       next_copy_id: 0,
       players: {},
+      log: [],
     },
   };
 
@@ -253,11 +254,12 @@ app.post('/games/new', function(req, res) {
   game.state.players[req.body.against].permanents.push(next_mother_ship());
 
   // Initial hand (debug)
+  /*
   let initial = ['blue supergiant','brown dwarf','desert planet','red giant',
     'rocky planet','white dwarf','yellow dwarf'];
   for (let name of initial) {
     game.state.players[req.user.id].hand.push(next_card(find_card(name)));
-  }
+  }*/
 
   if (game.state.players[req.user.id].hand.length == 0) {
     for (let player_id of [req.user.id, req.body.against]) {

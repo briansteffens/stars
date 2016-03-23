@@ -33,8 +33,10 @@ body {
   flex: 1;
 }
 
-#hud-bottom .log {
+#hud-bottom #log {
   border-left: solid 2px #aaa;
+  overflow-y: scroll;
+  height: 250px;
 }
 
 #hud-bottom #hand {
