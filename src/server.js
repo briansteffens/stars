@@ -199,6 +199,7 @@ app.post('/games/new', function(req, res) {
   let make_player = function(id) {
     return {
       user_id: id,
+      user_name: user_list[id],
       hand: [],
       deck: [],
       permanents: [],

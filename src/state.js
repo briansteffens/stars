@@ -85,7 +85,20 @@
     var player = state.players[move.user_id];
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
+    let get_user = function(id) {
+      console.log(game);
+      console.log(game.users);
+      for (let user of game.users) {
+        if (user.id == id) {
+          return user;
+        }
+      }
+      throw 'User not found';
+    }
+
     let log = function(message) {
+      message = message.replace('{me}', player.user_name);
+      message = message.replace('{enemy}', other_player.user_name);
       state.log.push({
         message: message,
         turn: move.turn,
@@ -104,6 +117,7 @@
         source.mass++;
       }
       source.tapped = true;
+      log('{me}\'s '+source.name+' consumes a '+info.card.name);
     }
 
     let permanent_handlers = {
@@ -158,6 +172,7 @@
           if (ctx.effect.turn_counter <= 0) {
             ctx.player.permanents.splice(
                 ctx.player.permanents.indexOf(ctx.target), 1);
+            log('{me}\'s '+ctx.target.name+' destroyed by overburner');
             return;
           }
           ctx.target.power = ctx.effect.old_power * ctx.effect.turn_counter;
@@ -177,6 +192,7 @@
             if (ctx.target.hp <= 0) {
               ctx.player.permanents.splice(
                   ctx.player.permanents.indexOf(ctx.target), 1);
+              log('{me}\'s '+ctx.target.name+' destroyed by time bomb');
             }
             ctx.target.effects.splice(
                 ctx.target.effects.indexOf(ctx.effect), 1);
@@ -196,6 +212,7 @@
             ctx.target.attack = ctx.effect.old_attack;
             ctx.target.effects.splice(
                 ctx.target.effects.indexOf(ctx.effect), 1);
+            log('weapon jammer wore off of {me}\'s '+ctx.target.name);
           }
         },
         on_detach: function(ctx) {
@@ -333,7 +350,7 @@
       player.hand = player.deck.splice(0, cards);
       player.mull_penalty++;
 
-      log('Player drew ' + cards + ' cards');
+      log('{me} drew ' + cards + ' cards');
     };
 
     if (move.type === 'forfeit') {
@@ -341,6 +358,7 @@
         throw 'Cannot forfeit a finished game';
       }
       state.winner = other_player.user_id;
+      log('{me} forfeit the game');
     } else if (state.phase === 'pre-game') {
       if (move.type === 'mull') {
         if (player.ready) {
@@ -350,6 +368,8 @@
         mull(player);
       } else if (move.type === 'ready') {
         player.ready = true;
+
+        log('{me} is ready');
 
         if (other_player.ready) {
           // Start game
@@ -367,6 +387,8 @@
 
           phase_main_start(state.players[state.turn_player_id],
             state.players[exports.next_player(game, state.turn_player_id)]);
+
+          log('the game has started');
         }
       } else {
         throw 'Invalid move type during pre-game phase';
@@ -378,6 +400,7 @@
         }
         state.draw_possible--;
         player.hand.push(player.deck.pop());
+        log('{me} drew a card');
       }
       else if (move.type === 'scrap') {
         if (player.user_id != state.turn_player_id) {
@@ -397,6 +420,7 @@
         info.collection.splice(info.collection.indexOf(info.card), 1);
         let cost = info.card.cost !== undefined ? info.card.cost : 0;
         player.scrap += Math.floor(cost / 2);
+        log('{me} scrapped a ' + info.card.name);
       }
       else if (move.type === 'explore') {
         if (player.user_id != state.turn_player_id) {
@@ -412,6 +436,7 @@
         }
         player.hand.push(exports.next_explore(game, state));
         state.can_explore--;
+        log('{me} explored');
       }
       else if (move.type === 'yield') {
         if (state.phase !== 'main') {
@@ -459,8 +484,10 @@
           }
           if (target.hp <= 0) {
             player.permanents.splice(player.permanents.indexOf(target), 1);
+            log(target.name + ' destroyed by {enemy}');
             if (target.name === 'mother ship') {
               state.winner = other_player.user_id;
+              log('{enemy} wins the game');
             }
           }
         }
@@ -495,6 +522,8 @@
 
         let is_generator_ship_or_black_hole =
           card.types.intersect(['generator','ship','black_hole']).length > 0;
+
+        log('{me} played a ' + card.name);
 
         if (card.types.contains('resource')) {
           player.scrap += remove_from_hand().worth;
@@ -561,22 +590,28 @@
               attacker: source.copy_id,
               target: target.copy_id,
             });
+            log('{me} attacked a '+target.name+' with a '+source.name);
             break;
           case 'repair':
             target.hp = Math.min(target.hp + action.amount, target.defense);
+            log('{me} repaired a '+target.name);
             break;
           case 'damage':
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
-            var shields = target.shields - action.amount;
+            let shields = target.shields - action.amount;
+            let msg = '{me} did '+action.amount+' damage to a '+target.name;
             if (shields < 0) {
               target.hp += shields;
+              msg += ' ('+shields+' blocked by shields)';
             }
             if (target.hp <= 0) {
               other_player.permanents.splice(
                   other_player.permanents.indexOf(target), 1);
+              msg += ', killing it';
             }
+            log(msg);
             break;
           case 'stats_delta':
             if (target.name === 'mother ship') {
@@ -589,6 +624,7 @@
               target.defense = Math.max(target.defense + action.defense, 0);
               target.hp = target.defense;
             }
+            log('{me} played a '+source.name+' on a '+target.name);
             break;
           case 'piracy':
             if (target.name === 'mother ship') {
@@ -599,6 +635,7 @@
             target.powered = false;
             target.shields = 0;
             player.permanents.push(target);
+            log('{me} stole a '+target.name);
             break;
           case 'apply_effect':
             if (target.name === 'mother ship') {
@@ -614,6 +651,7 @@
               player: player,
               other_player: other_player,
             });
+            log('{me} played a '+source.name+' on a '+target.name);
             break;
           case 'cleanse':
             if (target.name === 'mother ship') {
@@ -630,6 +668,7 @@
               }
               target.effects = [];
             }
+            log('{me} cleansed a '+target.name);
             break;
           case 'consume':
             if (target.name === 'mother ship') {
@@ -642,6 +681,7 @@
             break;
           case 'reactor_upgrade':
             target.power += action.amount;
+            log('{me} upgraded a '+target.name+' to '+target.power+' power');
             break;
           default:
             throw 'Action '+action.name+' unknown';
@@ -669,6 +709,8 @@
         if (player.power_used > player.power_total) {
           throw 'Not enough available power';
         }
+
+        log('{me} powered '+(card.powered ? 'on' : 'off')+' a '+card.name);
       } else if (move.type === 'shields') {
         if (state.turn_player_id != player.user_id) {
           throw 'Wrong turn';
@@ -689,6 +731,9 @@
             player.shields_used > player.shields_total) {
           throw 'Not enough available power or shields';
         }
+
+        log('{me} '+(move.delta > 0 ? 'added' : 'removed')+' shields from a '+
+            card.name);
       }
       else {
         throw 'Unrecognized move type ' + move.type;
