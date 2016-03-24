@@ -523,10 +523,9 @@
         let is_generator_ship_or_black_hole =
           card.types.intersect(['generator','ship','black_hole']).length > 0;
 
-        log('{me} played a ' + card.name);
-
         if (card.types.contains('resource')) {
           player.scrap += remove_from_hand().worth;
+          log('{me} played a ' + card.name);
         } else if (is_generator_ship_or_black_hole) {
           // Mark a card type as played this turn
           if (card.types.contains('generator')) {
@@ -540,11 +539,13 @@
           else {
             player.scrap -= cost;
             player.permanents.push(remove_from_hand());
+            log('{me} played a ' + card.name);
           }
         } else if (card.types.contains('shields')) {
           player.shields_total = Math.min(player.shields_total+card.shields,
               10);
           remove_from_hand();
+          log('{me} played a ' + card.name);
         } else {
           throw 'Unplayable card type ' + card.types;
         }
