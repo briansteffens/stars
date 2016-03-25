@@ -168,6 +168,7 @@ var View = React.createClass({
       text: this.refs.message.value,
     }));
     this.refs.message.value = '';
+    this.refs.message.blur();
   },
   add: function(msg) {
     this.update_state({
@@ -343,7 +344,8 @@ var View = React.createClass({
           <form onSubmit={this.send}>
             <button className="submit">send</button>
             <span>
-              <input type="text" placeholder="enter a message" ref="message" />
+              <input id="chat_message" type="text" placeholder="enter a message"
+                ref="message" />
             </span>
           </form>
         </div>
@@ -627,3 +629,22 @@ body_el.onresize = function() {
   document.getElementById('hud-bottom-spacer').style.height =
     document.getElementById('hud-bottom').offsetHeight + 'px';
 }
+
+document.onkeypress = function(e) {
+  e = e || window.event;
+
+  let chat_message = document.getElementById('chat_message');
+
+  if (chat_message === null) {
+    return;
+  }
+
+  if (e.keyCode === 13 && document.activeElement !== chat_message) {
+    chat_message.focus();
+  } else if (e.keyCode === 27) {
+    chat_message.value = '';
+    chat_message.blur();
+  }
+
+  console.log(e);
+};
