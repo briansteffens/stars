@@ -188,6 +188,13 @@ var View = React.createClass({
     return null;
   },
   key_press: function(e) {
+    if (e.key === 'Escape') {
+      this.update_state({
+        action: null,
+        source: null,
+      });
+      return;
+    }
     if (this.state.selection !== null) {
       let card_info = this.get_card_info(this.state.selection);
       if (card_info.is_perm) {
