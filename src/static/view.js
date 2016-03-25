@@ -179,6 +179,59 @@ var View = React.createClass({
       messages.scrollTop = messages.scrollHeight;
     });
   },
+  get_action: function(card, action_name) {
+    for (let action of card.actions) {
+      if (action.name === action_name) {
+        return action;
+      }
+    }
+    return null;
+  },
+  key_press: function(e) {
+    if (this.state.selection !== null) {
+      let card_info = this.get_card_info(this.state.selection);
+      if (card_info.is_perm) {
+        if (card_info.is_mine) {
+          if (e.key.toLowerCase() === 'a') {
+            let action = this.get_action(card_info.card, 'attack');
+            if (action !== null) {
+              this.target_start(card_info.card, action);
+            }
+          }
+        } else {
+        }
+      }
+    }
+  },
+  get_card_info: function(copy_id) {
+    let me = this.get_me();
+    for (let owner of [me, this.get_enemy()]) {
+      for (let container_name of ['permanents', 'hand']) {
+        for (let test of owner[container_name]) {
+          if (test.copy_id == this.state.selection) {
+            return {
+              card: test,
+              is_mine: owner === me,
+              is_perm: container_name === 'permanents',
+            };
+          }
+        }
+      }
+    }
+    return null;
+  },
+  get_me: function() {
+    return this.state.game.players[game_info.user_id];
+  },
+  get_enemy: function() {
+    for (let key in this.state.game.players) {
+      if (this.state.game.players.hasOwnProperty(key) &&
+          key != game_info.user_id) {
+        return this.state.game.players[key];
+      }
+    }
+    throw 'enemy not found';
+  },
   render: function() {
     var game = this.state.game;
 
@@ -187,19 +240,8 @@ var View = React.createClass({
     }
 
     var that = this;
-    var me = game.players[game_info.user_id];
-
-    var enemy = null;
-    for (let key in game.players) {
-      if (game.players.hasOwnProperty(key) &&
-          key != game_info.user_id) {
-        enemy = game.players[key];
-        break;
-      }
-    }
-    if (enemy === null) {
-      throw 'enemy not found';
-    }
+    var me = this.get_me();
+    var enemy = this.get_enemy();
 
     var my_turn = game.turn_player_id == game_info.user_id;
 
@@ -357,25 +399,15 @@ var View = React.createClass({
         return (<div />);
       }
 
-      let card = null;
-      let is_mine = null;
-      let is_perm = null;
-      for (let owner of [me, enemy]) {
-        for (let container_name of ['permanents', 'hand']) {
-          for (let test of owner[container_name]) {
-            if (test.copy_id == that.state.selection) {
-              card = test;
-              is_mine = owner === me;
-              is_perm = container_name === 'permanents';
-              break;
-            }
-          }
-        }
-      }
-      if (card === null) {
+      let card_info = that.get_card_info(that.state.selection);
+      if (card_info === null) {
         console.log('Cannot find card container');
         return (<div />);
       }
+
+      let card = card_info.card;
+      let is_mine = card_info.is_mine;
+      let is_perm = card_info.is_perm;
 
       let is_targeting = false;
       if (is_perm && my_turn && that.state.action !== null) {
@@ -639,9 +671,15 @@ document.onkeypress = function(e) {
     return;
   }
 
-  if (e.keyCode === 13 && document.activeElement !== chat_message) {
-    chat_message.focus();
-  } else if (e.keyCode === 27) {
+  if (document.activeElement !== chat_message) {
+    if (e.key === 'Enter') {
+      chat_message.focus();
+    }
+    else {
+      view.key_press(e);
+    }
+  }
+  else if (e.key === 'Escape') {
     chat_message.value = '';
     chat_message.blur();
   }
