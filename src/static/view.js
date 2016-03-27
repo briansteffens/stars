@@ -198,6 +198,12 @@ var View = React.createClass({
     if (this.state.selection !== null) {
       let card_info = this.get_card_info(this.state.selection);
       if (card_info.is_perm) {
+        if (e.key.toLowerCase() === 't') {
+          if (this.is_targeting(card_info)) {
+            this.target_finish(card_info.card);
+          }
+          return;
+        }
         if (card_info.is_mine) {
           if (e.key.toLowerCase() === 'a') {
             let action = this.get_action(card_info.card, 'attack');
@@ -239,6 +245,27 @@ var View = React.createClass({
     }
     throw 'enemy not found';
   },
+  is_my_turn: function() {
+    return this.state.game.turn_player_id = game_info.user_id;
+  },
+  is_targeting: function(card_info) {
+    if (!card_info.is_perm || !this.is_my_turn() ||
+        this.state.action === null) {
+      return false;
+    }
+
+    let targets = this.state.action.targeting;
+
+    let ownership_match = false;
+    if (targets.contains('friendly')) {
+      ownership_match = card_info.is_mine;
+    } else if (targets.contains('enemy')) {
+      ownership_match = !card_info.is_mine;
+    }
+
+    return ownership_match &&
+      targets.intersect(card_info.card.types).length > 0;
+  },
   render: function() {
     var game = this.state.game;
 
@@ -249,8 +276,7 @@ var View = React.createClass({
     var that = this;
     var me = this.get_me();
     var enemy = this.get_enemy();
-
-    var my_turn = game.turn_player_id == game_info.user_id;
+    var my_turn = this.is_my_turn();
 
     let render_card = function(card, is_mine, is_perm) {
       let cls = 'card';
@@ -416,19 +442,6 @@ var View = React.createClass({
       let is_mine = card_info.is_mine;
       let is_perm = card_info.is_perm;
 
-      let is_targeting = false;
-      if (is_perm && my_turn && that.state.action !== null) {
-        let targets = that.state.action.targeting;
-        if (targets.contains('friendly')) {
-          is_targeting = is_targeting ||
-            is_mine && targets.intersect(card.types).length > 0;
-        }
-        if (targets.contains('enemy')) {
-          is_targeting = is_targeting ||
-            !is_mine && targets.intersect(card.types).length > 0;
-        }
-      }
-
       let actions = [];
       let target = '';
       let power = '';
@@ -439,7 +452,7 @@ var View = React.createClass({
 
       if (is_perm) {
         // Target button
-        if (is_targeting) {
+        if (that.is_targeting(card_info)) {
           target = (<input type="button" value="target"
               onClick={that.target_finish.bind(null, card)} />);
         }
