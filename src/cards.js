@@ -244,7 +244,7 @@
           defense: 2,
         },
       ],
-      _draw_chances: 4,
+      _draw_chances: 5,
     },{
       name: 'hull breaker',
       types: ['instant'],
@@ -256,7 +256,7 @@
           defense: -4,
         },
       ],
-      _draw_chances: 2,
+      _draw_chances: 7,
     },{
       name: 'repair bot',
       types: ['ship'],
@@ -293,7 +293,7 @@
           defense: 1,
         },
       ],
-      _draw_chances: 13,
+      _draw_chances: 11,
     },{
       name: 'conversion kit: attack',
       types: ['instant'],
@@ -306,7 +306,7 @@
           defense: -1,
         },
       ],
-      _draw_chances: 13,
+      _draw_chances: 11,
     },{
       name: 'overburner',
       types: ['instant'],
@@ -401,7 +401,7 @@
           },
         },
       ],
-      _draw_chances: 7,
+      _draw_chances: 8,
     },{
       name: 'cleanse',
       types: ['instant'],
@@ -412,7 +412,7 @@
           targeting: ['friendly', 'enemy', 'ship'],
         },
       ],
-      _draw_chances: 15,
+      _draw_chances: 18,
     },{
       name: 'black hole',
       types: ['black_hole'],
