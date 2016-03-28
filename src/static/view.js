@@ -246,7 +246,7 @@ var View = React.createClass({
     throw 'enemy not found';
   },
   is_my_turn: function() {
-    return this.state.game.turn_player_id = game_info.user_id;
+    return this.state.game.turn_player_id == game_info.user_id;
   },
   is_targeting: function(card_info) {
     if (!card_info.is_perm || !this.is_my_turn() ||
