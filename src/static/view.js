@@ -4,6 +4,7 @@ var View = React.createClass({
       game: null,
       source: null,
       action: null,
+      selection: null,
       chats: [],
     };
   },
@@ -193,7 +194,34 @@ var View = React.createClass({
         action: null,
         source: null,
       });
-      return;
+      return true;
+    }
+    if (e.key === 'Tab') {
+      if (this.state.selection === null) {
+        let new_selection = this.get_me().permanents[0] ||
+          this.get_enemy().permanents[0];
+        if (new_selection !== undefined) {
+          this.update_state({selection: new_selection.copy_id});
+        }
+        return true;
+      }
+
+      let sel_info = this.get_card_info(this.state.selection);
+      let container = sel_info.container;
+      let index = container.indexOf(sel_info.card) + 1;
+
+      if (index >= container.length) {
+        index = 0;
+
+        if (sel_info.is_mine) {
+          container = this.get_enemy().permanents;
+        } else {
+          container = this.get_me().permanents;
+        }
+      }
+
+      this.update_state({selection: container[index].copy_id});
+      return true;
     }
     if (this.state.selection !== null) {
       let card_info = this.get_card_info(this.state.selection);
@@ -202,7 +230,7 @@ var View = React.createClass({
           if (this.is_targeting(card_info)) {
             this.target_finish(card_info.card);
           }
-          return;
+          return true;
         }
         if (card_info.is_mine) {
           if (e.key.toLowerCase() === 'a') {
@@ -215,6 +243,7 @@ var View = React.createClass({
         }
       }
     }
+    return false;
   },
   get_card_info: function(copy_id) {
     let me = this.get_me();
@@ -226,6 +255,8 @@ var View = React.createClass({
               card: test,
               is_mine: owner === me,
               is_perm: container_name === 'permanents',
+              container_name: container_name,
+              container: owner[container_name],
             };
           }
         }
@@ -696,7 +727,10 @@ document.onkeypress = function(e) {
       chat_message.focus();
     }
     else {
-      view.key_press(e);
+      if (view.key_press(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
   }
   else if (e.key === 'Escape') {
