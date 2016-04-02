@@ -22,3 +22,4 @@ server_dependencies:
       - ejs
       - passport
       - passport-local
+      - mongodb
