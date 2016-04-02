@@ -10,7 +10,7 @@
   <body>
     <div id="gamelist"></div>
     <script type="text/babel">
-      var user_id = <%= user.id %>;
+      var user_id = '<%= user._id.toString() %>';
       var username = '<%= user.username %>';
 
       function ajax_req(method, url, data, cb) {
@@ -37,7 +37,7 @@
       }
 
       var GameList = React.createClass({
-        getInitialState: function() { 
+        getInitialState: function() {
           return {
             games: [],
             users: [],
@@ -55,7 +55,7 @@
 
           ajax_req('POST', 'games/new', {
             name: this.refs.new_game_name.value,
-            against: parseInt(this.refs.new_game_vs.value),
+            against: this.refs.new_game_vs.value,
           }, function(res) {
             this_.setState(res);
           });
@@ -65,7 +65,7 @@
             for (let player of game.players) {
               if (player.user_id != user_id) {
                 for (let user of that.state.users) {
-                  if (user.id == player.user_id) {
+                  if (user._id == player.user_id) {
                     return user;
                   }
                 }
@@ -104,7 +104,7 @@
             let already_playing = false;
             for (let game of this.state.games) {
               let other_user = get_other_player(this, game);
-              if (other_user.id == user.id) {
+              if (other_user._id == user._id) {
                 if (game.state.winner === undefined) {
                   already_playing = true;
                   break;
@@ -117,7 +117,7 @@
             }
 
             against.push(
-              <option key={user.id} value={user.id}>{user.username}</option>
+              <option key={user._id} value={user._id}>{user.username}</option>
             );
           }
 

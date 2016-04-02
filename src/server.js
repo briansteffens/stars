@@ -4,6 +4,15 @@ var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
 var seedrandom = require('seedrandom');
 
+var mongojs = require('mongojs');
+var db = mongojs('stars', ['users']);
+
+db.users.remove();
+
+db.users.save({username: 'brian'});
+db.users.save({username: 'levi'});
+db.users.save({username: 'jeremy'});
+
 require('./static/common.js');
 var cards = require('./cards.js');
 var state = require('./state.js');
@@ -15,11 +24,15 @@ var all_cards = cards.all();
 var explore_cards = cards.explore();
 var random_pool = cards.pool(all_cards);
 
-var user_list = {
-  3: 'brian',
-  7: 'jeremy',
-  13: 'levi',
-};
+function get_user_by_id(id, cb) {
+  db.users.findOne({_id: mongojs.ObjectId(id)}, function(err, doc) {
+    if (err) {
+      throw 'Unable to find user id: '+id;
+    }
+
+    cb(doc);
+  });
+}
 
 function random_base64(len) {
   return crypto.randomBytes(Math.ceil(len * 3 / 4))
@@ -44,30 +57,22 @@ passport.use(new Strategy(function(username, password, cb) {
     return cb('Wrong password');
   }
 
-  let user_id = null;
-
-  for (let user_id in user_list) {
-    if (user_list.hasOwnProperty(user_id)) {
-      if (user_list[user_id] == username) {
-        return cb(null, {
-          id: user_id,
-          username: user_list[user_id],
-        });
-      }
+  db.users.findOne({username: username}, function(err, doc) {
+    if (err) {
+      return cb('Invalid username');
     }
-  }
 
-  return cb('Wrong username');
+    return cb(null, doc);
+  });
 }));
 
 passport.serializeUser(function(user, cb) {
-  cb(null, user.id);
+  cb(null, user._id.toString());
 });
 
 passport.deserializeUser(function(user_id, cb) {
-  cb(null, {
-    id: user_id,
-    username: user_list[user_id]
+  get_user_by_id(user_id, function(user) {
+    cb(null, user);
   });
 });
 
@@ -109,7 +114,7 @@ app.post('/login',
   }
 );
 
-let games_info = function(user_id) {
+let games_info = function(user_id, cb) {
   var game_list = [];
   for (var i = 0; i < games.length; i++) {
     for (var j = 0; j < games[i].player_ids.length; j++) {
@@ -133,20 +138,16 @@ let games_info = function(user_id) {
     }
   }
 
-  let users = [];
-  for (let other_user_id of Object.keys(user_list)) {
-    if (other_user_id != user_id) {
-      users.push({
-        id: other_user_id,
-        username: user_list[other_user_id],
-      });
+  db.users.find({_id: {$ne: mongojs.ObjectId(user_id)}}, function(err, docs) {
+    if (err) {
+      throw 'Error getting user list';
     }
-  }
 
-  return {
-    games: game_list,
-    users: users,
-  };
+    cb({
+      games: game_list,
+      users: docs,
+    });
+  });
 };
 
 app.get('/games/info', function(req, res) {
@@ -154,7 +155,9 @@ app.get('/games/info', function(req, res) {
     return res.redirect('/login');
   }
 
-  res.json(games_info(req.user.id));
+  games_info(req.user._id.toString(), function(r) {
+    res.json(r);
+  });
 });
 
 app.post('/games/new', function(req, res) {
@@ -165,7 +168,7 @@ app.post('/games/new', function(req, res) {
   let game = {
     id: null,
     name: req.body.name,
-    player_ids: [req.user.id, req.body.against],
+    player_ids: [req.user._id.toString(), req.body.against],
     sockets: {},
     chats: [],
     moves: [],
@@ -193,88 +196,99 @@ app.post('/games/new', function(req, res) {
     return false;
   });
 
-  game.sockets[req.user.id] = undefined;
+  game.sockets[req.user._id.toString()] = undefined;
   game.sockets[req.body.against] = undefined;
 
-  let make_player = function(id) {
-    return {
-      user_id: id,
-      user_name: user_list[id],
-      hand: [],
-      deck: [],
-      permanents: [],
-      scrap: 0,
-      cant_play: [],
-      power_used: 0,
-      power_total: 0,
-      shields_used: 0,
-      shields_total: 0,
-      ready: false,
-      mull_penalty: -1,
-    };
+  let make_player = function(id, cb) {
+    get_user_by_id(id, function(user) {
+      cb({
+        user_id: user._id.toString(),
+        user_name: user.username,
+        hand: [],
+        deck: [],
+        permanents: [],
+        scrap: 0,
+        cant_play: [],
+        power_used: 0,
+        power_total: 0,
+        shields_used: 0,
+        shields_total: 0,
+        ready: false,
+        mull_penalty: -1,
+      });
+    });
   }
 
-  game.state.players[req.user.id] = make_player(req.user.id);
-  game.state.players[req.body.against] = make_player(req.body.against);
+  make_player(req.user._id, function(user1) {
+    game.state.players[req.user._id] = user1;
 
-  let random_card = function() {
-    return random_pool[Math.floor(Math.random() * random_pool.length)];
-  }
+    make_player(req.body.against, function(user2) {
+      game.state.players[req.body.against] = user2;
 
-  let find_card = function(name) {
-    for (let coll of [all_cards, explore_cards]) {
-      for (let card of coll) {
-        if (card.name == name) {
-          return card;
+      let random_card = function() {
+        return random_pool[Math.floor(Math.random() * random_pool.length)];
+      }
+
+      let find_card = function(name) {
+        for (let coll of [all_cards, explore_cards]) {
+          for (let card of coll) {
+            if (card.name == name) {
+              return card;
+            }
+          }
+        }
+        throw 'Cannot find card ['+name+']';
+      }
+
+      let next_card = function(card) {
+        var card = JSON.parse(JSON.stringify(card));
+        card.copy_id = game.state.next_copy_id++;
+        card.tapped = false;
+        card.powered = false;
+        return card;
+      }
+
+      let next_mother_ship = function() {
+        var ret = cards.mother_ship();
+        ret.copy_id = game.state.next_copy_id++;
+        return ret;
+      }
+
+      let player_ids = [req.user._id.toString(), req.body.against];
+
+      for (let player_id of player_ids) {
+        for (var i = 0; i < 50; i++) {
+          game.state.players[player_id].deck.push(next_card(random_card()));
+        }
+
+        game.state.players[player_id].permanents.push(next_mother_ship());
+      }
+
+      // Initial hand (debug)
+      /*
+      let initial = ['blue supergiant','brown dwarf','desert planet',
+        'red giant','rocky planet','white dwarf','yellow dwarf'];
+      for (let name of initial) {
+        game.state.players[req.user._id].hand.push(next_card(find_card(name)));
+      }*/
+
+      if (game.state.players[req.user._id].hand.length == 0) {
+        for (let player_id of player_ids) {
+          state.apply_move(game, {
+            type: 'mull',
+            user_id: player_id,
+            turn: game.state.turn,
+          });
         }
       }
-    }
-    throw 'Cannot find card ['+name+']';
-  }
 
-  let next_card = function(card) {
-    var card = JSON.parse(JSON.stringify(card));
-    card.copy_id = game.state.next_copy_id++;
-    card.tapped = false;
-    card.powered = false;
-    return card;
-  }
+      games.push(game);
 
-  for (var i = 0; i < 50; i++) {
-    game.state.players[req.user.id].deck.push(next_card(random_card()));
-    game.state.players[req.body.against].deck.push(next_card(random_card()));
-  }
-
-  let next_mother_ship = function() {
-    var ret = cards.mother_ship();
-    ret.copy_id = game.state.next_copy_id++;
-    return ret;
-  }
-
-  game.state.players[req.user.id].permanents.push(next_mother_ship());
-  game.state.players[req.body.against].permanents.push(next_mother_ship());
-
-  // Initial hand (debug)
-  /*
-  let initial = ['blue supergiant','brown dwarf','desert planet','red giant',
-    'rocky planet','white dwarf','yellow dwarf'];
-  for (let name of initial) {
-    game.state.players[req.user.id].hand.push(next_card(find_card(name)));
-  }*/
-
-  if (game.state.players[req.user.id].hand.length == 0) {
-    for (let player_id of [req.user.id, req.body.against]) {
-      state.apply_move(game, {
-        type: 'mull',
-        user_id: player_id,
-        turn: game.state.turn,
+      games_info(req.user._id.toString(), function(r) {
+        res.json(r);
       });
-    }
-  }
-
-  games.push(game);
-
-  res.json(games_info(req.user.id));
+    });
+  });
 });
 
 let expire_tokens = function(tokens) {
@@ -308,7 +322,7 @@ app.get('/game/:game_id', function(req, res) {
   }
 
   if (game === null ||
-      game.state.players[req.user.id] === undefined) {
+      game.state.players[req.user._id] === undefined) {
     return res.status(404).send('Not found');
   }
 
@@ -320,7 +334,7 @@ app.get('/game/:game_id', function(req, res) {
 
   tokens[token] = {
     game_id: game.id,
-    user_id: req.user.id,
+    user_id: req.user._id,
     created: Date.now(),
   };
 
@@ -334,10 +348,10 @@ app.listen(8080);
 
 var wss = new require('ws').Server({port: 8081});
 wss.on('connection', function(ws) {
-  var token_data = undefined;
-  var game = undefined;
-  var player_id = undefined;
-  var user = undefined;
+  let token_data = undefined;
+  let game = undefined;
+  let player_id = undefined;
+  let user = undefined;
 
   // Add implicit properties to a move originating from a client
   var fill_in = function(move) {
@@ -383,37 +397,37 @@ wss.on('connection', function(ws) {
       if (token_data === undefined) {
         throw 'Invalid token';
       }
-      user = {
-        id: token_data.user_id,
-        username: user_list[token_data.user_id],
-      };
-      outer: for (var i = 0; i < games.length; i++) {
-        if (games[i].id == token_data.game_id) {
-          game = games[i];
-          for (var j = 0; j < game.player_ids.length; j++) {
-            if (game.player_ids[j] == token_data.user_id) {
-              player_id = game.player_ids[j];
-              break outer;
+
+      get_user_by_id(token_data.user_id, function(user_) {
+        user = user_;
+        outer: for (let i = 0; i < games.length; i++) {
+          if (games[i].id == token_data.game_id) {
+            game = games[i];
+            for (let j = 0; j < game.player_ids.length; j++) {
+              if (game.player_ids[j] == token_data.user_id) {
+                player_id = game.player_ids[j];
+                break outer;
+              }
             }
           }
         }
-      }
 
-      if (player_id === undefined) {
-        console.log('Game not found.');
-        send({type: 'error', text: 'Game not found'});
-        return;
-      }
+        if (player_id === undefined) {
+          console.log('Game not found.');
+          send({type: 'error', text: 'Game not found'});
+          return;
+        }
 
-      game.sockets[player_id] = ws;
-      console.log('user_id %s connected to game %s', user.id, game.id);
-      send({
-        type: 'greetings',
-        user_id: user.id,
-        username: user.username,
+        game.sockets[player_id] = ws;
+        console.log('user_id %s connected to game %s', user._id, game.id);
+        send({
+          type: 'greetings',
+          user_id: user._id,
+          username: user.username,
+        });
+        send({type: 'chats', chats: game.chats});
+        send_state(player_id);
       });
-      send({type: 'chats', chats: game.chats});
-      send_state(player_id);
     }
     else if (msg.type === 'chat') {
       var newMessage = {

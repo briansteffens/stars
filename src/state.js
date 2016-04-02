@@ -86,10 +86,8 @@
     var other_player = state.players[exports.next_player(game, move.user_id)];
 
     let get_user = function(id) {
-      console.log(game);
-      console.log(game.users);
       for (let user of game.users) {
-        if (user.id == id) {
+        if (user._id == id) {
           return user;
         }
       }
