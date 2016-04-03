@@ -49,17 +49,18 @@ function redis_err(msg, cb) {
   }
 }
 
-/* Store [val] in redis with a generated base64 key of length [key_len]
+/* Store [val] in redis with a generated base64 key of length [key_len] with
+ * a prefix of "[prefix]_".
  *
  * [cb] should be a function with the signature (err, key). [err] will be
  * non-null if a unique key could not be generated. [key] will contain the
  * generated key if [err] is null.
  */
-function redis_set(key_len, val, ttl, cb) {
+function redis_set(prefix, key_len, val, ttl, cb) {
   let tries = MAX_KEY_ATTEMPTS;
 
   let attempt = function() {
-    let key = random_base64(key_len);
+    let key = prefix + '_' + random_base64(key_len);
 
     redis.set(key, val, 'NX', 'EX', ttl, function(err, res) {
       if (res !== 'OK') {
@@ -370,7 +371,7 @@ app.get('/game/:game_id', function(req, res) {
     user_id: req.user._id.toString(),
   });
 
-  redis_set(10, token_data, GAME_TOKEN_TTL, function(err, token) {
+  redis_set('gametoken', 10, token_data, GAME_TOKEN_TTL, function(err, token) {
     if (err) {
       console.log('Error generating token: ' + err);
       return res.status(500).send('Error generating token');
@@ -378,7 +379,7 @@ app.get('/game/:game_id', function(req, res) {
 
     res.render('game', {
       user: req.user,
-      token: token,
+      token: token.replace('gametoken_', ''),
     });
   });
 });
@@ -430,7 +431,8 @@ wss.on('connection', function(ws) {
   ws.on('message', function(message) {
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
-      redis.get(msg.token, redis_err('token get failed', function(err, res) {
+      redis.get('gametoken_' + msg.token, redis_err('token get failed',
+            function(err, res) {
         if (err || res === null) {
           send({type: 'error', text: 'Invalid or expired game token'});
           return;
