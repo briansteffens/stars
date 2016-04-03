@@ -23,3 +23,4 @@ server_dependencies:
       - passport
       - passport-local
       - mongodb
+      - redis

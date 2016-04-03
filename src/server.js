@@ -4,6 +4,12 @@ var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
 var seedrandom = require('seedrandom');
 
+var redis = require("redis").createClient();
+
+redis.on("error", function (err) {
+  console.log("redis error: " + err);
+});
+
 var mongojs = require('mongojs');
 var db = mongojs('stars', ['users']);
 
@@ -17,12 +23,59 @@ require('./static/common.js');
 var cards = require('./cards.js');
 var state = require('./state.js');
 
-var tokens = {};
 var games = [];
 
 var all_cards = cards.all();
 var explore_cards = cards.explore();
 var random_pool = cards.pool(all_cards);
+
+const MAX_KEY_ATTEMPTS = 5;
+const GAME_TOKEN_TTL = 5 * 60;
+
+/* Return a redis callback that logs any found error in a standardized format
+ * with [msg] as descriptive text, then calls the optional [cb] callback
+ * with signature (err, res).
+ */
+function redis_err(msg, cb) {
+  return function(err, res) {
+    if (err) {
+      console.log('REDIS ERROR: '+msg+'\n err: ['+err+']\n res: ['+res+']\n');
+    }
+
+    if (cb) {
+      cb(err, res);
+    }
+  }
+}
+
+/* Store [val] in redis with a generated base64 key of length [key_len]
+ *
+ * [cb] should be a function with the signature (err, key). [err] will be
+ * non-null if a unique key could not be generated. [key] will contain the
+ * generated key if [err] is null.
+ */
+function redis_set(key_len, val, ttl, cb) {
+  let tries = MAX_KEY_ATTEMPTS;
+
+  let attempt = function() {
+    let key = random_base64(key_len);
+
+    redis.set(key, val, 'NX', 'EX', ttl, function(err, res) {
+      if (res !== 'OK') {
+        tries--;
+        if (tries <= 0) {
+          cb('Max attempts exceeded trying to generate a unique key', null);
+        }
+        attempt();
+        return;
+      }
+
+      cb(null, key);
+    });
+  };
+
+  attempt();
+}
 
 function get_user_by_id(id, cb) {
   db.users.findOne({_id: mongojs.ObjectId(id)}, function(err, doc) {
@@ -291,22 +344,6 @@ app.post('/games/new', function(req, res) {
   });
 });
 
-let expire_tokens = function(tokens) {
-  let to_delete = [];
-
-  for (let token in tokens) {
-    if (tokens.hasOwnProperty(token)) {
-      if (Date.now() - tokens[token].created > 60 * 1000) {
-        to_delete.push(token);
-      }
-    }
-  }
-
-  for (let token of to_delete) {
-    delete tokens[token];
-  }
-};
-
 app.get('/game/:game_id', function(req, res) {
   if (req.user === undefined) {
     return res.redirect('/login');
@@ -326,21 +363,21 @@ app.get('/game/:game_id', function(req, res) {
     return res.status(404).send('Not found');
   }
 
-  expire_tokens(tokens);
-
-  let token = generate_id(10, function(id) {
-    return tokens.hasOwnProperty(id);
+  let token_data = JSON.stringify({
+    game_id: game.id,
+    user_id: req.user._id.toString(),
   });
 
-  tokens[token] = {
-    game_id: game.id,
-    user_id: req.user._id,
-    created: Date.now(),
-  };
+  redis_set(10, token_data, GAME_TOKEN_TTL, function(err, token) {
+    if (err) {
+      console.log('Error generating token: ' + err);
+      return res.status(500).send('Error generating token');
+    }
 
-  res.render('game', {
-    user: req.user,
-    token: token
+    res.render('game', {
+      user: req.user,
+      token: token,
+    });
   });
 });
 
@@ -391,43 +428,46 @@ wss.on('connection', function(ws) {
   ws.on('message', function(message) {
     var msg = JSON.parse(message);
     if (msg.type === 'hello') {
-      expire_tokens(tokens);
-      token_data = tokens[msg.token];
-      delete tokens[msg.token];
-      if (token_data === undefined) {
-        throw 'Invalid token';
-      }
-
-      get_user_by_id(token_data.user_id, function(user_) {
-        user = user_;
-        outer: for (let i = 0; i < games.length; i++) {
-          if (games[i].id == token_data.game_id) {
-            game = games[i];
-            for (let j = 0; j < game.player_ids.length; j++) {
-              if (game.player_ids[j] == token_data.user_id) {
-                player_id = game.player_ids[j];
-                break outer;
-              }
-            }
-          }
-        }
-
-        if (player_id === undefined) {
-          console.log('Game not found.');
-          send({type: 'error', text: 'Game not found'});
+      redis.get(msg.token, redis_err('token get failed', function(err, res) {
+        if (err || res === null) {
+          send({type: 'error', text: 'Invalid or expired game token'});
           return;
         }
 
-        game.sockets[player_id] = ws;
-        console.log('user_id %s connected to game %s', user._id, game.id);
-        send({
-          type: 'greetings',
-          user_id: user._id,
-          username: user.username,
+        token_data = JSON.parse(res);
+        redis.del(msg.token, redis_err('token delete failed'));
+
+        get_user_by_id(token_data.user_id, function(user_) {
+          user = user_;
+          outer: for (let i = 0; i < games.length; i++) {
+            if (games[i].id == token_data.game_id) {
+              game = games[i];
+              for (let j = 0; j < game.player_ids.length; j++) {
+                if (game.player_ids[j] == token_data.user_id) {
+                  player_id = game.player_ids[j];
+                  break outer;
+                }
+              }
+            }
+          }
+
+          if (player_id === undefined) {
+            console.log('Game not found.');
+            send({type: 'error', text: 'Game not found'});
+            return;
+          }
+
+          game.sockets[player_id] = ws;
+          console.log('user_id %s connected to game %s', user._id, game.id);
+          send({
+            type: 'greetings',
+            user_id: user._id,
+            username: user.username,
+          });
+          send({type: 'chats', chats: game.chats});
+          send_state(player_id);
         });
-        send({type: 'chats', chats: game.chats});
-        send_state(player_id);
-      });
+      }));
     }
     else if (msg.type === 'chat') {
       var newMessage = {
