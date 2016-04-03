@@ -15,9 +15,24 @@ var db = mongojs('stars', ['users']);
 
 db.users.remove();
 
-db.users.save({username: 'brian'});
-db.users.save({username: 'levi'});
-db.users.save({username: 'jeremy'});
+function make_unique(field, options, cb) {
+  db.users.createIndex([field], options, function(err, list) {
+    if (err) {
+      throw 'Error making '+field+' unique';
+    }
+    console.log('LIST: ' + list);
+    cb();
+  });
+}
+
+make_unique('email', {unique: true}, function() {
+  make_unique('username', {unique: true}, function() {
+    make_unique('verification_code', {unique: true,sparse: true}, function() {
+      db.users.save({username: 'brian',email: 'brian@asdf.com'});
+      db.users.save({username: 'jeremy',email: 'jeremy@asdf.com'});
+    });
+  });
+});
 
 require('./static/common.js');
 var cards = require('./cards.js');
@@ -32,6 +47,7 @@ var random_pool = cards.pool(all_cards);
 const DEBUG = process.argv.contains('--debug');
 const MAX_KEY_ATTEMPTS = 5;
 const GAME_TOKEN_TTL = 5 * 60;
+const EMAIL_CONFIRM_TTL = 24 * 60;
 
 /* Return a redis callback that logs any found error in a standardized format
  * with [msg] as descriptive text, then calls the optional [cb] callback
@@ -149,6 +165,70 @@ app.use(express.static('src/static'));
 
 app.get('/', function(req, res) {
   res.redirect('/games');
+});
+
+app.get('/register', function(req, res) {
+  res.render('register');
+});
+
+app.post('/register', function(req, res) {
+  let errors = [];
+
+  if (req.body.username.length < 3) {
+    errors.push('Username must be at least 3 characters');
+  }
+
+  if (req.body.password.length < 6) {
+    errors.push('Password must be at least 6 characters');
+  }
+
+  if (req.body.password !== req.body.password_confirm) {
+    errors.push('Passwords must match');
+  }
+
+  // Check username availability
+  db.users.findOne({username: req.body.username}, function(err, doc) {
+    if (err) {
+      errors.push('Username is already taken');
+    }
+
+    let render_errors = function(errors) {
+      res.render('register', {
+        email: req.body.email,
+        username: req.body.username,
+        errors: errors,
+      });
+    }
+
+    // Check email availability
+    db.users.findOne({email: req.body.email}, function(err, doc) {
+      if (err) {
+        errors.push('Email already registered');
+      }
+
+      if (errors.length > 0) {
+        return render_errors(errors);
+      } else {
+        // Process registration
+        db.users.save({
+          email: req.body.email,
+          username: req.body.username,
+          password: req.body.password,
+          registered_at: Date.now(),
+          verified_at: null,
+          verification_code: random_base64(32),
+        }, function(err, list) {
+          if (err) {
+            console.log('Error inserting user: ' + err);
+            return render_errors([
+                'Unknown error creating the account, please try again']);
+          }
+
+          res.render('registered');
+        });
+      }
+    });
+  });
 });
 
 app.get('/login', function(req, res) {

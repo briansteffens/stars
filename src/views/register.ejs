@@ -1,0 +1,38 @@
+<html>
+  <body>
+    <% if (typeof errors !== 'undefined') { %>
+      <ul>
+        <% for (var i = 0; i < errors.length; i++) { %>
+          <li><%= errors[i] %></li>
+        <% } %>
+      </ul>
+    <% } %>
+
+    <% if (typeof email === 'undefined') { var email = ''; } %>
+    <% if (typeof username === 'undefined') { var username = ''; } %>
+
+    <form action="/register" method="post">
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" value="<%= email %>"
+            required />
+      <div>
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username" required
+            value="<%= username %>" />
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" required />
+      </div>
+      <div>
+        <label for="password_confirm">Confirm password:</label>
+        <input type="password" name="password_confirm" id="password_confirm"
+            required />
+      </div>
+      <div>
+        <input type="submit" value="Submit" />
+      </div>
+    </form>
+  </body>
+</html>
