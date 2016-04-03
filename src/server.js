@@ -29,6 +29,7 @@ var all_cards = cards.all();
 var explore_cards = cards.explore();
 var random_pool = cards.pool(all_cards);
 
+const DEBUG = process.argv.contains('--debug');
 const MAX_KEY_ATTEMPTS = 5;
 const GAME_TOKEN_TTL = 5 * 60;
 
@@ -317,15 +318,16 @@ app.post('/games/new', function(req, res) {
         game.state.players[player_id].permanents.push(next_mother_ship());
       }
 
-      // Initial hand (debug)
-      /*
-      let initial = ['blue supergiant','brown dwarf','desert planet',
-        'red giant','rocky planet','white dwarf','yellow dwarf'];
-      for (let name of initial) {
-        game.state.players[req.user._id].hand.push(next_card(find_card(name)));
-      }*/
+      if (DEBUG) {
+        let initial = ['blue supergiant','brown dwarf','desert planet',
+          'red giant','rocky planet','white dwarf','yellow dwarf'];
 
-      if (game.state.players[req.user._id].hand.length == 0) {
+        for (let name of initial) {
+          game.state.players[req.user._id].hand.push(
+              next_card(find_card(name)));
+        }
+      }
+      else {
         for (let player_id of player_ids) {
           state.apply_move(game, {
             type: 'mull',
