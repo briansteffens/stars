@@ -36,3 +36,6 @@ nodejs --use-strict src/server.js
 ```
 
 Now visit https://stars.local/ in a browser.
+
+For testing email stuff, visit http://stars.local/roundcube and use the
+credentials vagrant/vagrant.
