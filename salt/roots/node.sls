@@ -24,6 +24,7 @@ server_dependencies:
       - passport-local
       - mongodb
       - redis
+      - nodemailer
 
 config_file:
   file.symlink:

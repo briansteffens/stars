@@ -1,12 +1,14 @@
 (function(exports){
+  exports.external_url = 'https://stars.local/',
+
   exports.mail = {
-    options: {
-      host: 'stars.local',
+    transport: {
+      host: 'localhost',
       port: 25,
-      auth: {
-        user: 'vagrant',
-        pass: 'vagrant',
-      },
+      tls: {
+        rejectUnauthorized: false,
+      }
     },
+    from: '"stars!" <vagrant@stars.local>',
   };
 })(typeof exports === 'undefined' ? this['config'] = {} : exports);

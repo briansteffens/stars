@@ -20,7 +20,6 @@ function make_unique(field, options, cb) {
     if (err) {
       throw 'Error making '+field+' unique';
     }
-    console.log('LIST: ' + list);
     cb();
   });
 }
@@ -33,6 +32,11 @@ make_unique('email', {unique: true}, function() {
     });
   });
 });
+
+var config = require('./config.js');
+
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport(config.mail.transport);
 
 require('./static/common.js');
 var cards = require('./cards.js');
@@ -103,6 +107,21 @@ function get_user_by_id(id, cb) {
 
     cb(doc);
   });
+}
+
+/* Send email from the configured user
+ *
+ * cb should have a signature of (err, info)
+ */
+function email(to, subject, text, cb) {
+  var options = {
+    from: config.mail.from,
+    to: to,
+    subject: subject,
+    text: text,
+  };
+
+  transporter.sendMail(options, cb);
 }
 
 function random_base64(len) {
@@ -210,13 +229,15 @@ app.post('/register', function(req, res) {
         return render_errors(errors);
       } else {
         // Process registration
+        let verification_code = random_base64(32);
+
         db.users.save({
           email: req.body.email,
           username: req.body.username,
           password: req.body.password,
           registered_at: Date.now(),
           verified_at: null,
-          verification_code: random_base64(32),
+          verification_code: verification_code,
         }, function(err, list) {
           if (err) {
             console.log('Error inserting user: ' + err);
@@ -224,7 +245,21 @@ app.post('/register', function(req, res) {
                 'Unknown error creating the account, please try again']);
           }
 
-          res.render('registered');
+          let body = 'Thanks for registering! Verify your email address by ' +
+                     'clicking here: ' + config.external_url + 'register/' +
+                     verification_code;
+
+          email(req.body.email, 'stars: verify email address', body,
+              function(err, info) {
+            if (err) {
+              console.log('MAIL ERROR: ' + err);
+              return render_errors([
+                  'Unknown error sending a verify email, please try again']);
+            }
+
+            console.log('MAIL SENT: ' + info.response);
+            res.render('registered');
+          });
         });
       }
     });
