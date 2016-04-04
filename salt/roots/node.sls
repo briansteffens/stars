@@ -24,3 +24,11 @@ server_dependencies:
       - passport-local
       - mongodb
       - redis
+
+config_file:
+  file.symlink:
+    - name: /vagrant/src/config.js
+    - target: /vagrant/src/config.js.example
+    - owner: vagrant
+    - group: vagrant
+    - unless: test -f /vagrant/src/config.js

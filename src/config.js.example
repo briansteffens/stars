@@ -1,0 +1,12 @@
+(function(exports){
+  exports.mail = {
+    options: {
+      host: 'stars.local',
+      port: 25,
+      auth: {
+        user: 'vagrant',
+        pass: 'vagrant',
+      },
+    },
+  };
+})(typeof exports === 'undefined' ? this['config'] = {} : exports);
