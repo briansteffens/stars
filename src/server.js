@@ -3,6 +3,7 @@ var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
 var seedrandom = require('seedrandom');
+var bcrypt = require('bcryptjs');
 
 var redis = require("redis").createClient();
 
@@ -143,16 +144,18 @@ function generate_id(len, collision_check) {
 }
 
 passport.use(new Strategy(function(username, password, cb) {
-  if (password !== 'password') {
-    return cb('Wrong password');
-  }
-
   db.users.findOne({username: username}, function(err, doc) {
     if (err) {
       return cb('Invalid username');
     }
 
-    return cb(null, doc);
+    bcrypt.compare(password, doc.password, function(err, res) {
+      if (!res) {
+        return cb('Invalid password');
+      } else {
+        return cb(null, doc);
+      }
+    });
   });
 }));
 
@@ -231,34 +234,36 @@ app.post('/register', function(req, res) {
         // Process registration
         let verification_code = random_base64(32);
 
-        db.users.save({
-          email: req.body.email,
-          username: req.body.username,
-          password: req.body.password,
-          registered_at: Date.now(),
-          verified_at: null,
-          verification_code: verification_code,
-        }, function(err, list) {
-          if (err) {
-            console.log('Error inserting user: ' + err);
-            return render_errors([
-                'Unknown error creating the account, please try again']);
-          }
-
-          let body = 'Thanks for registering! Verify your email address by ' +
-                     'clicking here: ' + config.external_url + 'register/' +
-                     verification_code;
-
-          email(req.body.email, 'stars: verify email address', body,
-              function(err, info) {
+        bcrypt.hash(req.body.password, 8, function(err, hash) {
+          db.users.save({
+            email: req.body.email,
+            username: req.body.username,
+            password: hash,
+            registered_at: Date.now(),
+            verified_at: null,
+            verification_code: verification_code,
+          }, function(err, list) {
             if (err) {
-              console.log('MAIL ERROR: ' + err);
+              console.log('Error inserting user: ' + err);
               return render_errors([
-                  'Unknown error sending a verify email, please try again']);
+                  'Unknown error creating the account, please try again']);
             }
 
-            console.log('MAIL SENT: ' + info.response);
-            res.render('registered');
+            let body = 'Thanks for registering! Verify your email address by '+
+                       'clicking here: ' + config.external_url + 'register/' +
+                       verification_code;
+
+            email(req.body.email, 'stars: verify email address', body,
+                function(err, info) {
+              if (err) {
+                console.log('MAIL ERROR: ' + err);
+                return render_errors([
+                    'Unknown error sending a verify email, please try again']);
+              }
+
+              console.log('MAIL SENT: ' + info.response);
+              res.render('registered');
+            });
           });
         });
       }

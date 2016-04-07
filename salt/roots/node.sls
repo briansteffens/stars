@@ -25,6 +25,7 @@ server_dependencies:
       - mongodb
       - redis
       - nodemailer
+      - bcryptjs
 
 config_file:
   file.symlink:
