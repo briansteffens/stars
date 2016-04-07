@@ -12,16 +12,13 @@ var game_info = undefined;
 var socket = undefined;
 var view = undefined;
 
-function connect_socket(token) {
+function connect_socket(msg) {
   socket = new WebSocket('wss://' + location.hostname + '/ws/');
   socket.onerror = function(error) {
     console.log("WebSocket error: " + error);
   };
   socket.onopen = function(e) {
-    socket.send(JSON.stringify({
-      type: 'hello',
-      token: token,
-    }));
+    socket.send(JSON.stringify(msg));
   };
   socket.onmessage = function(e) {
     var msg = JSON.parse(e.data);

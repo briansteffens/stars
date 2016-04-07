@@ -505,7 +505,7 @@ app.get('/game/:game_id', function(req, res) {
     user_id: req.user._id.toString(),
   });
 
-  redis_set('gametoken', 10, token_data, GAME_TOKEN_TTL, function(err, token) {
+  redis_set('wstoken', 10, token_data, GAME_TOKEN_TTL, function(err, token) {
     if (err) {
       console.log('Error generating token: ' + err);
       return res.status(500).send('Error generating token');
@@ -513,7 +513,7 @@ app.get('/game/:game_id', function(req, res) {
 
     res.render('game', {
       user: req.user,
-      token: token.replace('gametoken_', ''),
+      token: token.replace('wstoken_', ''),
     });
   });
 });
@@ -564,12 +564,11 @@ wss.on('connection', function(ws) {
 
   ws.on('message', function(message) {
     var msg = JSON.parse(message);
-    if (msg.type === 'hello') {
-      redis.get('gametoken_' + msg.token, redis_err('token get failed',
+    if (msg.type === 'connect') {
+      redis.get('wstoken_' + msg.token, redis_err('token get failed',
             function(err, res) {
         if (err || res === null) {
-          send({type: 'error', text: 'Invalid or expired game token'});
-          return;
+          return send({type: 'error', text: 'Invalid or expired token'});
         }
 
         token_data = JSON.parse(res);
@@ -577,33 +576,38 @@ wss.on('connection', function(ws) {
 
         get_user_by_id(token_data.user_id, function(user_) {
           user = user_;
-          outer: for (let i = 0; i < games.length; i++) {
-            if (games[i].id == token_data.game_id) {
-              game = games[i];
-              for (let j = 0; j < game.player_ids.length; j++) {
-                if (game.player_ids[j] == token_data.user_id) {
-                  player_id = game.player_ids[j];
-                  break outer;
+
+          if (msg.page === 'game') {
+            outer: for (let i = 0; i < games.length; i++) {
+              if (games[i].id == token_data.game_id) {
+                game = games[i];
+                for (let j = 0; j < game.player_ids.length; j++) {
+                  if (game.player_ids[j] == token_data.user_id) {
+                    player_id = game.player_ids[j];
+                    break outer;
+                  }
                 }
               }
             }
-          }
 
-          if (player_id === undefined) {
-            console.log('Game not found.');
-            send({type: 'error', text: 'Game not found'});
-            return;
-          }
+            if (player_id === undefined) {
+              console.log('Game not found.');
+              send({type: 'error', text: 'Game not found'});
+              return;
+            }
 
-          game.sockets[player_id] = ws;
-          console.log('user_id %s connected to game %s', user._id, game.id);
-          send({
-            type: 'greetings',
-            user_id: user._id,
-            username: user.username,
-          });
-          send({type: 'chats', chats: game.chats});
-          send_state(player_id);
+            game.sockets[player_id] = ws;
+            console.log('user_id %s connected to game %s', user._id, game.id);
+            send({
+              type: 'greetings',
+              user_id: user._id,
+              username: user.username,
+            });
+            send({type: 'chats', chats: game.chats});
+            send_state(player_id);
+          } else {
+            send({type: 'error', text: 'Unrecognized page'});
+          }
         });
       }));
     }
