@@ -34,8 +34,21 @@ function make_unique(field, options, cb) {
 make_unique('email', {unique: true}, function() {
   make_unique('username', {unique: true}, function() {
     make_unique('verification_code', {unique: true,sparse: true}, function() {
-      db.users.save({username: 'brian',email: 'brian@asdf.com'});
-      db.users.save({username: 'jeremy',email: 'jeremy@asdf.com'});
+      db.users.save({
+        username: 'brian',
+        email: 'brian@asdf.com',
+        password: bcrypt.hashSync('password'),
+      });
+      db.users.save({
+        username: 'jeremy',
+        email: 'jeremy@asdf.com',
+        password: bcrypt.hashSync('password'),
+      });
+      db.users.save({
+        username: 'levi',
+        email: 'levi@asdf.com',
+        password: bcrypt.hashSync('password'),
+      });
     });
   });
 });
