@@ -207,7 +207,7 @@ app.post('/register', function(req, res) {
 
   // Check username availability
   db.users.findOne({username: req.body.username}, function(err, doc) {
-    if (err) {
+    if (doc) {
       errors.push('Username is already taken');
     }
 
@@ -221,7 +221,7 @@ app.post('/register', function(req, res) {
 
     // Check email availability
     db.users.findOne({email: req.body.email}, function(err, doc) {
-      if (err) {
+      if (doc) {
         errors.push('Email already registered');
       }
 
@@ -262,6 +262,25 @@ app.post('/register', function(req, res) {
           });
         });
       }
+    });
+  });
+});
+
+app.get('/register/:code', function(req, res) {
+  db.users.findOne({verification_code: req.params.code}, function(err, user) {
+    if (err || !user || user.verified_at) {
+      return res.render('register_fail');
+    }
+
+    user.verification_code = null;
+    user.verified_at = Date.now();
+
+    db.users.save(user, function(err, doc) {
+      if (err) {
+        return res.render('register_fail');
+      }
+
+      return res.render('register_complete');
     });
   });
 });
