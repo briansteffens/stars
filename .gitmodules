@@ -1,0 +1,3 @@
+[submodule "src/static/img"]
+	path = src/static/img
+	url = https://github.com/briansteffens/stars-assets
