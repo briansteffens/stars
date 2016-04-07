@@ -4,14 +4,20 @@ var Strategy = require('passport-local').Strategy;
 var crypto = require('crypto');
 var seedrandom = require('seedrandom');
 var bcrypt = require('bcryptjs');
-
 var redis = require("redis").createClient();
-
-redis.on("error", function (err) {
-  console.log("redis error: " + err);
-});
-
 var mongojs = require('mongojs');
+var nodemailer = require('nodemailer');
+require('./static/common.js');
+var cards = require('./cards.js');
+var state = require('./state.js');
+var config = require('./config.js');
+
+const DEBUG = process.argv.contains('--debug');
+const MAX_KEY_ATTEMPTS = 5;
+const GAME_TOKEN_TTL = 5 * 60;
+const EMAIL_CONFIRM_TTL = 24 * 60;
+
+// Setup mongo database connection
 var db = mongojs('stars', ['users']);
 
 db.users.remove();
@@ -34,25 +40,14 @@ make_unique('email', {unique: true}, function() {
   });
 });
 
-var config = require('./config.js');
-
-var nodemailer = require('nodemailer');
+// Email config
 var transporter = nodemailer.createTransport(config.mail.transport);
-
-require('./static/common.js');
-var cards = require('./cards.js');
-var state = require('./state.js');
 
 var games = [];
 
 var all_cards = cards.all();
 var explore_cards = cards.explore();
 var random_pool = cards.pool(all_cards);
-
-const DEBUG = process.argv.contains('--debug');
-const MAX_KEY_ATTEMPTS = 5;
-const GAME_TOKEN_TTL = 5 * 60;
-const EMAIL_CONFIRM_TTL = 24 * 60;
 
 /* Return a redis callback that logs any found error in a standardized format
  * with [msg] as descriptive text, then calls the optional [cb] callback
