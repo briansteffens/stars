@@ -494,7 +494,7 @@ app.post('/games/new', function(req, res) {
   });
 });
 
-app.get('/game/:game_id', function(req, res) {
+app.get('/game', function(req, res) {
   if (req.user === undefined) {
     return res.redirect('/login');
   }
@@ -502,14 +502,13 @@ app.get('/game/:game_id', function(req, res) {
   let game = null;
 
   for (let i = 0; i < games.length; i++) {
-    if (games[i].id == req.params.game_id) {
+    if (games[i].player_ids.contains(req.user._id.toString())) {
       game = games[i];
       break;
     }
   }
 
-  if (game === null ||
-      game.state.players[req.user._id] === undefined) {
+  if (game === null) {
     return res.status(404).send('Not found');
   }
 
