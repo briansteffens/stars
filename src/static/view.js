@@ -501,8 +501,8 @@ var View = React.createClass({
         if (is_mine) {
           for (let i = 0; i < card.actions.length; i++) {
             let action = card.actions[i];
-            let can_attack = is_perm && my_turn && that.state.action === null &&
-                !card.tapped;
+            let can_attack = is_perm && my_turn && that.state.action === null
+                && !card.tapped;
             if (!card.types.contains('black_hole')) {
               can_attack = can_attack && card.powered;
             }
@@ -669,7 +669,6 @@ var View = React.createClass({
 
     let render_log = function() {
       let log = [];
-      console.log(that.state);
       for (let index = 0; index < game.log.length; index++) {
         let entry = game.log[index];
         log.push(<div key={index}>{entry.message}</div>);
@@ -694,18 +693,6 @@ var View = React.createClass({
         </div>
       </div>
     );
-    /*
-          <div className="stats">
-            Selection: {selection}
-            Hand: {enemy.hand.length} cards
-            &nbsp;
-            Scrap: {enemy.scrap}
-            &nbsp;
-            Power: {render_power(enemy)}
-            &nbsp;
-            Shields: {render_shields(enemy)}
-          </div>
-    */
   },
 });
 
@@ -780,6 +767,4 @@ document.onkeypress = function(e) {
     chat_message.value = '';
     chat_message.blur();
   }
-
-  console.log(e);
 };
