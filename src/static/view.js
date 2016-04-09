@@ -1,3 +1,6 @@
+var game_info = undefined;
+var socket = undefined;
+
 var View = React.createClass({
   getInitialState: function() {
     return {
@@ -57,7 +60,13 @@ var View = React.createClass({
     }
   },
   componentDidMount: function() {
-    setTimeout(start_socket);
+    setTimeout(function() {
+      connect_socket({
+        type: 'connect',
+        page: 'game',
+        token: game_socket_token,
+      });
+    });
   },
   set_state: function(game_state) {
     this.update_state({game: game_state});
@@ -700,7 +709,41 @@ var View = React.createClass({
   },
 });
 
-view = ReactDOM.render(<View />, document.getElementById('view'));
+var view = ReactDOM.render(<View />, document.getElementById('view'));
+
+function connect_socket(msg) {
+  socket = new WebSocket('wss://' + location.hostname + '/ws/');
+  socket.onerror = function(error) {
+    console.log("WebSocket error: " + error);
+  };
+  socket.onopen = function(e) {
+    socket.send(JSON.stringify(msg));
+  };
+  socket.onmessage = function(e) {
+    var msg = JSON.parse(e.data);
+    if (msg.type === 'chat') {
+      view.add(msg.chat);
+    }
+    else if (msg.type === 'chats') {
+      for (var i = msg.chats.length - 1; i >= 0; i--) {
+        view.add(msg.chats[i]);
+      }
+    }
+    else if (msg.type === 'greetings') {
+      game_info = msg;
+      view.forceUpdate();
+    }
+    else if (msg.type === 'state') {
+      view.set_state(msg.state);
+    }
+    else {
+      console.log('Unrecognized WebSocket message type: %s', msg.type);
+    }
+  };
+  socket.onclose = function(e) {
+    console.log("WebSocket closed");
+  };
+}
 
 var body_el = document.getElementsByTagName('body').item(0);
 body_el.onresize = function() {

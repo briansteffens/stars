@@ -11,3 +11,7 @@ Array.prototype.intersect = function(other) {
   }
   return ret;
 };
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj)); // TODO: something better
+}

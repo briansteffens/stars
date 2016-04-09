@@ -11,17 +11,10 @@
   </head>
   <body>
     <canvas id="canvas" width="300" height="300"></canvas>
+    <script>
+      var game_socket_token = '<%= token %>';
+    </script>
     <div id="view"></div>
     <script type="text/babel" src="/view.js"></script>
-    <script src="/socket.js"></script>
-    <script>
-      function start_socket() {
-        connect_socket({
-          type: 'connect',
-          page: 'game',
-          token: '<%= token %>',
-        });
-      }
-    </script>
   </body>
 </html>
