@@ -1,7 +1,64 @@
 var game_info = undefined;
 var socket = undefined;
+var body_el = document.getElementsByTagName('body').item(0);
 
-var View = React.createClass({
+var Chat = React.createClass({
+  getInitialState: function() {
+    return {
+      chats: []
+    };
+  },
+  send: function(e) {
+    e.preventDefault();
+    socket.send(JSON.stringify({
+      type: 'chat',
+      text: this.refs.message.value,
+    }));
+    this.refs.message.value = '';
+    this.refs.message.blur();
+  },
+  add: function(msg) {
+    this.setState({
+      chats: [msg, ...this.state.chats],
+    });
+    window.requestAnimationFrame(function() {
+      let messages = document.getElementById("messages");
+      messages.scrollTop = messages.scrollHeight;
+    });
+  },
+  render: function() {
+    let chats = [];
+    for (let i = this.state.chats.length - 1; i >= 0; i--) {
+      let chat = this.state.chats[i];
+      chats.push(
+        <div key={i}>
+          <strong>{chat.username}</strong>:
+          &nbsp;
+          {chat.text}
+        </div>
+      );
+    }
+
+    return (
+      <div className="chat_container">
+        <div className="chat">
+          <div id="messages" className="messages">
+            {chats}
+          </div>
+          <form onSubmit={this.send}>
+            <button className="submit">send</button>
+            <span>
+              <input id="chat_message" type="text"
+                placeholder="enter a message" ref="message" />
+            </span>
+          </form>
+        </div>
+      </div>
+    );
+  },
+});
+
+var Game = React.createClass({
   getInitialState: function() {
     return {
       game: null,
@@ -170,24 +227,6 @@ var View = React.createClass({
       return;
     }
     socket.send(JSON.stringify({type: 'forfeit'}));
-  },
-  send: function(e) {
-    e.preventDefault();
-    socket.send(JSON.stringify({
-      type: 'chat',
-      text: this.refs.message.value,
-    }));
-    this.refs.message.value = '';
-    this.refs.message.blur();
-  },
-  add: function(msg) {
-    this.update_state({
-      chats: [msg, ...this.state.chats],
-    });
-    window.requestAnimationFrame(function() {
-      let messages = document.getElementById("messages");
-      messages.scrollTop = messages.scrollHeight;
-    });
   },
   get_action: function(card, action_name) {
     for (let action of card.actions) {
@@ -438,35 +477,6 @@ var View = React.createClass({
       );
     }
 
-    let chats = [];
-    for (let i = this.state.chats.length - 1; i >= 0; i--) {
-      let chat = this.state.chats[i];
-      chats.push(
-        <div key={i}>
-          <strong>{chat.username}</strong>:
-          &nbsp;
-          {chat.text}
-        </div>
-      );
-    }
-
-    let chat = (
-      <div className="chat_container">
-        <div className="chat">
-          <div id="messages" className="messages">
-            {chats}
-          </div>
-          <form onSubmit={this.send}>
-            <button className="submit">send</button>
-            <span>
-              <input id="chat_message" type="text" placeholder="enter a message"
-                ref="message" />
-            </span>
-          </form>
-        </div>
-      </div>
-    );
-
     let render_selection = function() {
       if (!that.state.selection) {
         return (<div />);
@@ -688,10 +698,22 @@ var View = React.createClass({
         <div id="hud-bottom" className="hud">
           {render_selection()}
           {render_hand()}
-          {chat}
+          {this.props.children}
           {render_log()}
         </div>
       </div>
+    );
+  },
+  page_type: 'game',
+});
+
+var View = React.createClass({
+  getInitialState: function() {
+    return {};
+  },
+  render: function() {
+    return (
+      <Game ref="page"><Chat ref="chat" /></Game>
     );
   },
 });
@@ -709,11 +731,11 @@ function connect_socket(msg) {
   socket.onmessage = function(e) {
     var msg = JSON.parse(e.data);
     if (msg.type === 'chat') {
-      view.add(msg.chat);
+      view.refs.chat.add(msg.chat);
     }
     else if (msg.type === 'chats') {
       for (var i = msg.chats.length - 1; i >= 0; i--) {
-        view.add(msg.chats[i]);
+        view.refs.chat.add(msg.chats[i]);
       }
     }
     else if (msg.type === 'greetings') {
@@ -721,7 +743,7 @@ function connect_socket(msg) {
       view.forceUpdate();
     }
     else if (msg.type === 'state') {
-      view.set_state(msg.state);
+      view.refs.page.set_state(msg.state);
     }
     else {
       console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -732,9 +754,12 @@ function connect_socket(msg) {
   };
 }
 
-var body_el = document.getElementsByTagName('body').item(0);
 body_el.onresize = function() {
-  view.render_canvas();
+  if (view.refs.page.page_type !== 'game') {
+    return;
+  }
+
+  view.refs.page.render_canvas();
 
   document.getElementById('hud-spacer').style.height =
     document.getElementById('hud').offsetHeight + 'px';
