@@ -2,6 +2,25 @@ var game_info = undefined;
 var socket = undefined;
 var body_el = document.getElementsByTagName('body').item(0);
 
+var Menu = React.createClass({
+  getInitialState: function() {
+    return {};
+  },
+  swap: function(target) {
+    this.props.menu(target);
+  },
+  render: function() {
+    return (
+      <span>
+        <input type="button" value="lobby"
+          onClick={this.swap.bind(null, 'lobby')} />
+        <input type="button" value="game"
+          onClick={this.swap.bind(null, 'game')} />
+      </span>
+    );
+  },
+});
+
 var Chat = React.createClass({
   getInitialState: function() {
     return {
@@ -52,6 +71,22 @@ var Chat = React.createClass({
                 placeholder="enter a message" ref="message" />
             </span>
           </form>
+        </div>
+      </div>
+    );
+  },
+});
+
+var Lobby = React.createClass({
+  page_type: 'lobby',
+  getInitialState: function() {
+    return {};
+  },
+  render: function() {
+    return (
+      <div>
+        <div id="hud-bottom" className="hud">
+          {this.props.children}
         </div>
       </div>
     );
@@ -408,6 +443,7 @@ var Game = React.createClass({
 
       hud = (
         <div id="hud" className="hud">
+          {this.props.children[0]}
           {pregame}
           {gameover}
           It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
@@ -651,7 +687,7 @@ var Game = React.createClass({
         <div id="hud-bottom" className="hud">
           {render_selection()}
           {render_hand()}
-          {this.props.children}
+          {this.props.children[1]}
           {render_log()}
         </div>
       </div>
@@ -695,25 +731,65 @@ var Game = React.createClass({
       }
     }
   },
-  componentDidMount: function() {
-    setTimeout(function() {
-      connect_socket({
-        type: 'connect',
-        page: 'game',
-        token: game_socket_token,
-      });
-    });
-  },
 });
+
+var states = {
+  lobby: null,
+  game: null,
+  chat: null,
+};
+
+var view_just_changed = true;
 
 var View = React.createClass({
   getInitialState: function() {
-    return {};
+    return {last_page: 'lobby', page: 'lobby'};
+  },
+  menu: function(page) {
+    view_just_changed = true;
+    this.setState({last_page: this.state.page, page: page});
   },
   render: function() {
-    return (
-      <Game ref="page"><Chat ref="chat" /></Game>
-    );
+    let children = [
+      (<Menu ref="menu" key="menu" menu={this.menu} />),
+      (<Chat ref="chat" key="chat" />),
+    ];
+
+    if (view_just_changed) {
+      if (this.refs.page !== undefined) {
+        states[this.refs.page.page_type] = this.refs.page.state;
+        states['chat'] = this.refs.chat.state;
+      }
+      console.log(states);
+    }
+
+    if (this.state.page === 'lobby') {
+      return (<Lobby ref="page">{children}</Lobby>);
+    } else if (this.state.page === 'game') {
+      return (<Game ref="page">{children}</Game>);
+    }
+  },
+  componentDidUpdate: function() {
+    if (view_just_changed) {
+      if (states[this.state.page] !== null) {
+        this.refs.page.setState(JSON.parse(JSON.stringify(
+                states[this.state.page])));
+      }
+
+      if (states.chat !== null) {
+        //this.refs.chat.setState(states.chat);
+      }
+
+      if (this.state.page === 'game') {
+        connect_socket({
+          type: 'connect',
+          page: 'game',
+          token: game_socket_token,
+        });
+      }
+
+      view_just_changed = false;
+    }
   },
 });
 
