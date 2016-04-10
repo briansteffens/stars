@@ -59,6 +59,7 @@ var Chat = React.createClass({
 });
 
 var Game = React.createClass({
+  page_type: 'game',
   getInitialState: function() {
     return {
       game: null,
@@ -77,53 +78,6 @@ var Game = React.createClass({
       }
     }
     throw 'Permanent ' + copy_id + ' not found';
-  },
-  render_canvas: function() {
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    if (this.state.game === null) {
-      return;
-    }
-
-    let game = this.state.game;
-
-    ctx.strokeStyle = 'rgb(200, 0, 0)';
-    ctx.lineWidth = 2;
-
-    var draw_attack_line = function(top_el, bottom_el) {
-      ctx.beginPath();
-      ctx.moveTo(top_el.offsetLeft + top_el.offsetWidth / 2,
-                 top_el.offsetTop + top_el.offsetHeight);
-      ctx.lineTo(bottom_el.offsetLeft + bottom_el.offsetWidth / 2,
-                 bottom_el.offsetTop);
-      ctx.stroke();
-    };
-
-    var my_turn = game.turn_player_id == game_info.user_id;
-
-    for (let attack of game.attacks) {
-      let attacker_el = document.getElementById('perm_'+attack.attacker);
-      let target_el = document.getElementById('perm_'+attack.target);
-
-      if (my_turn && game.phase === 'main' ||
-          !my_turn && game.phase === 'defend') {
-        draw_attack_line(attacker_el, target_el);
-      } else {
-        draw_attack_line(target_el, attacker_el);
-      }
-    }
-  },
-  componentDidMount: function() {
-    setTimeout(function() {
-      connect_socket({
-        type: 'connect',
-        page: 'game',
-        token: game_socket_token,
-      });
-    });
   },
   set_state: function(game_state) {
     this.update_state({game: game_state});
@@ -704,7 +658,53 @@ var Game = React.createClass({
       </div>
     );
   },
-  page_type: 'game',
+  render_canvas: function() {
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    if (this.state.game === null) {
+      return;
+    }
+
+    let game = this.state.game;
+
+    ctx.strokeStyle = 'rgb(200, 0, 0)';
+    ctx.lineWidth = 2;
+
+    var draw_attack_line = function(top_el, bottom_el) {
+      ctx.beginPath();
+      ctx.moveTo(top_el.offsetLeft + top_el.offsetWidth / 2,
+                 top_el.offsetTop + top_el.offsetHeight);
+      ctx.lineTo(bottom_el.offsetLeft + bottom_el.offsetWidth / 2,
+                 bottom_el.offsetTop);
+      ctx.stroke();
+    };
+
+    var my_turn = game.turn_player_id == game_info.user_id;
+
+    for (let attack of game.attacks) {
+      let attacker_el = document.getElementById('perm_'+attack.attacker);
+      let target_el = document.getElementById('perm_'+attack.target);
+
+      if (my_turn && game.phase === 'main' ||
+          !my_turn && game.phase === 'defend') {
+        draw_attack_line(attacker_el, target_el);
+      } else {
+        draw_attack_line(target_el, attacker_el);
+      }
+    }
+  },
+  componentDidMount: function() {
+    setTimeout(function() {
+      connect_socket({
+        type: 'connect',
+        page: 'game',
+        token: game_socket_token,
+      });
+    });
+  },
 });
 
 var View = React.createClass({
