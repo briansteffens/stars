@@ -66,7 +66,6 @@ var Game = React.createClass({
       source: null,
       action: null,
       selection: null,
-      chats: [],
     };
   },
   get_permanent: function(copy_id) {
@@ -101,7 +100,7 @@ var Game = React.createClass({
   update_state: function(fields) {
     let new_state = {};
 
-    for (let field of ['game','action','source','chats','selection']) {
+    for (let field of ['game','action','source','selection']) {
       if (fields[field] !== undefined) {
         new_state[field] = fields[field];
       } else {
