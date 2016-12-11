@@ -2,6 +2,7 @@ body {
   margin: 0px;
   background-size: cover;
   background-image: url('img/background_1.jpg');
+  font-family: arial;
 }
 
 #canvas {
@@ -49,17 +50,18 @@ body {
 }
 
 #hud-bottom #hand #cards div {
-  border-bottom: solid 2px #aaa;
+  border: solid 2px #aaa;
+  margin: 7px;
+  float: left;
+  width: 150px;
 }
 
 #hud-bottom #hand #cards div:after {
-  clear: both;
   content: "";
   display: block;
 }
 
 #hud-bottom #hand #cards div button {
-  float: right;
 }
 
 .hud .stats {
@@ -172,19 +174,47 @@ div.hand_separator {
   float: right;
 }
 
-img.card {
-  width: 210px;
-  height: 200px;
+.card {
+  border: solid 2px #aaf;
+  margin: 5px;
+  padding: 7px;
+  display: inline-block;
+  width: 150px;
+  height: 225px;
+  background-color: #000;
+  cursor: pointer;
+  color: #fff;
 }
 
-img.sel {
-  filter: brightness(1.2) sepia(100%);
+.card .title {
+  font-weight: bold;
+  float: left;
 }
 
-img.card:hover {
-  filter: drop-shadow(0px 0px 20px blue);
+.card .stats {
+  float: right;
 }
 
-img.sel:hover {
-  filter: brightness(1.5) sepia(200%) drop-shadow(0px 0px 20px blue);
+.card .stats:after {
+  clear: both;
+}
+
+.card .details {
+}
+
+.card img {
+  width: 100px;
+  height: 100px;
+  display: block;
+  margin: 0 auto;
+  border: solid 1px #fff;
+  background-color: #000;
+}
+
+.card:hover {
+  filter: drop-shadow(0px 0px 20px #acf);
+}
+
+.sel, .sel:hover {
+  filter: brightness(1.5) sepia(200%) drop-shadow(0px 0px 20px #acf);
 }

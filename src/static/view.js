@@ -324,10 +324,30 @@ var View = React.createClass({
         cls += ' sel';
       }
 
+      const attack = card.attack > 0 ? card.attack : 0;
+      const defense = card.defense > 0 ? card.defense : 0;
+      const stats = card.attack || card.defense ? `${attack}/${defense}` : '';
+
+      let details = [];
+
+      if (card.power) {
+        details.push(`Generates ${card.power}`);
+      }
+
       return (
-        <img id={'perm_' + card.copy_id} key={card.copy_id}
-          src={'/img/' + card.image} className={cls}
-          onClick={that.select.bind(that, card)} />
+        <div
+          id={'perm_' + card.copy_id}
+          key={card.copy_id}
+          className={cls}
+          onClick={that.select.bind(that, card)}
+        >
+          <div className="title">{card.name}</div>
+          <div className="stats">{stats}</div>
+          <img src={'/img/' + card.image} />
+          <div className="details">
+            {card.power ? `Generates ${card.power}` : ''}
+          </div>
+        </div>
       );
     };
 
@@ -642,7 +662,7 @@ var View = React.createClass({
         }
 
         hand.push(
-          <div key={card.copy_id}>
+          <div key={card.copy_id} className="hand-card">
             {card.name}
             <button onClick={that.play.bind(that, card)} disabled={!my_turn}>
               play</button>
