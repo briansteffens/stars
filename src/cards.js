@@ -1,5 +1,5 @@
 (function(exports){
-  exports.fill_in = function(cards) {
+  exports.fillIn = function(cards) {
     for (var i = 0; i < cards.length; i++) {
       let card = cards[i];
 
@@ -40,13 +40,13 @@
   };
 
   exports.all = function() {
-    return exports.fill_in([{
+    return exports.fillIn([{
       name: 'exploratory drone',
       types: ['ship'],
       cost: 1,
       upkeep: 1,
       defense: 3,
-      _draw_chances: 13,
+      _drawChances: 13,
     },{
       name: 'attack drone',
       types: ['ship'],
@@ -54,7 +54,7 @@
       upkeep: 1,
       attack: 1,
       defense: 0,
-      _draw_chances: 23,
+      _drawChances: 23,
     },{
       name: 'fighter',
       types: ['ship'],
@@ -62,7 +62,7 @@
       upkeep: 2,
       attack: 2,
       defense: 3,
-      _draw_chances: 25,
+      _drawChances: 25,
     },{
       name: 'bomber',
       types: ['ship'],
@@ -70,7 +70,7 @@
       upkeep: 3,
       attack: 4,
       defense: 3,
-      _draw_chances: 18,
+      _drawChances: 18,
     },{
       name: 'glass cannon',
       types: ['ship'],
@@ -78,7 +78,7 @@
       upkeep: 5,
       attack: 5,
       defense: 0,
-      _draw_chances: 2,
+      _drawChances: 2,
     },{
       name: 'laser turret',
       types: ['ship'],
@@ -86,7 +86,7 @@
       upkeep: 3,
       attack: 1,
       defense: 3,
-      _draw_chances: 10,
+      _drawChances: 10,
     },{
       name: 'reaper',
       types: ['ship'],
@@ -94,7 +94,7 @@
       upkeep: 7,
       attack: 9,
       defense: 7,
-      _draw_chances: 11,
+      _drawChances: 11,
     },{
       name: 'battlecruiser',
       types: ['ship'],
@@ -102,7 +102,7 @@
       upkeep: 2,
       attack: 3,
       defense: 2,
-      _draw_chances: 20,
+      _drawChances: 20,
     },{
       name: 'dreadnought',
       types: ['ship'],
@@ -110,7 +110,7 @@
       upkeep: 6,
       attack: 5,
       defense: 8,
-      _draw_chances: 14,
+      _drawChances: 14,
     },{
       name: 'frigate',
       types: ['ship'],
@@ -118,7 +118,7 @@
       upkeep: 5,
       attack: 3,
       defense: 5,
-      _draw_chances: 18,
+      _drawChances: 18,
     },{
       name: 'raider',
       types: ['ship'],
@@ -126,7 +126,7 @@
       upkeep: 4,
       attack: 4,
       defense: 2,
-      _draw_chances: 20,
+      _drawChances: 20,
     },{
       name: 'endbringer',
       types: ['ship'],
@@ -134,22 +134,22 @@
       upkeep: 11,
       attack: 13,
       defense: 7,
-      _draw_chances: 7,
+      _drawChances: 7,
     },{
       name: 'crude reactor',
       types: ['generator', 'reactor'],
       power: 1,
-      _draw_chances: 25,
+      _drawChances: 25,
     },{
       name: 'reactor',
       types: ['generator', 'reactor'],
       power: 2,
-      _draw_chances: 18,
+      _drawChances: 18,
     },{
       name: 'superior reactor',
       types: ['generator', 'reactor'],
       power: 3,
-      _draw_chances: 12,
+      _drawChances: 12,
     },{
       name: 'reactor upgrade',
       types: ['instant'],
@@ -161,12 +161,12 @@
           amount: 1,
         },
       ],
-      _draw_chances: 30,
+      _drawChances: 30,
     },{
       name: 'scrap',
       types: ['resource'],
       worth: 1,
-      _draw_chances: 19,
+      _drawChances: 19,
     },{
       name: 'repair crew',
       types: ['instant'],
@@ -177,12 +177,12 @@
           amount: 2,
         },
       ],
-      _draw_chances: 7,
+      _drawChances: 7,
     },{
       name: 'shield hardware',
       types: ['shields'],
       shields: 1,
-      _draw_chances: 20,
+      _drawChances: 20,
     },{
       name: 'implosion bomb',
       types: ['instant'],
@@ -194,7 +194,7 @@
           amount: 100,
         },
       ],
-      _draw_chances: 5,
+      _drawChances: 5,
     },{
       name: 'weapons upgrade',
       types: ['instant'],
@@ -206,7 +206,7 @@
           attack: 1,
         },
       ],
-      _draw_chances: 13,
+      _drawChances: 13,
     },{
       name: 'weapons damager',
       types: ['instant'],
@@ -218,7 +218,7 @@
           attack: -1,
         },
       ],
-      _draw_chances: 11,
+      _drawChances: 11,
     },{
       name: 'hardware upgrade',
       types: ['instant'],
@@ -231,7 +231,7 @@
           defense: 1,
         },
       ],
-      _draw_chances: 9,
+      _drawChances: 9,
     },{
       name: 'supreme hardware upgrade',
       types: ['instant'],
@@ -244,7 +244,7 @@
           defense: 2,
         },
       ],
-      _draw_chances: 5,
+      _drawChances: 5,
     },{
       name: 'hull breaker',
       types: ['instant'],
@@ -256,7 +256,7 @@
           defense: -4,
         },
       ],
-      _draw_chances: 7,
+      _drawChances: 7,
     },{
       name: 'repair bot',
       types: ['ship'],
@@ -269,7 +269,7 @@
           amount: 3,
         },
       ],
-      _draw_chances: 5,
+      _drawChances: 5,
     },{
       name: 'piracy crew',
       types: ['instant'],
@@ -280,7 +280,7 @@
           targeting: ['enemy', 'ship'],
         },
       ],
-      _draw_chances: 15,
+      _drawChances: 15,
     },{
       name: 'conversion kit: defense',
       types: ['instant'],
@@ -293,7 +293,7 @@
           defense: 1,
         },
       ],
-      _draw_chances: 11,
+      _drawChances: 11,
     },{
       name: 'conversion kit: attack',
       types: ['instant'],
@@ -306,7 +306,7 @@
           defense: -1,
         },
       ],
-      _draw_chances: 11,
+      _drawChances: 11,
     },{
       name: 'overburner',
       types: ['instant'],
@@ -321,7 +321,7 @@
           },
         },
       ],
-      _draw_chances: 20,
+      _drawChances: 20,
     },{
       name: 'time bomb',
       types: ['instant'],
@@ -337,7 +337,7 @@
           },
         },
       ],
-      _draw_chances: 18,
+      _drawChances: 18,
     },{
       name: 'massive time bomb',
       types: ['instant'],
@@ -353,7 +353,7 @@
           },
         }
       ],
-      _draw_chances: 6,
+      _drawChances: 6,
     },{
       name: 'brief weapon jammer',
       types: ['instant'],
@@ -369,7 +369,7 @@
           },
         },
       ],
-      _draw_chances: 15,
+      _drawChances: 15,
     },{
       name: 'weapon jammer',
       types: ['instant'],
@@ -385,7 +385,7 @@
           },
         },
       ],
-      _draw_chances: 10,
+      _drawChances: 10,
     },{
       name: 'long weapon jammer',
       types: ['instant'],
@@ -401,7 +401,7 @@
           },
         },
       ],
-      _draw_chances: 8,
+      _drawChances: 8,
     },{
       name: 'cleanse',
       types: ['instant'],
@@ -412,7 +412,7 @@
           targeting: ['friendly', 'enemy', 'ship'],
         },
       ],
-      _draw_chances: 18,
+      _drawChances: 18,
     },{
       name: 'black hole',
       types: ['black_hole'],
@@ -425,68 +425,68 @@
         },
       ],
       image: 'black_hole.png',
-      _draw_chances: 5,
+      _drawChances: 5,
     }]);
   };
 
   exports.explore = function() {
-    return exports.fill_in([{
+    return exports.fillIn([{
       name: 'asteroid',
       types: ['resource'],
       worth: 2,
-      _draw_chances: 140,
+      _drawChances: 140,
     },{
       name: 'rocky planet',
       types: ['generator'],
       worth: 4,
       image: 'rocky_planet.png',
-      _draw_chances: 40,
+      _drawChances: 40,
     },{
       name: 'desert planet',
       types: ['generator'],
       worth: 3,
       image: 'desert_planet.png',
-      _draw_chances: 45,
+      _drawChances: 45,
     },{
       name: 'ship wreckage',
       types: ['resource'],
       worth: 3,
-      _draw_chances: 100,
+      _drawChances: 100,
     },{
       name: 'brown dwarf',
       types: ['generator'],
       power: 3,
       image: 'brown_dwarf.png',
-      _draw_chances: 40,
+      _drawChances: 40,
     },{
       name: 'white dwarf',
       types: ['generator'],
       power: 4,
       image: 'white_dwarf.png',
-      _draw_chances: 25,
+      _drawChances: 25,
     },{
       name: 'blue supergiant',
       types: ['generator'],
       power: 10,
       image: 'blue_supergiant.png',
-      _draw_chances: 1,
+      _drawChances: 1,
     },{
       name: 'red giant',
       types: ['generator'],
       power: 7,
       image: 'red_giant.png',
-      _draw_chances: 1,
+      _drawChances: 1,
     },{
       name: 'yellow dwarf',
       types: ['generator'],
       power: 5,
       image: 'yellow_dwarf.png',
-      _draw_chances: 15,
+      _drawChances: 15,
     }]);
   };
 
-  exports.mother_ship = function() {
-    return exports.fill_in([{
+  exports.motherShip = function() {
+    return exports.fillIn([{
       name: 'mother ship',
       types: ['ship'],
       defense: 20,
@@ -496,8 +496,8 @@
   exports.pool = function(cards) {
     var ret = [];
     for (var i = 0; i < cards.length; i++) {
-      var chance = typeof cards[i]._draw_chances === 'undefined' ?
-                   1 : cards[i]._draw_chances;
+      var chance = typeof cards[i]._drawChances === 'undefined' ?
+                   1 : cards[i]._drawChances;
 
       for (var j = 0; j < chance; j++) {
         ret.push(cards[i]);

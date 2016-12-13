@@ -1,91 +1,91 @@
 (function(exports) {
   var cards = require('./cards.js');
-  var explore_cards = cards.pool(cards.explore());
+  var exploreCards = cards.pool(cards.explore());
 
-  exports.clone_state = function(state) {
+  exports.cloneState = function(state) {
     return JSON.parse(JSON.stringify(state)); // TODO: something better
   };
 
-  exports.next_explore = function(game, state) {
-    var rand = Math.floor(explore_cards.length * game.rng());
-    var card = JSON.parse(JSON.stringify(explore_cards[rand]));
-    card.copy_id = state.next_copy_id++;
+  exports.nextExplore = function(game, state) {
+    var rand = Math.floor(exploreCards.length * game.rng());
+    var card = JSON.parse(JSON.stringify(exploreCards[rand]));
+    card.copyId = state.nextCopyId++;
     card.tapped = false;
     card.powered = false;
     return card;
   };
 
-  exports.get_player_permanent = function(state, player_id, copy_id) {
-    var permanents = state.players[player_id].permanents;
+  exports.getPlayerPermanent = function(state, playerId, copyId) {
+    var permanents = state.players[playerId].permanents;
     for (var i = 0; i < permanents.length; i++) {
-      if (permanents[i].copy_id == copy_id) {
+      if (permanents[i].copyId == copyId) {
         return permanents[i];
       }
     }
     return null;
   };
 
-  exports.get_permanent = function(state, copy_id) {
-    for (var player_id in state.players) {
-      if (!state.players.hasOwnProperty(player_id)) {
+  exports.getPermanent = function(state, copyId) {
+    for (var playerId in state.players) {
+      if (!state.players.hasOwnProperty(playerId)) {
         continue;
       }
-      var temp = exports.get_player_permanent(state, player_id, copy_id);
+      var temp = exports.getPlayerPermanent(state, playerId, copyId);
       if (temp !== null) {
         return temp;
       }
     }
-    throw 'Permanent ' + copy_id + ' not found.';
+    throw 'Permanent ' + copyId + ' not found.';
   };
 
   // Gets info about which player has a card and which array it's in
-  exports.get_card_info = function(state, copy_id) {
-    for (var player_id in state.players) {
-      if (!state.players.hasOwnProperty(player_id)) {
+  exports.getCardInfo = function(state, copyId) {
+    for (var playerId in state.players) {
+      if (!state.players.hasOwnProperty(playerId)) {
         continue;
       }
 
-      var hand = state.players[player_id].hand;
+      var hand = state.players[playerId].hand;
       for (var i = 0; i < hand.length; i++) {
-        if (hand[i].copy_id == copy_id) {
+        if (hand[i].copyId == copyId) {
           return {
-            player_id: player_id,
+            playerId: playerId,
             collection: hand,
-            collection_name: 'hand',
+            collectionName: 'hand',
             card: hand[i],
           };
         }
       }
 
-      var ret = exports.get_player_permanent(state, player_id, copy_id);
+      var ret = exports.getPlayerPermanent(state, playerId, copyId);
       if (ret !== null) {
         return {
-          player_id: player_id,
-          collection: state.players[player_id].permanents,
-          collection_name: 'permanents',
+          playerId: playerId,
+          collection: state.players[playerId].permanents,
+          collectionName: 'permanents',
           card: ret,
         };
       }
     }
 
-    throw 'Permanent ' + copy_id + ' not found.';
+    throw 'Permanent ' + copyId + ' not found.';
   };
 
-  exports.get_card = function(state, copy_id) {
-    return exports.get_card_info(state, copy_id).card;
+  exports.getCard = function(state, copyId) {
+    return exports.getCardInfo(state, copyId).card;
   }
 
-  exports.apply_move = function(game, move) {
+  exports.applyMove = function(game, move) {
     if (game.state.winner !== undefined) {
       console.log('game already finished');
       return;
     }
 
-    var state = exports.clone_state(game.state);
-    var player = state.players[move.user_id];
-    var other_player = state.players[exports.next_player(game, move.user_id)];
+    var state = exports.cloneState(game.state);
+    var player = state.players[move.userId];
+    var otherPlayer = state.players[exports.nextPlayer(game, move.userId)];
 
-    let get_user = function(id) {
+    let getUser = function(id) {
       for (let user of game.users) {
         if (user._id == id) {
           return user;
@@ -95,17 +95,17 @@
     }
 
     let log = function(message) {
-      message = message.replace('{me}', player.user_name);
-      message = message.replace('{enemy}', other_player.user_name);
+      message = message.replace('{me}', player.userName);
+      message = message.replace('{enemy}', otherPlayer.userName);
       state.log.push({
         message: message,
         turn: move.turn,
-        player_id: player.id,
+        playerId: player.id,
       });
     }
 
-    let consume = function(source, target_id) {
-      let info = exports.get_card_info(state, target_id);
+    let consume = function(source, targetId) {
+      let info = exports.getCardInfo(state, targetId);
       info.collection.splice(info.collection.indexOf(info.card), 1);
       if (info.card.mass !== undefined) {
         source.mass += info.card.mass;
@@ -118,74 +118,74 @@
       log('{me}\'s '+source.name+' consumes a '+info.card.name);
     }
 
-    let permanent_handlers = {
-      black_hole: {
-        on_turn_end: function(ctx) {
+    let permanentHandlers = {
+      blackHole: {
+        onTurnEnd: function(ctx) {
           if (!ctx.permanent.tapped) {
             let consumable = function(player) {
               let ret = [];
               for (let perm of player.permanents) {
                 if (perm.name !== 'mother ship' &&
-                    perm.copy_id !== ctx.permanent.copy_id) {
+                    perm.copyId !== ctx.permanent.copyId) {
                   ret.push(perm);
                 }
               }
               return ret;
             }
 
-            let options = consumable(player).concat(consumable(other_player));
+            let options = consumable(player).concat(consumable(otherPlayer));
             if (options.length == 0) {
               console.log('Nothing left to consume');
             } else {
               let index = Math.floor(game.rng() * options.length);
-              consume(ctx.permanent, options[index].copy_id);
+              consume(ctx.permanent, options[index].copyId);
             }
           }
         },
       },
     };
 
-    let handle_permanent_event = function(handler_name, ctx) {
+    let handlePermanentEvent = function(handlerName, ctx) {
       for (let type of ctx.permanent.types) {
-        if (!permanent_handlers.hasOwnProperty(type)) {
+        if (!permanentHandlers.hasOwnProperty(type)) {
           return;
         }
-        let handler = permanent_handlers[type];
-        if (!handler.hasOwnProperty(handler_name)) {
+        let handler = permanentHandlers[type];
+        if (!handler.hasOwnProperty(handlerName)) {
           return;
         }
-        handler[handler_name](ctx);
+        handler[handlerName](ctx);
       }
     };
 
-    let effect_handlers = {
+    let effectHandlers = {
       overburner: {
-        on_attach: function(ctx) {
-          ctx.effect.turn_counter = 2;
-          ctx.effect.old_power = ctx.target.power;
-          ctx.target.power = ctx.effect.old_power * ctx.effect.turn_counter;
+        onAttach: function(ctx) {
+          ctx.effect.turnCounter = 2;
+          ctx.effect.oldPower = ctx.target.power;
+          ctx.target.power = ctx.effect.oldPower * ctx.effect.turnCounter;
         },
-        on_turn_start: function(ctx) {
-          ctx.effect.turn_counter--;
-          if (ctx.effect.turn_counter <= 0) {
+        onTurnStart: function(ctx) {
+          ctx.effect.turnCounter--;
+          if (ctx.effect.turnCounter <= 0) {
             ctx.player.permanents.splice(
                 ctx.player.permanents.indexOf(ctx.target), 1);
             log('{me}\'s '+ctx.target.name+' destroyed by overburner');
             return;
           }
-          ctx.target.power = ctx.effect.old_power * ctx.effect.turn_counter;
+          ctx.target.power = ctx.effect.oldPower * ctx.effect.turnCounter;
         },
-        on_detach: function(ctx) {
-          ctx.target.power = ctx.effect.old_power;
+        onDetach: function(ctx) {
+          ctx.target.power = ctx.effect.oldPower;
         },
       },
-      time_bomb: {
-        on_attach: function(ctx) {
-          ctx.effect.turn_counter = 2;
+      timeBomb: {
+        onAttach: function(ctx) {
+          ctx.effect.turnCounter = 2;
         },
-        on_turn_start: function(ctx) {
-          ctx.effect.turn_counter--;
-          if (ctx.effect.turn_counter <= 0) {
+        onTurnStart: function(ctx) {
+          ctx.effect.turnCounter--;
+          if (ctx.effect.turnCounter <= 0) {
             ctx.target.hp -= ctx.effect.damage;
             if (ctx.target.hp <= 0) {
               ctx.player.permanents.splice(
@@ -196,49 +196,49 @@
                 ctx.target.effects.indexOf(ctx.effect), 1);
           }
         },
-        on_detach: function(ctx) {},
+        onDetach: function(ctx) {},
       },
-      weapon_jammer: {
-        on_attach: function(ctx) {
-          ctx.effect.turn_counter = ctx.effect.turns;
-          ctx.effect.old_attack = ctx.target.attack;
+      weaponJammer: {
+        onAttach: function(ctx) {
+          ctx.effect.turnCounter = ctx.effect.turns;
+          ctx.effect.oldAttack = ctx.target.attack;
           ctx.target.attack = 0;
         },
-        on_turn_start: function(ctx) {
-          ctx.effect.turn_counter--;
-          if (ctx.effect.turn_counter < 0) {
-            ctx.target.attack = ctx.effect.old_attack;
+        onTurnStart: function(ctx) {
+          ctx.effect.turnCounter--;
+          if (ctx.effect.turnCounter < 0) {
+            ctx.target.attack = ctx.effect.oldAttack;
             ctx.target.effects.splice(
                 ctx.target.effects.indexOf(ctx.effect), 1);
             log('weapon jammer wore off of {me}\'s '+ctx.target.name);
           }
         },
-        on_detach: function(ctx) {
-          ctx.target.attack = ctx.effect.old_attack;
+        onDetach: function(ctx) {
+          ctx.target.attack = ctx.effect.oldAttack;
         },
       },
     };
 
-    var update_power = function(player, enforce) {
-      player.power_used = 0;
-      player.power_total = 0;
-      player.shields_used = 0;
+    var updatePower = function(player, enforce) {
+      player.powerUsed = 0;
+      player.powerTotal = 0;
+      player.shieldsUsed = 0;
 
       // Permanent power
       for (var i = 0; i < player.permanents.length; i++) {
         var perm = player.permanents[i];
 
         if (perm.power !== undefined) {
-          player.power_total += perm.power;
+          player.powerTotal += perm.power;
         }
 
         if (perm.powered && perm.upkeep !== undefined) {
-          player.power_used += perm.upkeep;
+          player.powerUsed += perm.upkeep;
         }
 
         if (perm.shields !== undefined) {
-          player.shields_used += perm.shields;
-          player.power_used += perm.shields;
+          player.shieldsUsed += perm.shields;
+          player.powerUsed += perm.shields;
         }
       }
 
@@ -250,44 +250,44 @@
       for (var i = 0; i < player.permanents.length; i++) {
         var perm = player.permanents[i];
 
-        if (player.power_used > player.power_total &&
+        if (player.powerUsed > player.powerTotal &&
             perm.powered && perm.upkeep !== undefined) {
           perm.powered = false;
-          player.power_used -= perm.upkeep;
+          player.powerUsed -= perm.upkeep;
         }
 
-        if (player.shields_used > player.shields_total ||
-            player.power_used > player.power_total) {
-          player.shields_used -= perm.shields;
+        if (player.shieldsUsed > player.shieldsTotal ||
+            player.powerUsed > player.powerTotal) {
+          player.shieldsUsed -= perm.shields;
           perm.shields = 0;
         }
       }
     };
 
-    let handle_effect_event = function(handler_name, ctx) {
+    let handleEffectEvent = function(handlerName, ctx) {
       for (let type of ctx.effect.types) {
-        if (!effect_handlers.hasOwnProperty(type)) {
+        if (!effectHandlers.hasOwnProperty(type)) {
           return;
         }
-        let handler = effect_handlers[type];
-        if (!handler.hasOwnProperty(handler_name)) {
+        let handler = effectHandlers[type];
+        if (!handler.hasOwnProperty(handlerName)) {
           return;
         }
-        handler[handler_name](ctx);
+        handler[handlerName](ctx);
       }
     };
 
-    let on_turn_end = function() {
+    let onTurnEnd = function() {
       for (let permanent of player.permanents) {
-        handle_permanent_event('on_turn_end', {
+        handlePermanentEvent('onTurnEnd', {
           permanent: permanent,
           player: player,
-          other_player: other_player,
+          otherPlayer: otherPlayer,
         });
       }
     };
 
-    var phase_main_start = function(player, other_player) {
+    var phaseMainStart = function(player, otherPlayer) {
       state.attacks = [];
       state.phase = 'main';
 
@@ -297,17 +297,17 @@
       }
 
       // reset draw count
-      state.draw_possible = 1;
+      state.drawPossible = 1;
 
       // reset explore count
-      state.can_explore = 1;
+      state.canExplore = 1;
       let chance = 1.0;
       for (var i = 0; i < player.permanents.length; i++) {
         if (player.permanents[i].name === 'exploratory drone' &&
             player.permanents[i].powered) {
           chance /= 2;
           if (game.rng() < chance) {
-            state.can_explore++;
+            state.canExplore++;
           }
         }
       }
@@ -318,18 +318,18 @@
           continue;
         }
         for (let effect of perm.effects) {
-          handle_effect_event('on_turn_start', {
+          handleEffectEvent('onTurnStart', {
             target: perm,
             effect: effect,
             player: player,
-            other_player: other_player,
+            otherPlayer: otherPlayer,
           });
         }
       }
     };
 
     var mull = function(player) {
-      if (player.mull_penalty >= 7) {
+      if (player.mullPenalty >= 7) {
         throw 'Cannot mull anymore';
       }
 
@@ -344,9 +344,9 @@
         player.deck[j] = temp;
       }
 
-      let cards = 7 - Math.max(0, player.mull_penalty);
+      let cards = 7 - Math.max(0, player.mullPenalty);
       player.hand = player.deck.splice(0, cards);
-      player.mull_penalty++;
+      player.mullPenalty++;
 
       log('{me} drew ' + cards + ' cards');
     };
@@ -355,7 +355,7 @@
       if (state.winner !== undefined) {
         throw 'Cannot forfeit a finished game';
       }
-      state.winner = other_player.user_id;
+      state.winner = otherPlayer.userId;
       log('{me} forfeit the game');
     } else if (state.phase === 'pre-game') {
       if (move.type === 'mull') {
@@ -369,22 +369,22 @@
 
         log('{me} is ready');
 
-        if (other_player.ready) {
+        if (otherPlayer.ready) {
           // Start game
           state.turn = 0;
-          state.turn_player_id = player.user_id;
+          state.turnPlayerId = player.userId;
 
-          let player_ids = [];
-          for (let player_id in state.players) {
-            if (state.players.hasOwnProperty(player_id)) {
-              player_ids.push(player_id);
+          let playerIDs = [];
+          for (let playerId in state.players) {
+            if (state.players.hasOwnProperty(playerId)) {
+              playerIDs.push(playerId);
             }
           }
 
-          state.turn_player_id = player_ids[Math.floor(game.rng() * 2)];
+          state.turnPlayerId = playerIDs[Math.floor(game.rng() * 2)];
 
-          phase_main_start(state.players[state.turn_player_id],
-            state.players[exports.next_player(game, state.turn_player_id)]);
+          phaseMainStart(state.players[state.turnPlayerId],
+            state.players[exports.nextPlayer(game, state.turnPlayerId)]);
 
           log('the game has started');
         }
@@ -393,20 +393,20 @@
       }
     } else {
       if (move.type === 'draw') {
-        if (state.draw_possible <= 0) {
+        if (state.drawPossible <= 0) {
           throw 'Cannot draw anymore cards this turn';
         }
-        state.draw_possible--;
+        state.drawPossible--;
         player.hand.push(player.deck.pop());
         log('{me} drew a card');
       }
       else if (move.type === 'scrap') {
-        if (player.user_id != state.turn_player_id) {
+        if (player.userId != state.turnPlayerId) {
           throw 'Can only scrap during your turn';
         }
 
-        let info = exports.get_card_info(state, move.card);
-        if (info.player_id != player.user_id) {
+        let info = exports.getCardInfo(state, move.card);
+        if (info.playerId != player.userId) {
           throw "Cannot scrap other player's card";
         }
 
@@ -421,7 +421,7 @@
         log('{me} scrapped a ' + info.card.name);
       }
       else if (move.type === 'explore') {
-        if (player.user_id != state.turn_player_id) {
+        if (player.userId != state.turnPlayerId) {
           throw 'Can only explore on your turn';
         }
 
@@ -429,11 +429,11 @@
           throw 'Can only explore during main phase';
         }
 
-        if (state.can_explore <= 0) {
+        if (state.canExplore <= 0) {
           throw 'Player cannot explore anymore this turn';
         }
-        player.hand.push(exports.next_explore(game, state));
-        state.can_explore--;
+        player.hand.push(exports.nextExplore(game, state));
+        state.canExplore--;
         log('{me} explored');
       }
       else if (move.type === 'yield') {
@@ -441,27 +441,27 @@
           throw 'Can only yield in main phase';
         }
 
-        on_turn_end();
+        onTurnEnd();
 
         state.turn++;
 
         // Change player's turn
-        state.turn_player_id = other_player.user_id;
+        state.turnPlayerId = otherPlayer.userId;
 
         // Reset ability to play cards per turn
-        other_player.cant_play = [];
+        otherPlayer.cantPlay = [];
 
         if (state.attacks.length > 0) {
           state.phase = 'defend';
         }
         else {
-          phase_main_start(other_player, player);
+          phaseMainStart(otherPlayer, player);
         }
       }
       else if (move.type === 'defend') {
         var targets = [];
         for (var i = 0; i < state.attacks.length; i++) {
-          var target = exports.get_permanent(state, state.attacks[i].target);
+          var target = exports.getPermanent(state, state.attacks[i].target);
           if (targets.indexOf(target) < 0) {
             targets.push(target);
           }
@@ -471,8 +471,8 @@
           var target = targets[i];
           var shields = target.shields;
           for (var j = 0; j < state.attacks.length; j++) {
-            if (state.attacks[j].target == target.copy_id) {
-              shields -= exports.get_permanent(state,
+            if (state.attacks[j].target == target.copyId) {
+              shields -= exports.getPermanent(state,
                   state.attacks[j].attacker).attack;
             }
           }
@@ -484,50 +484,50 @@
             player.permanents.splice(player.permanents.indexOf(target), 1);
             log(target.name + ' destroyed by {enemy}');
             if (target.name === 'mother ship') {
-              state.winner = other_player.user_id;
+              state.winner = otherPlayer.userId;
               log('{enemy} wins the game');
             }
           }
         }
 
-        phase_main_start(player, other_player);
+        phaseMainStart(player, otherPlayer);
       }
       else if (move.type === 'play') {
-        if (player.user_id != state.turn_player_id) {
+        if (player.userId != state.turnPlayerId) {
           throw 'Can only play cards during your turn';
         }
 
         var index = null;
         for (var i = 0; i < player.hand.length; i++) {
-          if (player.hand[i].copy_id == move.copy_id) {
+          if (player.hand[i].copyId == move.copyId) {
             index = i;
             break;
           }
         }
         if (index === null) {
-          throw 'Attempt to play ' + move.copy_id + ' not in hand.';
+          throw 'Attempt to play ' + move.copyId + ' not in hand.';
         }
 
         var card = player.hand[index];
 
-        var remove_from_hand = function() {
+        var removeFromHand = function() {
           return player.hand.splice(index, 1)[0];
         }
 
-        if (player.cant_play.intersect(card.types).length > 0) {
+        if (player.cantPlay.intersect(card.types).length > 0) {
           throw 'Card has already been played this turn';
         }
 
-        let is_generator_ship_or_black_hole =
+        let isGeneratorShipOrBlackHole =
           card.types.intersect(['generator','ship','black_hole']).length > 0;
 
         if (card.types.contains('resource')) {
-          player.scrap += remove_from_hand().worth;
+          player.scrap += removeFromHand().worth;
           log('{me} played a ' + card.name);
-        } else if (is_generator_ship_or_black_hole) {
+        } else if (isGeneratorShipOrBlackHole) {
           // Mark a card type as played this turn
           if (card.types.contains('generator')) {
-            player.cant_play = player.cant_play.concat(card.types);
+            player.cantPlay = player.cantPlay.concat(card.types);
           }
 
           var cost = card.hasOwnProperty('cost') ? card.cost : 0;
@@ -536,21 +536,21 @@
           }
           else {
             player.scrap -= cost;
-            player.permanents.push(remove_from_hand());
+            player.permanents.push(removeFromHand());
             log('{me} played a ' + card.name);
           }
         } else if (card.types.contains('shields')) {
-          player.shields_total = Math.min(player.shields_total+card.shields,
+          player.shieldsTotal = Math.min(player.shieldsTotal+card.shields,
               10);
-          remove_from_hand();
+          removeFromHand();
           log('{me} played a ' + card.name);
         } else {
           throw 'Unplayable card type ' + card.types;
         }
       }
       else if (move.type === 'action') {
-        var source = exports.get_card(state, move.source);
-        var target = exports.get_card(state, move.target);
+        var source = exports.getCard(state, move.source);
+        var target = exports.getCard(state, move.target);
 
         var action = null;
 
@@ -586,8 +586,8 @@
         switch (action.name) {
           case 'attack':
             state.attacks.push({
-              attacker: source.copy_id,
-              target: target.copy_id,
+              attacker: source.copyId,
+              target: target.copyId,
             });
             log('{me} attacked a '+target.name+' with a '+source.name);
             break;
@@ -606,13 +606,13 @@
               msg += ' ('+shields+' blocked by shields)';
             }
             if (target.hp <= 0) {
-              other_player.permanents.splice(
-                  other_player.permanents.indexOf(target), 1);
+              otherPlayer.permanents.splice(
+                  otherPlayer.permanents.indexOf(target), 1);
               msg += ', killing it';
             }
             log(msg);
             break;
-          case 'stats_delta':
+          case 'statsDelta':
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
@@ -629,14 +629,14 @@
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
-            other_player.permanents.splice(
-                other_player.permanents.indexOf(target), 1);
+            otherPlayer.permanents.splice(
+                otherPlayer.permanents.indexOf(target), 1);
             target.powered = false;
             target.shields = 0;
             player.permanents.push(target);
             log('{me} stole a '+target.name);
             break;
-          case 'apply_effect':
+          case 'applyEffect':
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
@@ -644,11 +644,11 @@
               target.effects = [];
             }
             target.effects.push(action.effect);
-            handle_effect_event('on_attach', {
+            handleEffectEvent('onAttach', {
               target: target,
               effect: action.effect,
               player: player,
-              other_player: other_player,
+              otherPlayer: otherPlayer,
             });
             log('{me} played a '+source.name+' on a '+target.name);
             break;
@@ -658,11 +658,11 @@
             }
             if (target.effects !== undefined) {
               for (let effect of target.effects) {
-                handle_effect_event('on_detach', {
+                handleEffectEvent('onDetach', {
                   target: target,
                   effect: effect,
                   player: player,
-                  other_player: other_player,
+                  otherPlayer: otherPlayer,
                 });
               }
               target.effects = [];
@@ -673,12 +673,12 @@
             if (target.name === 'mother ship') {
               throw 'Cannot use this on the mother ship';
             }
-            if (source.copy_id === target.copy_id) {
+            if (source.copyId === target.copyId) {
               throw 'Cannot consume itself';
             }
-            consume(source, target.copy_id);
+            consume(source, target.copyId);
             break;
-          case 'reactor_upgrade':
+          case 'reactorUpgrade':
             target.power += action.amount;
             log('{me} upgraded a '+target.name+' to '+target.power+' power');
             break;
@@ -690,12 +690,12 @@
           player.hand.splice(player.hand.indexOf(source), 1);
         }
       }
-      else if (move.type === 'toggle_power') {
-        if (state.turn_player_id != player.user_id) {
+      else if (move.type === 'togglePower') {
+        if (state.turnPlayerId != player.userId) {
           throw 'Wrong turn';
         }
 
-        var card = exports.get_player_permanent(state, player.user_id,
+        var card = exports.getPlayerPermanent(state, player.userId,
             move.card);
 
         if (card.tapped) {
@@ -703,19 +703,19 @@
         }
 
         card.powered = !card.powered;
-        update_power(player, false);
+        updatePower(player, false);
 
-        if (player.power_used > player.power_total) {
+        if (player.powerUsed > player.powerTotal) {
           throw 'Not enough available power';
         }
 
         log('{me} powered '+(card.powered ? 'on' : 'off')+' a '+card.name);
       } else if (move.type === 'shields') {
-        if (state.turn_player_id != player.user_id) {
+        if (state.turnPlayerId != player.userId) {
           throw 'Wrong turn';
         }
 
-        var card = exports.get_player_permanent(state, player.user_id,
+        var card = exports.getPlayerPermanent(state, player.userId,
             move.card);
 
         if (card.types.contains('black_hole')) {
@@ -724,10 +724,10 @@
 
         card.shields = Math.max(card.shields + move.delta, 0);
 
-        update_power(player, false);
+        updatePower(player, false);
 
-        if (player.power_used > player.power_total ||
-            player.shields_used > player.shields_total) {
+        if (player.powerUsed > player.powerTotal ||
+            player.shieldsUsed > player.shieldsTotal) {
           throw 'Not enough available power or shields';
         }
 
@@ -739,8 +739,8 @@
       }
     }
 
-    update_power(player, true);
-    update_power(other_player, true);
+    updatePower(player, true);
+    updatePower(otherPlayer, true);
 
     // Accept move and replace old state with new one
     game.moves.push(move);
@@ -748,25 +748,25 @@
   };
 
   // Strip out secrets from a state for sending to the given player
-  exports.strip_state = function(state, dest_player_id) {
-    var state = exports.clone_state(state);
+  exports.stripState = function(state, destPlayerId) {
+    var state = exports.cloneState(state);
 
-    for (var p_id in state.players) {
-      if (!state.players.hasOwnProperty(p_id) || p_id == dest_player_id) {
+    for (var pId in state.players) {
+      if (!state.players.hasOwnProperty(pId) || pId == destPlayerId) {
         continue;
       }
 
-      var other_player = state.players[p_id];
+      var otherPlayer = state.players[pId];
 
-      for (var i = 0; i < other_player.hand.length; i++) {
-        other_player.hand[i] = {name: '?'};
+      for (var i = 0; i < otherPlayer.hand.length; i++) {
+        otherPlayer.hand[i] = {name: '?'};
       }
     }
 
     return state;
   };
 
-  exports.next_player = function(game, player_id) {
-    return game.player_ids[(game.player_ids[0] == player_id) | 0];
+  exports.nextPlayer = function(game, playerId) {
+    return game.playerIDs[(game.playerIDs[0] == playerId) | 0];
   };
 })(exports === undefined ? this['state'] = {} : exports);

@@ -10,10 +10,10 @@
   <body>
     <div id="gamelist"></div>
     <script type="text/babel">
-      var user_id = '<%= user._id.toString() %>';
+      var userId = '<%= user._id.toString() %>';
       var username = '<%= user.username %>';
 
-      function ajax_req(method, url, data, cb) {
+      function ajaxReq(method, url, data, cb) {
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
@@ -46,14 +46,14 @@
         refresh: function(e) {
           let this_ = this;
 
-          ajax_req('GET', 'games/info', null, function(res) {
+          ajaxReq('GET', 'games/info', null, function(res) {
             this_.setState(res);
           });
         },
-        new_game: function(e) {
+        newGame: function(e) {
           let this_ = this;
 
-          ajax_req('POST', 'games/new', {
+          ajaxReq('POST', 'games/new', {
             name: this.refs.new_game_name.value,
             against: this.refs.new_game_vs.value,
           }, function(res) {
@@ -61,11 +61,11 @@
           });
         },
         render: function() {
-          let get_other_player = function(that, game) {
+          let getOtherPlayer = function(that, game) {
             for (let player of game.players) {
-              if (player.user_id != user_id) {
+              if (player.userId != userId) {
                 for (let user of that.state.users) {
-                  if (user._id == player.user_id) {
+                  if (user._id == player.userId) {
                     return user;
                   }
                 }
@@ -76,43 +76,43 @@
 
           let games = [];
           for (let game of this.state.games) {
-            var other_user = get_other_player(this, game);
+            var otherUser = getOtherPlayer(this, game);
 
             let winner = 'undecided';
             if (game.state.winner !== undefined) {
-              winner = game.state.winner == user_id ?
-                username : other_user.username;
+              winner = game.state.winner == userId ?
+                username : otherUser.username;
             }
 
-            let join_link = '';
+            let joinLink = '';
             if (game.state.winner === undefined) {
-              join_link = (<a href={"game"}>join</a>);
+              joinLink = (<a href={"game"}>join</a>);
             }
 
             games.push(
               <tr key={game.id}>
                 <td>{game.name}</td>
-                <td>{other_user.username}</td>
+                <td>{otherUser.username}</td>
                 <td>{winner}</td>
-                <td>{join_link}</td>
+                <td>{joinLink}</td>
               </tr>
             );
           }
 
           let against = [];
           for (let user of this.state.users) {
-            let already_playing = false;
+            let alreadyPlaying = false;
             for (let game of this.state.games) {
-              let other_user = get_other_player(this, game);
-              if (other_user._id == user._id) {
+              let otherUser = getOtherPlayer(this, game);
+              if (otherUser._id == user._id) {
                 if (game.state.winner === undefined) {
-                  already_playing = true;
+                  alreadyPlaying = true;
                   break;
                 }
               }
             }
 
-            if (already_playing) {
+            if (alreadyPlaying) {
               continue;
             }
 
@@ -121,9 +121,9 @@
             );
           }
 
-          let game_table = '';
+          let gameTable = '';
           if (games.length > 0) {
-            game_table = (
+            gameTable = (
               <table>
                 <thead>
                   <tr>
@@ -142,14 +142,14 @@
 
           return (
             <div>
-              {game_table}
+              {gameTable}
               <label htmlFor="new_game_name">new game name</label>
               <input id="new_game_name" ref="new_game_name" />
               <label htmlFor="new_game_vs">play against</label>
               <select id="new_game_vs" ref="new_game_vs">
                 {against}
               </select>
-              <input type="button" value="new game" onClick={this.new_game} />
+              <input type="button" value="new game" onClick={this.newGame} />
             </div>
           );
         },

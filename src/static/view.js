@@ -1,4 +1,4 @@
-var game_info = undefined;
+var gameInfo = undefined;
 var socket = undefined;
 
 var View = React.createClass({
@@ -11,17 +11,7 @@ var View = React.createClass({
       chats: [],
     };
   },
-  get_permanent: function(copy_id) {
-    for (let player_id of Object.keys(this.state.game.players)) {
-      for (let perm of this.state.game.players[player_id].permanents) {
-        if (perm.copy_id == copy_id) {
-          return perm;
-        }
-      }
-    }
-    throw 'Permanent ' + copy_id + ' not found';
-  },
-  render_canvas: function() {
+  renderCanvas: function() {
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
@@ -36,40 +26,37 @@ var View = React.createClass({
     ctx.strokeStyle = 'rgb(200, 0, 0)';
     ctx.lineWidth = 2;
 
-    var draw_attack_line = function(top_el, bottom_el) {
+    var drawAttackLine = function(topEl, bottomEl) {
       ctx.beginPath();
-      ctx.moveTo(top_el.offsetLeft + top_el.offsetWidth / 2,
-                 top_el.offsetTop + top_el.offsetHeight);
-      ctx.lineTo(bottom_el.offsetLeft + bottom_el.offsetWidth / 2,
-                 bottom_el.offsetTop);
+      ctx.moveTo(topEl.offsetLeft + topEl.offsetWidth / 2,
+                 topEl.offsetTop + topEl.offsetHeight);
+      ctx.lineTo(bottomEl.offsetLeft + bottomEl.offsetWidth / 2,
+                 bottomEl.offsetTop);
       ctx.stroke();
     };
 
-    var my_turn = game.turn_player_id == game_info.user_id;
+    var myTurn = game.turnPlayerId == gameInfo.userId;
 
     for (let attack of game.attacks) {
-      let attacker_el = document.getElementById('perm_'+attack.attacker);
-      let target_el = document.getElementById('perm_'+attack.target);
+      let attackerEl = document.getElementById(`perm_${attack.attacker}`);
+      let targetEl = document.getElementById(`perm_${attack.target}`);
 
-      if (my_turn && game.phase === 'main' ||
-          !my_turn && game.phase === 'defend') {
-        draw_attack_line(attacker_el, target_el);
+      if (myTurn && game.phase === 'main' ||
+          !myTurn && game.phase === 'defend') {
+        drawAttackLine(attackerEl, targetEl);
       } else {
-        draw_attack_line(target_el, attacker_el);
+        drawAttackLine(targetEl, attackerEl);
       }
     }
   },
   componentDidMount: function() {
     setTimeout(function() {
-      connect_socket({
+      connectSocket({
         type: 'connect',
         page: 'game',
-        token: game_socket_token,
+        token: gameSocketToken,
       });
     });
-  },
-  set_state: function(game_state) {
-    this.update_state({game: game_state});
   },
   yield: function(e) {
     socket.send(JSON.stringify({type: 'yield'}));
@@ -82,29 +69,29 @@ var View = React.createClass({
   },
   play: function(card, e) {
     if (card.types.indexOf('instant') >= 0) {
-      this.target_start(card, card.actions[0], e);
+      this.targetStart(card, card.actions[0], e);
     } else {
-      socket.send(JSON.stringify({type: 'play',copy_id: card.copy_id}));
+      socket.send(JSON.stringify({type: 'play',copyId: card.copyId}));
     }
   },
-  update_state: function(fields) {
-    let new_state = {};
+  updateState: function(fields) {
+    let newState = {};
 
     for (let field of ['game','action','source','chats','selection']) {
       if (fields[field] !== undefined) {
-        new_state[field] = fields[field];
+        newState[field] = fields[field];
       } else {
         try {
-          new_state[field] = clone(this.state[field]);
+          newState[field] = clone(this.state[field]);
         } catch (e) {
-          new_state[field] = this.state[field];
+          newState[field] = this.state[field];
         }
       }
     }
 
-    this.setState(new_state);
+    this.setState(newState);
 
-    body_el.onresize();
+    bodyEl.onresize();
 
     window.requestAnimationFrame(function() {
       let log = document.getElementById("log");
@@ -112,47 +99,47 @@ var View = React.createClass({
     });
   },
   select: function(card, e) {
-    this.update_state({
-      selection: card.copy_id,
+    this.updateState({
+      selection: card.copyId,
     });
   },
-  target_start: function(source, action, e) {
-    this.update_state({
+  targetStart: function(source, action, e) {
+    this.updateState({
       action: action,
       source: source,
     });
   },
-  target_cancel: function(e) {
-    this.update_state({
+  targetCancel: function(e) {
+    this.updateState({
       action: null,
       source: null,
     });
   },
-  target_finish: function(target, e) {
+  targetFinish: function(target, e) {
     socket.send(JSON.stringify({
       type: 'action',
-      source: this.state.source.copy_id,
+      source: this.state.source.copyId,
       action: this.state.action.name,
-      target: target.copy_id,
+      target: target.copyId,
     }));
-    this.target_cancel(e);
+    this.targetCancel(e);
   },
-  toggle_power: function(card, e) {
+  togglePower: function(card, e) {
     socket.send(JSON.stringify({
-      type: 'toggle_power',
-      card: card.copy_id,
+      type: 'togglePower',
+      card: card.copyId,
     }));
   },
   scrap: function(card, e) {
     socket.send(JSON.stringify({
       type: 'scrap',
-      card: card.copy_id,
+      card: card.copyId,
     }));
   },
   shields: function(card, delta, e) {
     socket.send(JSON.stringify({
       type: 'shields',
-      card: card.copy_id,
+      card: card.copyId,
       delta: delta,
     }));
   },
@@ -181,7 +168,7 @@ var View = React.createClass({
     this.refs.message.blur();
   },
   add: function(msg) {
-    this.update_state({
+    this.updateState({
       chats: [msg, ...this.state.chats],
     });
     window.requestAnimationFrame(function() {
@@ -189,17 +176,17 @@ var View = React.createClass({
       messages.scrollTop = messages.scrollHeight;
     });
   },
-  get_action: function(card, action_name) {
+  getAction: function(card, actionName) {
     for (let action of card.actions) {
-      if (action.name === action_name) {
+      if (action.name === actionName) {
         return action;
       }
     }
     return null;
   },
-  key_press: function(e) {
+  keyPress: function(e) {
     if (e.key === 'Escape') {
-      this.update_state({
+      this.updateState({
         action: null,
         source: null,
       });
@@ -207,45 +194,45 @@ var View = React.createClass({
     }
     if (e.key === 'Tab') {
       if (this.state.selection === null) {
-        let new_selection = this.get_me().permanents[0] ||
-          this.get_enemy().permanents[0];
-        if (new_selection !== undefined) {
-          this.update_state({selection: new_selection.copy_id});
+        let newSelection = this.getMe().permanents[0] ||
+          this.getEnemy().permanents[0];
+        if (newSelection !== undefined) {
+          this.updateState({selection: newSelection.copyId});
         }
         return true;
       }
 
-      let sel_info = this.get_card_info(this.state.selection);
-      let container = sel_info.container;
-      let index = container.indexOf(sel_info.card) + 1;
+      let selInfo = this.getCardInfo(this.state.selection);
+      let container = selInfo.container;
+      let index = container.indexOf(selInfo.card) + 1;
 
       if (index >= container.length) {
         index = 0;
 
-        if (sel_info.is_mine) {
-          container = this.get_enemy().permanents;
+        if (selInfo.isMine) {
+          container = this.getEnemy().permanents;
         } else {
-          container = this.get_me().permanents;
+          container = this.getMe().permanents;
         }
       }
 
-      this.update_state({selection: container[index].copy_id});
+      this.updateState({selection: container[index].copyId});
       return true;
     }
     if (this.state.selection !== null) {
-      let card_info = this.get_card_info(this.state.selection);
-      if (card_info.is_perm) {
+      let cardInfo = this.getCardInfo(this.state.selection);
+      if (cardInfo.isPerm) {
         if (e.key.toLowerCase() === 't') {
-          if (this.is_targeting(card_info)) {
-            this.target_finish(card_info.card);
+          if (this.isTargeting(cardInfo)) {
+            this.targetFinish(cardInfo.card);
           }
           return true;
         }
-        if (card_info.is_mine) {
+        if (cardInfo.isMine) {
           if (e.key.toLowerCase() === 'a') {
-            let action = this.get_action(card_info.card, 'attack');
+            let action = this.getAction(cardInfo.card, 'attack');
             if (action !== null) {
-              this.target_start(card_info.card, action);
+              this.targetStart(cardInfo.card, action);
             }
           }
         } else {
@@ -254,18 +241,18 @@ var View = React.createClass({
     }
     return false;
   },
-  get_card_info: function(copy_id) {
-    let me = this.get_me();
-    for (let owner of [me, this.get_enemy()]) {
-      for (let container_name of ['permanents', 'hand']) {
-        for (let test of owner[container_name]) {
-          if (test.copy_id == this.state.selection) {
+  getCardInfo: function(copyId) {
+    let me = this.getMe();
+    for (let owner of [me, this.getEnemy()]) {
+      for (let containerName of ['permanents', 'hand']) {
+        for (let test of owner[containerName]) {
+          if (test.copyId == this.state.selection) {
             return {
               card: test,
-              is_mine: owner === me,
-              is_perm: container_name === 'permanents',
-              container_name: container_name,
-              container: owner[container_name],
+              isMine: owner === me,
+              isPerm: containerName === 'permanents',
+              containerName: containerName,
+              container: owner[containerName],
             };
           }
         }
@@ -273,55 +260,55 @@ var View = React.createClass({
     }
     return null;
   },
-  get_me: function() {
-    return this.state.game.players[game_info.user_id];
+  getMe: function() {
+    return this.state.game.players[gameInfo.userId];
   },
-  get_enemy: function() {
+  getEnemy: function() {
     for (let key in this.state.game.players) {
       if (this.state.game.players.hasOwnProperty(key) &&
-          key != game_info.user_id) {
+          key != gameInfo.userId) {
         return this.state.game.players[key];
       }
     }
     throw 'enemy not found';
   },
-  is_my_turn: function() {
-    return this.state.game.turn_player_id == game_info.user_id;
+  isMyTurn: function() {
+    return this.state.game.turnPlayerId == gameInfo.userId;
   },
-  is_targeting: function(card_info) {
-    if (!card_info.is_perm || !this.is_my_turn() ||
+  isTargeting: function(cardInfo) {
+    if (!cardInfo.isPerm || !this.isMyTurn() ||
         this.state.action === null) {
       return false;
     }
 
     let targets = this.state.action.targeting;
 
-    let ownership_match = false;
+    let ownershipMatch = false;
     if (targets.contains('friendly')) {
-      ownership_match = card_info.is_mine;
+      ownershipMatch = cardInfo.isMine;
     } else if (targets.contains('enemy')) {
-      ownership_match = !card_info.is_mine;
+      ownershipMatch = !cardInfo.isMine;
     }
 
-    return ownership_match &&
-      targets.intersect(card_info.card.types).length > 0;
+    return ownershipMatch &&
+      targets.intersect(cardInfo.card.types).length > 0;
   },
   render: function() {
     var game = this.state.game;
 
-    if (game_info === undefined || game === null) {
+    if (gameInfo === undefined || game === null) {
       return (<i>Connecting..</i>);
     }
 
     var that = this;
-    var me = this.get_me();
-    var enemy = this.get_enemy();
-    var my_turn = this.is_my_turn();
+    var me = this.getMe();
+    var enemy = this.getEnemy();
+    var myTurn = this.isMyTurn();
 
-    let render_card = function(card, is_mine, is_perm) {
+    let renderCard = function(card, isMine, isPerm) {
       let cls = 'card';
 
-      if (that.state.selection && that.state.selection == card.copy_id) {
+      if (that.state.selection && that.state.selection == card.copyId) {
         cls += ' sel';
       }
 
@@ -339,7 +326,7 @@ var View = React.createClass({
         details.push(<div>{`Generates ${card.power} power`}</div>);
       }
 
-      if (card.cost && !is_perm) {
+      if (card.cost && !isPerm) {
         details.push(<div>{`Costs ${card.cost}`}</div>);
       }
 
@@ -349,19 +336,19 @@ var View = React.createClass({
 
       // Power button
       let power = '';
-      if (is_mine && card.upkeep) {
-        const can_power = card.powered ||
-                          me.power_used + card.upkeep <= me.power_total;
+      if (isMine && card.upkeep) {
+        const canPower = card.powered ||
+                          me.powerUsed + card.upkeep <= me.powerTotal;
 
-        const cant_toggle = card.tapped || !can_power;
+        const cantToggle = card.tapped || !canPower;
 
-        const icon_type = card.powered ? 'full' : 'empty';
-        const battery_class = cant_toggle ? 'battery-disabled' : 'battery';
+        const iconType = card.powered ? 'full' : 'empty';
+        const batteryClass = cantToggle ? 'battery-disabled' : 'battery';
 
         power = (
           <i
-            onClick={that.toggle_power.bind(null, card)}
-            className={`fa ${battery_class} fa-battery-${icon_type}`}
+            onClick={that.togglePower.bind(null, card)}
+            className={`fa ${batteryClass} fa-battery-${iconType}`}
           >
           </i>
         );
@@ -369,8 +356,8 @@ var View = React.createClass({
 
       return (
         <div
-          id={'perm_' + card.copy_id}
-          key={card.copy_id}
+          id={'perm_' + card.copyId}
+          key={card.copyId}
           className={cls}
           onClick={that.select.bind(that, card)}
         >
@@ -387,57 +374,57 @@ var View = React.createClass({
       );
     };
 
-    let render_permanents = function(perms, are_mine) {
+    let renderPermanents = function(perms, areMine) {
       let ret = [];
 
       for (let perm of perms) {
         if (perm.name === 'mother ship') {
-          ret.push(render_card(perm, are_mine, true));
+          ret.push(renderCard(perm, areMine, true));
         }
       }
 
       for (let perm of perms) {
         if (perm.name !== 'mother ship' && perm.types.contains('generator')) {
-          ret.push(render_card(perm, are_mine, true));
+          ret.push(renderCard(perm, areMine, true));
         }
       }
 
       for (let perm of perms) {
         if (perm.name !== 'mother ship' && !perm.types.contains('generator')) {
-          ret.push(render_card(perm, are_mine, true));
+          ret.push(renderCard(perm, areMine, true));
         }
       }
 
       return ret;
     };
 
-    let permanents = render_permanents(me.permanents, true);
-    let enemy_permanents = render_permanents(enemy.permanents);
+    let permanents = renderPermanents(me.permanents, true);
+    let enemyPermanents = renderPermanents(enemy.permanents);
 
     let gameover = '';
     if (game.winner !== undefined) {
-      let outcome = game.winner == game_info.user_id ? 'won' : 'lost';
+      let outcome = game.winner == gameInfo.userId ? 'won' : 'lost';
       gameover = (<h3>Game over! You {outcome}!</h3>);
     }
 
-    let render_power = function(player) {
+    let renderPower = function(player) {
       return (
         <span className="power">
-          {player.power_total - player.power_used}/{player.power_total}
+          {player.powerTotal - player.powerUsed}/{player.powerTotal}
         </span>
       );
     };
 
-    let render_shields = function(player) {
+    let renderShields = function(player) {
       return (<span className="shields">
-          {player.shields_used}/{player.shields_total}</span>);
+          {player.shieldsUsed}/{player.shieldsTotal}</span>);
     }
 
     let pregame = '';
     if (game.phase === 'pre-game') {
-      let enemy_ready = '';
+      let enemyReady = '';
       if (enemy.ready) {
-        enemy_ready = (<span>the other player is ready</span>);
+        enemyReady = (<span>the other player is ready</span>);
       }
       pregame = (
         <span>
@@ -445,15 +432,15 @@ var View = React.createClass({
             disabled={me.ready} />
           <input type="button" onClick={this.ready} value="ready"
             disabled={me.ready} />
-          {enemy_ready}
+          {enemyReady}
         </span>
       );
     }
 
-    let cancel_target_button = '';
+    let cancelTargetButton = '';
     if (this.state.action !== null) {
-      cancel_target_button = (
-        <input type="button" onClick={this.target_cancel}
+      cancelTargetButton = (
+        <input type="button" onClick={this.targetCancel}
           value="cancel action" />
       );
     }
@@ -463,10 +450,10 @@ var View = React.createClass({
       hud = (<div id="hud" className="hud">{pregame}</div>);
     } else {
       let defend = '';
-      if (my_turn && game.phase === 'defend') {
+      if (myTurn && game.phase === 'defend') {
         defend = (
           <input type="button" onClick={this.defend} value="defend"
-            disabled={!my_turn || game.phase !== 'defend'} />
+            disabled={!myTurn || game.phase !== 'defend'} />
         );
       }
 
@@ -474,21 +461,21 @@ var View = React.createClass({
         <div id="hud" className="hud">
           {pregame}
           {gameover}
-          It is <strong>{my_turn ? '' : 'not '}your turn</strong>.
+          It is <strong>{myTurn ? '' : 'not '}your turn</strong>.
           Phase: <strong>{game.phase}</strong>
           {defend}
           <input type="button" onClick={this.yield} value="yield"
-            disabled={!my_turn || game.phase !== 'main'} />
+            disabled={!myTurn || game.phase !== 'main'} />
           <input type="button" onClick={this.forfeit} value="forfeit"
             disabled={game.winner !== undefined} />
-          {cancel_target_button}
+          {cancelTargetButton}
           <div className="stats">
             &nbsp;
             Scrap: {me.scrap}
             &nbsp;
-            Power: {render_power(me)}
+            Power: {renderPower(me)}
             &nbsp;
-            Shields: {render_shields(me)}
+            Shields: {renderShields(me)}
           </div>
         </div>
       );
@@ -523,20 +510,20 @@ var View = React.createClass({
       </div>
     );
 
-    let render_selection = function() {
+    let renderSelection = function() {
       if (!that.state.selection) {
         return (<div />);
       }
 
-      let card_info = that.get_card_info(that.state.selection);
-      if (card_info === null) {
+      let cardInfo = that.getCardInfo(that.state.selection);
+      if (cardInfo === null) {
         console.log('Cannot find card container');
         return (<div />);
       }
 
-      let card = card_info.card;
-      let is_mine = card_info.is_mine;
-      let is_perm = card_info.is_perm;
+      let card = cardInfo.card;
+      let isMine = cardInfo.isMine;
+      let isPerm = cardInfo.isPerm;
 
       let actions = [];
       let target = '';
@@ -545,26 +532,26 @@ var View = React.createClass({
       let effects = '';
       let mass = '';
 
-      if (is_perm) {
+      if (isPerm) {
         // Target button
-        if (that.is_targeting(card_info)) {
+        if (that.isTargeting(cardInfo)) {
           target = (<input type="button" value="target"
-              onClick={that.target_finish.bind(null, card)} />);
+              onClick={that.targetFinish.bind(null, card)} />);
         }
 
         // Action buttons
-        if (is_mine) {
+        if (isMine) {
           for (let i = 0; i < card.actions.length; i++) {
             let action = card.actions[i];
-            let can_attack = is_perm && my_turn && that.state.action === null
+            let canAttack = isPerm && myTurn && that.state.action === null
                 && !card.tapped;
             if (!card.types.contains('black_hole')) {
-              can_attack = can_attack && card.powered;
+              canAttack = canAttack && card.powered;
             }
             actions.push(
               <input type="button" value={action.name} key={action.name}
-                onClick={that.target_start.bind(null, card, action)}
-                disabled={!can_attack} />
+                onClick={that.targetStart.bind(null, card, action)}
+                disabled={!canAttack} />
             );
           }
         }
@@ -574,18 +561,18 @@ var View = React.createClass({
             card.types.intersect(['generator','black_hole']).length == 0) {
           shields = (<span>shields: {card.shields}</span>);
 
-          if (is_mine) {
+          if (isMine) {
             shields = (
               <div className="shields">
                 <input type="button" value="-"
                     onClick={that.shields.bind(null, card, -1)}
-                    disabled={!my_turn || card.shields <= 0} />
+                    disabled={!myTurn || card.shields <= 0} />
                 {shields}
                 <input type="button" value="+"
                     onClick={that.shields.bind(null, card, 1)}
-                    disabled={!my_turn ||
-                              me.shields_total - me.shields_used <= 0 ||
-                              me.power_total - me.power_used <= 0} />
+                    disabled={!myTurn ||
+                              me.shieldsTotal - me.shieldsUsed <= 0 ||
+                              me.powerTotal - me.powerUsed <= 0} />
               </div>
             );
           }
@@ -627,11 +614,11 @@ var View = React.createClass({
         worth = (<div>worth: {card.worth}</div>);
       }
 
-      let or_zero = function(v) { return v !== undefined ? v : 0 };
+      let orZero = function(v) { return v !== undefined ? v : 0 };
 
       let stats = '';
       if (card.types.contains('ship')) {
-        stats = or_zero(card.attack) + '/' + or_zero(card.hp);
+        stats = orZero(card.attack) + '/' + orZero(card.hp);
       }
 
       let classes = 'permanent';
@@ -647,9 +634,9 @@ var View = React.createClass({
       }
 
       let scrap = '';
-      if (is_mine && (card.types.intersect(['ship','instant']).length > 0) &&
+      if (isMine && (card.types.intersect(['ship','instant']).length > 0) &&
           card.name !== 'mother ship') {
-        scrap = (<input type="button" value="scrap" disabled={!my_turn}
+        scrap = (<input type="button" value="scrap" disabled={!myTurn}
             onClick={that.scrap.bind(null, card)} />);
       }
 
@@ -672,43 +659,43 @@ var View = React.createClass({
       );
     }
 
-    let render_hand = function() {
+    let renderHand = function() {
       let hand = [];
 
       for (let card of me.hand) {
         let scrap = '';
         if (card.types.intersect(['ship','instant']).length > 0) {
           scrap = (<button onClick={that.scrap.bind(null, card)}
-            disabled={!my_turn}>scrap</button>);
+            disabled={!myTurn}>scrap</button>);
         }
 
         hand.push(
-          <div key={card.copy_id} className="hand-card">
+          <div key={card.copyId} className="hand-card">
             {card.name}
-            <button onClick={that.play.bind(that, card)} disabled={!my_turn}>
+            <button onClick={that.play.bind(that, card)} disabled={!myTurn}>
               play</button>
             {scrap}
           </div>
         );
       }
 
-      let draw_possible = my_turn ? game.draw_possible : 0;
-      let explore_possible = my_turn ? game.can_explore : 0;
+      let drawPossible = myTurn ? game.drawPossible : 0;
+      let explorePossible = myTurn ? game.canExplore : 0;
 
       return (
         <div id="hand">
           <input type="button" onClick={that.draw}
-            value={'draw (' + draw_possible + ')'}
-            disabled={!draw_possible} />
+            value={'draw (' + drawPossible + ')'}
+            disabled={!drawPossible} />
           <input type="button" onClick={that.explore}
-            value={'explore (' + explore_possible + ')'}
-            disabled={!explore_possible} />
+            value={'explore (' + explorePossible + ')'}
+            disabled={!explorePossible} />
           <div id="cards">{hand}</div>
         </div>
       );
     }
 
-    let render_log = function() {
+    let renderLog = function() {
       let log = [];
       for (let index = 0; index < game.log.length; index++) {
         let entry = game.log[index];
@@ -724,13 +711,13 @@ var View = React.createClass({
         <div id="hud-spacer" />
         <div>{permanents}</div>
         <div className="player_separator"></div>
-        <div>{enemy_permanents}</div>
+        <div>{enemyPermanents}</div>
         <div id="hud-bottom-spacer" />
         <div id="hud-bottom" className="hud">
-          {render_selection()}
-          {render_hand()}
+          {renderSelection()}
+          {renderHand()}
           {chat}
-          {render_log()}
+          {renderLog()}
         </div>
       </div>
     );
@@ -739,7 +726,7 @@ var View = React.createClass({
 
 var view = ReactDOM.render(<View />, document.getElementById('view'));
 
-function connect_socket(msg) {
+function connectSocket(msg) {
   socket = new WebSocket('wss://' + location.hostname + '/ws/');
   socket.onerror = function(error) {
     console.log("WebSocket error: " + error);
@@ -758,11 +745,11 @@ function connect_socket(msg) {
       }
     }
     else if (msg.type === 'greetings') {
-      game_info = msg;
+      gameInfo = msg;
       view.forceUpdate();
     }
     else if (msg.type === 'state') {
-      view.set_state(msg.state);
+      view.updateState({game: msg.state});
     }
     else {
       console.log('Unrecognized WebSocket message type: %s', msg.type);
@@ -773,9 +760,9 @@ function connect_socket(msg) {
   };
 }
 
-var body_el = document.getElementsByTagName('body').item(0);
-body_el.onresize = function() {
-  view.render_canvas();
+var bodyEl = document.getElementsByTagName('body').item(0);
+bodyEl.onresize = function() {
+  view.renderCanvas();
 
   document.getElementById('hud-spacer').style.height =
     document.getElementById('hud').offsetHeight + 'px';
@@ -787,25 +774,25 @@ body_el.onresize = function() {
 document.onkeypress = function(e) {
   e = e || window.event;
 
-  let chat_message = document.getElementById('chat_message');
+  let chatMessage = document.getElementById('chat_message');
 
-  if (chat_message === null) {
+  if (chatMessage === null) {
     return;
   }
 
-  if (document.activeElement !== chat_message) {
+  if (document.activeElement !== chatMessage) {
     if (e.key === 'Enter') {
-      chat_message.focus();
+      chatMessage.focus();
     }
     else {
-      if (view.key_press(e)) {
+      if (view.keyPress(e)) {
         e.preventDefault();
         e.stopPropagation();
       }
     }
   }
   else if (e.key === 'Escape') {
-    chat_message.value = '';
-    chat_message.blur();
+    chatMessage.value = '';
+    chatMessage.blur();
   }
 };

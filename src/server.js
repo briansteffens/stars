@@ -22,7 +22,7 @@ var db = mongojs('stars', ['users']);
 
 db.users.remove();
 
-function make_unique(field, options, cb) {
+function makeUnique(field, options, cb) {
   db.users.createIndex([field], options, function(err, list) {
     if (err) {
       throw 'Error making '+field+' unique';
@@ -31,9 +31,9 @@ function make_unique(field, options, cb) {
   });
 }
 
-make_unique('email', {unique: true}, function() {
-  make_unique('username', {unique: true}, function() {
-    make_unique('verification_code', {unique: true,sparse: true}, function() {
+makeUnique('email', {unique: true}, function() {
+  makeUnique('username', {unique: true}, function() {
+    makeUnique('verificationCode', {unique: true,sparse: true}, function() {
       db.users.save({
         username: 'brian',
         email: 'brian@asdf.com',
@@ -58,15 +58,15 @@ var transporter = nodemailer.createTransport(config.mail.transport);
 
 var games = [];
 
-var all_cards = cards.all();
-var explore_cards = cards.explore();
-var random_pool = cards.pool(all_cards);
+var allCards = cards.all();
+var exploreCards = cards.explore();
+var randomPool = cards.pool(allCards);
 
 /* Return a redis callback that logs any found error in a standardized format
  * with [msg] as descriptive text, then calls the optional [cb] callback
  * with signature (err, res).
  */
-function redis_err(msg, cb) {
+function redisErr(msg, cb) {
   return function(err, res) {
     if (err) {
       console.log('REDIS ERROR: '+msg+'\n err: ['+err+']\n res: ['+res+']\n');
@@ -78,18 +78,18 @@ function redis_err(msg, cb) {
   }
 }
 
-/* Store [val] in redis with a generated base64 key of length [key_len] with
+/* Store [val] in redis with a generated base64 key of length [keyLen] with
  * a prefix of "[prefix]_".
  *
  * [cb] should be a function with the signature (err, key). [err] will be
  * non-null if a unique key could not be generated. [key] will contain the
  * generated key if [err] is null.
  */
-function redis_set(prefix, key_len, val, ttl, cb) {
+function redisSet(prefix, keyLen, val, ttl, cb) {
   let tries = MAX_KEY_ATTEMPTS;
 
   let attempt = function() {
-    let key = prefix + '_' + random_base64(key_len);
+    let key = prefix + '_' + randomBase64(keyLen);
 
     redis.set(key, val, 'NX', 'EX', ttl, function(err, res) {
       if (res !== 'OK') {
@@ -108,7 +108,7 @@ function redis_set(prefix, key_len, val, ttl, cb) {
   attempt();
 }
 
-function get_user_by_id(id, cb) {
+function getUserByID(id, cb) {
   db.users.findOne({_id: mongojs.ObjectId(id)}, function(err, doc) {
     if (err) {
       throw 'Unable to find user id: '+id;
@@ -133,7 +133,7 @@ function email(to, subject, text, cb) {
   transporter.sendMail(options, cb);
 }
 
-function random_base64(len) {
+function randomBase64(len) {
   return crypto.randomBytes(Math.ceil(len * 3 / 4))
     .toString('base64')
     .slice(0, len)
@@ -141,12 +141,12 @@ function random_base64(len) {
     .replace(/\//g, '_');
 }
 
-function generate_id(len, collision_check) {
+function generateId(len, collisionCheck) {
   let id = null;
 
   do {
-    id = random_base64(len);
-  } while (collision_check(id));
+    id = randomBase64(len);
+  } while (collisionCheck(id));
 
   return id;
 }
@@ -171,8 +171,8 @@ passport.serializeUser(function(user, cb) {
   cb(null, user._id.toString());
 });
 
-passport.deserializeUser(function(user_id, cb) {
-  get_user_by_id(user_id, function(user) {
+passport.deserializeUser(function(userId, cb) {
+  getUserByID(userId, function(user) {
     cb(null, user);
   });
 });
@@ -212,7 +212,7 @@ app.post('/register', function(req, res) {
     errors.push('Password must be at least 6 characters');
   }
 
-  if (req.body.password !== req.body.password_confirm) {
+  if (req.body.password !== req.body.passwordConfirm) {
     errors.push('Passwords must match');
   }
 
@@ -222,7 +222,7 @@ app.post('/register', function(req, res) {
       errors.push('Username is already taken');
     }
 
-    let render_errors = function(errors) {
+    let renderErrors = function(errors) {
       res.render('register', {
         email: req.body.email,
         username: req.body.username,
@@ -237,35 +237,35 @@ app.post('/register', function(req, res) {
       }
 
       if (errors.length > 0) {
-        return render_errors(errors);
+        return renderErrors(errors);
       } else {
         // Process registration
-        let verification_code = random_base64(32);
+        let verificationCode = randomBase64(32);
 
         bcrypt.hash(req.body.password, 8, function(err, hash) {
           db.users.save({
             email: req.body.email,
             username: req.body.username,
             password: hash,
-            registered_at: Date.now(),
-            verified_at: null,
-            verification_code: verification_code,
+            registeredAt: Date.now(),
+            verifiedAt: null,
+            verificationCode: verificationCode,
           }, function(err, list) {
             if (err) {
               console.log('Error inserting user: ' + err);
-              return render_errors([
+              return renderErrors([
                   'Unknown error creating the account, please try again']);
             }
 
             let body = 'Thanks for registering! Verify your email address by '+
-                       'clicking here: ' + config.external_url + 'register/' +
-                       verification_code;
+                       'clicking here: ' + config.externalUrl + 'register/' +
+                       verificationCode;
 
             email(req.body.email, 'stars: verify email address', body,
                 function(err, info) {
               if (err) {
                 console.log('MAIL ERROR: ' + err);
-                return render_errors([
+                return renderErrors([
                     'Unknown error sending a verify email, please try again']);
               }
 
@@ -280,13 +280,13 @@ app.post('/register', function(req, res) {
 });
 
 app.get('/register/:code', function(req, res) {
-  db.users.findOne({verification_code: req.params.code}, function(err, user) {
-    if (err || !user || user.verified_at) {
+  db.users.findOne({verificationCode: req.params.code}, function(err, user) {
+    if (err || !user || user.verifiedAt) {
       return res.render('register_fail');
     }
 
-    user.verification_code = null;
-    user.verified_at = Date.now();
+    user.verificationCode = null;
+    user.verifiedAt = Date.now();
 
     db.users.save(user, function(err, doc) {
       if (err) {
@@ -316,12 +316,12 @@ app.post('/login',
   }
 );
 
-let games_info = function(user_id, cb) {
-  var game_list = [];
+let gamesInfo = function(userId, cb) {
+  var gameList = [];
   for (var i = 0; i < games.length; i++) {
-    for (var j = 0; j < games[i].player_ids.length; j++) {
-      if (games[i].player_ids[j] == user_id) {
-        var game_temp = {
+    for (var j = 0; j < games[i].playerIDs.length; j++) {
+      if (games[i].playerIDs[j] == userId) {
+        var gameTemp = {
           id: games[i].id,
           name: games[i].name,
           players: [],
@@ -329,24 +329,24 @@ let games_info = function(user_id, cb) {
             winner: games[i].state.winner,
           },
         };
-        for (var k = 0; k < games[i].player_ids.length; k++) {
-          game_temp.players.push({
-            user_id: games[i].player_ids[k],
+        for (var k = 0; k < games[i].playerIDs.length; k++) {
+          gameTemp.players.push({
+            userId: games[i].playerIDs[k],
           });
         }
-        game_list.push(game_temp);
+        gameList.push(gameTemp);
         continue;
       }
     }
   }
 
-  db.users.find({_id: {$ne: mongojs.ObjectId(user_id)}}, function(err, docs) {
+  db.users.find({_id: {$ne: mongojs.ObjectId(userId)}}, function(err, docs) {
     if (err) {
       throw 'Error getting user list';
     }
 
     cb({
-      games: game_list,
+      games: gameList,
       users: docs,
     });
   });
@@ -357,7 +357,7 @@ app.get('/games/info', function(req, res) {
     return res.redirect('/login');
   }
 
-  games_info(req.user._id.toString(), function(r) {
+  gamesInfo(req.user._id.toString(), function(r) {
     res.json(r);
   });
 });
@@ -370,7 +370,7 @@ app.post('/games/new', function(req, res) {
   let game = {
     id: null,
     name: req.body.name,
-    player_ids: [req.user._id.toString(), req.body.against],
+    playerIDs: [req.user._id.toString(), req.body.against],
     sockets: {},
     chats: [],
     moves: [],
@@ -378,18 +378,18 @@ app.post('/games/new', function(req, res) {
     state: {
       winner: undefined,
       turn: -1,
-      turn_player_id: null,
+      turnPlayerId: null,
       phase: 'pre-game',
-      draw_possible: 0,
-      can_explore: 0,
+      drawPossible: 0,
+      canExplore: 0,
       attacks: [],
-      next_copy_id: 0,
+      nextCopyId: 0,
       players: {},
       log: [],
     },
   };
 
-  game.id = generate_id(5, function(id) {
+  game.id = generateId(5, function(id) {
     for (let g of games) {
       if (g.id == id) {
         return true;
@@ -401,38 +401,38 @@ app.post('/games/new', function(req, res) {
   game.sockets[req.user._id.toString()] = undefined;
   game.sockets[req.body.against] = undefined;
 
-  let make_player = function(id, cb) {
-    get_user_by_id(id, function(user) {
+  let makePlayer = function(id, cb) {
+    getUserByID(id, function(user) {
       cb({
-        user_id: user._id.toString(),
-        user_name: user.username,
+        userId: user._id.toString(),
+        userName: user.username,
         hand: [],
         deck: [],
         permanents: [],
         scrap: 0,
-        cant_play: [],
-        power_used: 0,
-        power_total: 0,
-        shields_used: 0,
-        shields_total: 0,
+        cantPlay: [],
+        powerUsed: 0,
+        powerTotal: 0,
+        shieldsUsed: 0,
+        shieldsTotal: 0,
         ready: false,
-        mull_penalty: -1,
+        mullPenalty: -1,
       });
     });
   }
 
-  make_player(req.user._id, function(user1) {
+  makePlayer(req.user._id, function(user1) {
     game.state.players[req.user._id] = user1;
 
-    make_player(req.body.against, function(user2) {
+    makePlayer(req.body.against, function(user2) {
       game.state.players[req.body.against] = user2;
 
-      let random_card = function() {
-        return random_pool[Math.floor(Math.random() * random_pool.length)];
+      let randomCard = function() {
+        return randomPool[Math.floor(Math.random() * randomPool.length)];
       }
 
-      let find_card = function(name) {
-        for (let coll of [all_cards, explore_cards]) {
+      let findCard = function(name) {
+        for (let coll of [allCards, exploreCards]) {
           for (let card of coll) {
             if (card.name == name) {
               return card;
@@ -442,28 +442,28 @@ app.post('/games/new', function(req, res) {
         throw 'Cannot find card ['+name+']';
       }
 
-      let next_card = function(card) {
+      let nextCard = function(card) {
         var card = JSON.parse(JSON.stringify(card));
-        card.copy_id = game.state.next_copy_id++;
+        card.copyId = game.state.nextCopyId++;
         card.tapped = false;
         card.powered = false;
         return card;
       }
 
-      let next_mother_ship = function() {
-        var ret = cards.mother_ship();
-        ret.copy_id = game.state.next_copy_id++;
+      let nextMotherShip = function() {
+        var ret = cards.motherShip();
+        ret.copyId = game.state.nextCopyId++;
         return ret;
       }
 
-      let player_ids = [req.user._id.toString(), req.body.against];
+      let playerIDs = [req.user._id.toString(), req.body.against];
 
-      for (let player_id of player_ids) {
+      for (let playerId of playerIDs) {
         for (var i = 0; i < 50; i++) {
-          game.state.players[player_id].deck.push(next_card(random_card()));
+          game.state.players[playerId].deck.push(nextCard(randomCard()));
         }
 
-        game.state.players[player_id].permanents.push(next_mother_ship());
+        game.state.players[playerId].permanents.push(nextMotherShip());
       }
 
       if (DEBUG) {
@@ -472,14 +472,14 @@ app.post('/games/new', function(req, res) {
 
         for (let name of initial) {
           game.state.players[req.user._id].hand.push(
-              next_card(find_card(name)));
+              nextCard(findCard(name)));
         }
       }
       else {
-        for (let player_id of player_ids) {
-          state.apply_move(game, {
+        for (let playerId of playerIDs) {
+          state.applyMove(game, {
             type: 'mull',
-            user_id: player_id,
+            userId: playerId,
             turn: game.state.turn,
           });
         }
@@ -487,7 +487,7 @@ app.post('/games/new', function(req, res) {
 
       games.push(game);
 
-      games_info(req.user._id.toString(), function(r) {
+      gamesInfo(req.user._id.toString(), function(r) {
         res.json(r);
       });
     });
@@ -502,7 +502,7 @@ app.get('/game', function(req, res) {
   let game = null;
 
   for (let i = 0; i < games.length; i++) {
-    if (games[i].player_ids.contains(req.user._id.toString())) {
+    if (games[i].playerIDs.contains(req.user._id.toString())) {
       game = games[i];
       break;
     }
@@ -512,12 +512,12 @@ app.get('/game', function(req, res) {
     return res.status(404).send('Not found');
   }
 
-  let token_data = JSON.stringify({
-    game_id: game.id,
-    user_id: req.user._id.toString(),
+  let tokenData = JSON.stringify({
+    gameId: game.id,
+    userId: req.user._id.toString(),
   });
 
-  redis_set('wstoken', 10, token_data, GAME_TOKEN_TTL, function(err, token) {
+  redisSet('wstoken', 10, tokenData, GAME_TOKEN_TTL, function(err, token) {
     if (err) {
       console.log('Error generating token: ' + err);
       return res.status(500).send('Error generating token');
@@ -534,23 +534,23 @@ app.listen(8080);
 
 var wss = new require('ws').Server({port: 8081});
 wss.on('connection', function(ws) {
-  let token_data = undefined;
+  let tokenData = undefined;
   let game = undefined;
-  let player_id = undefined;
+  let playerId = undefined;
   let user = undefined;
 
   // Add implicit properties to a move originating from a client
-  var fill_in = function(move) {
-    move.user_id = player_id;
+  var fillIn = function(move) {
+    move.userId = playerId;
     move.turn = state.turn;
     return move;
   };
 
-  var send = function(payload, to_player) {
-    if (to_player === undefined) {
-      to_player = player_id;
+  var send = function(payload, toPlayer) {
+    if (toPlayer === undefined) {
+      toPlayer = playerId;
     }
-    var socket = game.sockets[to_player];
+    var socket = game.sockets[toPlayer];
     if (socket === undefined) {
       return;
     }
@@ -559,64 +559,64 @@ wss.on('connection', function(ws) {
         return;
       }
       if (error.message === 'not opened') {
-        game.sockets[to_player] = undefined;
-        console.log('player %s disconnected', to_player);
+        game.sockets[toPlayer] = undefined;
+        console.log('player %s disconnected', toPlayer);
         return;
       }
       throw error;
     });
   };
 
-  var send_state = function(to_player) {
+  var sendState = function(toPlayer) {
     send({
       type: 'state',
-      state: state.strip_state(game.state, to_player),
-    }, to_player);
+      state: state.stripState(game.state, toPlayer),
+    }, toPlayer);
   };
 
   ws.on('message', function(message) {
     var msg = JSON.parse(message);
     if (msg.type === 'connect') {
-      redis.get('wstoken_' + msg.token, redis_err('token get failed',
+      redis.get('wstoken_' + msg.token, redisErr('token get failed',
             function(err, res) {
         if (err || res === null) {
           return send({type: 'error', text: 'Invalid or expired token'});
         }
 
-        token_data = JSON.parse(res);
-        redis.del(msg.token, redis_err('token delete failed'));
+        tokenData = JSON.parse(res);
+        redis.del(msg.token, redisErr('token delete failed'));
 
-        get_user_by_id(token_data.user_id, function(user_) {
+        getUserByID(tokenData.userId, function(user_) {
           user = user_;
 
           if (msg.page === 'game') {
             outer: for (let i = 0; i < games.length; i++) {
-              if (games[i].id == token_data.game_id) {
+              if (games[i].id == tokenData.gameId) {
                 game = games[i];
-                for (let j = 0; j < game.player_ids.length; j++) {
-                  if (game.player_ids[j] == token_data.user_id) {
-                    player_id = game.player_ids[j];
+                for (let j = 0; j < game.playerIDs.length; j++) {
+                  if (game.playerIDs[j] == tokenData.userId) {
+                    playerId = game.playerIDs[j];
                     break outer;
                   }
                 }
               }
             }
 
-            if (player_id === undefined) {
+            if (playerId === undefined) {
               console.log('Game not found.');
               send({type: 'error', text: 'Game not found'});
               return;
             }
 
-            game.sockets[player_id] = ws;
-            console.log('user_id %s connected to game %s', user._id, game.id);
+            game.sockets[playerId] = ws;
+            console.log('userId %s connected to game %s', user._id, game.id);
             send({
               type: 'greetings',
-              user_id: user._id,
+              userId: user._id,
               username: user.username,
             });
             send({type: 'chats', chats: game.chats});
-            send_state(player_id);
+            sendState(playerId);
           } else {
             send({type: 'error', text: 'Unrecognized page'});
           }
@@ -633,21 +633,21 @@ wss.on('connection', function(ws) {
         }
       };
       game.chats.splice(0, 0, newMessage.chat);
-      for (var i = 0; i < game.player_ids.length; i++) {
-        if (game.sockets[game.player_ids[i]] !== undefined) {
-          send(newMessage, game.player_ids[i]);
+      for (var i = 0; i < game.playerIDs.length; i++) {
+        if (game.sockets[game.playerIDs[i]] !== undefined) {
+          send(newMessage, game.playerIDs[i]);
         }
       }
     }
     else {
-      msg = fill_in(msg);
+      msg = fillIn(msg);
       try {
-        state.apply_move(game, msg);
+        state.applyMove(game, msg);
       } catch (ex) {
-        console.log("EXCEPTION in apply_move: " + ex);
+        console.log("EXCEPTION in applyMove: " + ex);
       }
-      send_state(player_id);
-      send_state(state.next_player(game, player_id));
+      sendState(playerId);
+      sendState(state.nextPlayer(game, playerId));
     }
   });
 });
