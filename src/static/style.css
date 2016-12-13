@@ -17,6 +17,7 @@ body {
   width: 100%;
   background-color: #333;
   color: #fff;
+  z-index: 1;
 }
 
 #hud {
@@ -182,8 +183,9 @@ div.hand_separator {
   width: 150px;
   height: 225px;
   background-color: #000;
-  cursor: pointer;
+  cursor: default;
   color: #fff;
+  vertical-align: top;
 }
 
 .card .title {
@@ -200,6 +202,7 @@ div.hand_separator {
 }
 
 .card .details {
+  font-size: .9em;
 }
 
 .card img {
@@ -216,5 +219,19 @@ div.hand_separator {
 }
 
 .sel, .sel:hover {
-  filter: brightness(1.5) sepia(200%) drop-shadow(0px 0px 20px #acf);
+  filter: drop-shadow(0px 0px 20px #fff);
+}
+
+.card-off {
+  filter: grayscale(100%);
+}
+
+.battery {
+  color: #0f0;
+  cursor: pointer;
+}
+
+.battery-disabled {
+  color: #aaa;
+  cursor: default;
 }

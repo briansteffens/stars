@@ -320,8 +320,13 @@ var View = React.createClass({
 
     let render_card = function(card, is_mine, is_perm) {
       let cls = 'card';
+
       if (that.state.selection && that.state.selection == card.copy_id) {
         cls += ' sel';
+      }
+
+      if (card.upkeep && !card.powered) {
+        cls += ' card-off';
       }
 
       const attack = card.attack > 0 ? card.attack : 0;
@@ -331,7 +336,35 @@ var View = React.createClass({
       let details = [];
 
       if (card.power) {
-        details.push(`Generates ${card.power}`);
+        details.push(<div>{`Generates ${card.power} power`}</div>);
+      }
+
+      if (card.cost && !is_perm) {
+        details.push(<div>{`Costs ${card.cost}`}</div>);
+      }
+
+      if (card.upkeep) {
+        details.push(<div>{`${card.upkeep} to power`}</div>);
+      }
+
+      // Power button
+      let power = '';
+      if (is_mine && card.upkeep) {
+        const can_power = card.powered ||
+                          me.power_used + card.upkeep <= me.power_total;
+
+        const cant_toggle = card.tapped || !can_power;
+
+        const icon_type = card.powered ? 'full' : 'empty';
+        const battery_class = cant_toggle ? 'battery-disabled' : 'battery';
+
+        power = (
+          <i
+            onClick={that.toggle_power.bind(null, card)}
+            className={`fa ${battery_class} fa-battery-${icon_type}`}
+          >
+          </i>
+        );
       }
 
       return (
@@ -345,7 +378,10 @@ var View = React.createClass({
           <div className="stats">{stats}</div>
           <img src={'/img/' + card.image} />
           <div className="details">
-            {card.power ? `Generates ${card.power}` : ''}
+            {details}
+          </div>
+          <div>
+            {power}
           </div>
         </div>
       );
@@ -504,7 +540,6 @@ var View = React.createClass({
 
       let actions = [];
       let target = '';
-      let power = '';
       let play = '';
       let shields = '';
       let effects = '';
@@ -532,19 +567,6 @@ var View = React.createClass({
                 disabled={!can_attack} />
             );
           }
-        }
-
-        // Power button
-        if (is_mine && card.upkeep !== undefined) {
-          let can_power = card.powered ||
-                          me.power_used + card.upkeep <= me.power_total;
-
-          power = (
-            <input type="button"
-              value={card.powered ? "power off" : "power on"}
-              disabled={card.tapped || !can_power}
-              onClick={that.toggle_power.bind(null, card)} />
-          );
         }
 
         // Shields
@@ -639,7 +661,6 @@ var View = React.createClass({
           {generates}
           <div>{stats}</div>
           {mass}
-          {power}
           {scrap}
           {play}
           {shields}
