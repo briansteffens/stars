@@ -104,6 +104,8 @@ var View = React.createClass({
     });
   },
   targetStart: function(source, action, e) {
+    e.stopPropagation();
+
     this.updateState({
       action: action,
       source: source,
@@ -343,7 +345,7 @@ var View = React.createClass({
         const cantToggle = card.tapped || !canPower;
 
         const iconType = card.powered ? 'full' : 'empty';
-        const batteryClass = cantToggle ? 'battery-disabled' : 'battery';
+        const batteryClass = cantToggle ? 'icon-disabled' : 'battery';
 
         power = (
           <i
@@ -352,6 +354,40 @@ var View = React.createClass({
           >
           </i>
         );
+      }
+
+      // Action buttons
+      let actions = [];
+      if (isMine) {
+        for (let i = 0; i < card.actions.length; i++) {
+          let action = card.actions[i];
+          let canAttack = isPerm && myTurn && that.state.action === null
+              && !card.tapped;
+          if (!card.types.contains('black_hole')) {
+            canAttack = canAttack && card.powered;
+          }
+
+          let cls = 'question-circle';
+
+          if (action.name === 'attack') {
+            cls = 'plane';
+          }
+
+          if (canAttack) {
+            cls += ' attack';
+          } else {
+            cls += ' icon-disabled';
+          }
+
+          actions.push(
+            <i
+              className={`fa fa-lg fa-${cls}`}
+              key={action.name}
+              onClick={that.targetStart.bind(null, card, action)}
+              disabled={!canAttack}
+            ></i>
+          );
+        }
       }
 
       return (
@@ -369,6 +405,7 @@ var View = React.createClass({
           </div>
           <div>
             {power}
+            {actions}
           </div>
         </div>
       );
@@ -537,23 +574,6 @@ var View = React.createClass({
         if (that.isTargeting(cardInfo)) {
           target = (<input type="button" value="target"
               onClick={that.targetFinish.bind(null, card)} />);
-        }
-
-        // Action buttons
-        if (isMine) {
-          for (let i = 0; i < card.actions.length; i++) {
-            let action = card.actions[i];
-            let canAttack = isPerm && myTurn && that.state.action === null
-                && !card.tapped;
-            if (!card.types.contains('black_hole')) {
-              canAttack = canAttack && card.powered;
-            }
-            actions.push(
-              <input type="button" value={action.name} key={action.name}
-                onClick={that.targetStart.bind(null, card, action)}
-                disabled={!canAttack} />
-            );
-          }
         }
 
         // Shields

@@ -231,7 +231,12 @@ div.hand_separator {
   cursor: pointer;
 }
 
-.battery-disabled {
+.icon-disabled {
   color: #aaa;
   cursor: default;
+}
+
+.attack {
+  color: #f00;
+  cursor: pointer;
 }
