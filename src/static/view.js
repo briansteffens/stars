@@ -24,14 +24,14 @@ var View = React.createClass({
     let game = this.state.game;
 
     ctx.strokeStyle = 'rgb(200, 0, 0)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
 
     var drawAttackLine = function(topEl, bottomEl) {
       ctx.beginPath();
       ctx.moveTo(topEl.offsetLeft + topEl.offsetWidth / 2,
-                 topEl.offsetTop + topEl.offsetHeight);
+                 topEl.offsetTop + topEl.offsetHeight + 1);
       ctx.lineTo(bottomEl.offsetLeft + bottomEl.offsetWidth / 2,
-                 bottomEl.offsetTop);
+                 bottomEl.offsetTop - 1);
       ctx.stroke();
     };
 
@@ -724,6 +724,10 @@ var View = React.createClass({
 
       return (<div id="log">{log}</div>);
     }
+
+    // Update canvas after all changes have been flushed to the DOM
+    setTimeout(
+      () => window.requestAnimationFrame(() => view.renderCanvas()), 0);
 
     return (
       <div>

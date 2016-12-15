@@ -10,6 +10,7 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 1;
 }
 
 .hud {
@@ -17,7 +18,7 @@ body {
   width: 100%;
   background-color: #333;
   color: #fff;
-  z-index: 1;
+  z-index: 2;
 }
 
 #hud {
