@@ -241,3 +241,8 @@ div.hand_separator {
   color: #f00;
   cursor: pointer;
 }
+
+.target {
+  color: #f00;
+  cursor: pointer;
+}

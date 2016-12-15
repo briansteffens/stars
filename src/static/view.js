@@ -118,12 +118,15 @@ var View = React.createClass({
     });
   },
   targetFinish: function(target, e) {
+    e.stopPropagation();
+
     socket.send(JSON.stringify({
       type: 'action',
       source: this.state.source.copyId,
       action: this.state.action.name,
       target: target.copyId,
     }));
+
     this.targetCancel(e);
   },
   togglePower: function(card, e) {
@@ -389,6 +392,23 @@ var View = React.createClass({
           );
         }
       }
+      //<i class="fa fa-crosshairs" aria-hidden="true"></i>
+
+      // Target button
+      const cardInfo = { // TODO: maybe take cardInfo as an arg to this func?
+        card: card,
+        isMine: isMine,
+        isPerm: isPerm,
+      };
+      let target = '';
+      if (that.isTargeting(cardInfo)) {
+        target = (
+          <i
+            className="fa fa-lg fa-crosshairs target"
+            onClick={that.targetFinish.bind(null, card)}
+          ></i>
+        );
+      }
 
       return (
         <div
@@ -406,6 +426,7 @@ var View = React.createClass({
           <div>
             {power}
             {actions}
+            {target}
           </div>
         </div>
       );
@@ -570,12 +591,6 @@ var View = React.createClass({
       let mass = '';
 
       if (isPerm) {
-        // Target button
-        if (that.isTargeting(cardInfo)) {
-          target = (<input type="button" value="target"
-              onClick={that.targetFinish.bind(null, card)} />);
-        }
-
         // Shields
         if (card.shields !== undefined &&
             card.types.intersect(['generator','black_hole']).length == 0) {
