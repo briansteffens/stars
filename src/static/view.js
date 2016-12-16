@@ -392,7 +392,6 @@ var View = React.createClass({
           );
         }
       }
-      //<i class="fa fa-crosshairs" aria-hidden="true"></i>
 
       // Target button
       const cardInfo = { // TODO: maybe take cardInfo as an arg to this func?
@@ -406,6 +405,19 @@ var View = React.createClass({
           <i
             className="fa fa-lg fa-crosshairs target"
             onClick={that.targetFinish.bind(null, card)}
+          ></i>
+        );
+      }
+
+      // Scrap button
+      let scrap = '';
+      if (isMine && (card.types.intersect(['ship','instant']).length > 0) &&
+          card.name !== 'mother ship') {
+        scrap = (
+          <i
+            className="fa fa-lg fa-window-close-o scrap"
+            disabled={!myTurn}
+            onClick={that.scrap.bind(null, card)}
           ></i>
         );
       }
@@ -427,6 +439,7 @@ var View = React.createClass({
             {power}
             {actions}
             {target}
+            {scrap}
           </div>
         </div>
       );
@@ -668,13 +681,6 @@ var View = React.createClass({
         generates = (<div>generates {card.power}</div>);
       }
 
-      let scrap = '';
-      if (isMine && (card.types.intersect(['ship','instant']).length > 0) &&
-          card.name !== 'mother ship') {
-        scrap = (<input type="button" value="scrap" disabled={!myTurn}
-            onClick={that.scrap.bind(null, card)} />);
-      }
-
       return (
         <div>
           {target}
@@ -683,7 +689,6 @@ var View = React.createClass({
           {generates}
           <div>{stats}</div>
           {mass}
-          {scrap}
           {play}
           {shields}
           {actions}
