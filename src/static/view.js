@@ -341,7 +341,7 @@ var View = React.createClass({
 
       // Power button
       let power = '';
-      if (isMine && card.upkeep) {
+      if (isPerm && isMine && card.upkeep) {
         const canPower = card.powered ||
                           me.powerUsed + card.upkeep <= me.powerTotal;
 
@@ -364,6 +364,11 @@ var View = React.createClass({
       if (isMine) {
         for (let i = 0; i < card.actions.length; i++) {
           let action = card.actions[i];
+
+          if (action.name === 'attack' && !isPerm) {
+            continue;
+          }
+
           let canAttack = isPerm && myTurn && that.state.action === null
               && !card.tapped;
           if (!card.types.contains('black_hole')) {
@@ -400,7 +405,7 @@ var View = React.createClass({
         isPerm: isPerm,
       };
       let target = '';
-      if (that.isTargeting(cardInfo)) {
+      if (isPerm && that.isTargeting(cardInfo)) {
         target = (
           <i
             className="fa fa-lg fa-crosshairs target"
@@ -703,20 +708,7 @@ var View = React.createClass({
       let hand = [];
 
       for (let card of me.hand) {
-        let scrap = '';
-        if (card.types.intersect(['ship','instant']).length > 0) {
-          scrap = (<button onClick={that.scrap.bind(null, card)}
-            disabled={!myTurn}>scrap</button>);
-        }
-
-        hand.push(
-          <div key={card.copyId} className="hand-card">
-            {card.name}
-            <button onClick={that.play.bind(that, card)} disabled={!myTurn}>
-              play</button>
-            {scrap}
-          </div>
-        );
+        hand.push(renderCard(card, true, false));
       }
 
       let drawPossible = myTurn ? game.drawPossible : 0;

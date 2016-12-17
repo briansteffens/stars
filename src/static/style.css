@@ -51,21 +51,6 @@ body {
   height: 215px;
 }
 
-#hud-bottom #hand #cards div {
-  border: solid 2px #aaa;
-  margin: 7px;
-  float: left;
-  width: 150px;
-}
-
-#hud-bottom #hand #cards div:after {
-  content: "";
-  display: block;
-}
-
-#hud-bottom #hand #cards div button {
-}
-
 .hud .stats {
   float: right;
 }
