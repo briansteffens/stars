@@ -375,16 +375,18 @@ var View = React.createClass({
             canAttack = canAttack && card.powered;
           }
 
-          let cls = 'question-circle';
+          let cls = 'play-circle-o';
 
           if (action.name === 'attack') {
             cls = 'plane';
-          }
 
-          if (canAttack) {
-            cls += ' attack';
+            if (canAttack) {
+              cls += ' attack';
+            } else {
+              cls += ' icon-disabled';
+            }
           } else {
-            cls += ' icon-disabled';
+            cls += ' play';
           }
 
           actions.push(

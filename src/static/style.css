@@ -235,3 +235,8 @@ div.hand_separator {
 .scrap {
   cursor: pointer;
 }
+
+.play {
+  color: #fff;
+  cursor: pointer;
+}
