@@ -299,18 +299,18 @@ var View = React.createClass({
       targets.intersect(cardInfo.card.types).length > 0;
   },
   render: function() {
-    var game = this.state.game;
+    const game = this.state.game;
 
     if (gameInfo === undefined || game === null) {
       return (<i>Connecting..</i>);
     }
 
-    var that = this;
-    var me = this.getMe();
-    var enemy = this.getEnemy();
-    var myTurn = this.isMyTurn();
+    const that = this;
+    const me = this.getMe();
+    const enemy = this.getEnemy();
+    const myTurn = this.isMyTurn();
 
-    let renderCard = function(card, isMine, isPerm) {
+    const renderCard = function(card, isMine, isPerm) {
       let cls = 'card';
 
       if (that.state.selection && that.state.selection == card.copyId) {
@@ -325,7 +325,7 @@ var View = React.createClass({
       const defense = card.defense > 0 ? card.defense : 0;
       const stats = card.attack || card.defense ? `${attack}/${defense}` : '';
 
-      let details = [];
+      const details = [];
 
       if (card.power) {
         details.push(<div>{`Generates ${card.power} power`}</div>);
@@ -360,17 +360,18 @@ var View = React.createClass({
       }
 
       // Action buttons
-      let actions = [];
+      const actions = [];
       if (isMine) {
         for (let i = 0; i < card.actions.length; i++) {
-          let action = card.actions[i];
+          const action = card.actions[i];
 
           if (action.name === 'attack' && !isPerm) {
             continue;
           }
 
           let canAttack = isPerm && myTurn && that.state.action === null
-              && !card.tapped;
+            && !card.tapped;
+
           if (!card.types.contains('black_hole')) {
             canAttack = canAttack && card.powered;
           }
@@ -452,22 +453,22 @@ var View = React.createClass({
       );
     };
 
-    let renderPermanents = function(perms, areMine) {
-      let ret = [];
+    const renderPermanents = function(perms, areMine) {
+      const ret = [];
 
-      for (let perm of perms) {
+      for (const perm of perms) {
         if (perm.name === 'mother ship') {
           ret.push(renderCard(perm, areMine, true));
         }
       }
 
-      for (let perm of perms) {
+      for (const perm of perms) {
         if (perm.name !== 'mother ship' && perm.types.contains('generator')) {
           ret.push(renderCard(perm, areMine, true));
         }
       }
 
-      for (let perm of perms) {
+      for (const perm of perms) {
         if (perm.name !== 'mother ship' && !perm.types.contains('generator')) {
           ret.push(renderCard(perm, areMine, true));
         }
@@ -476,16 +477,16 @@ var View = React.createClass({
       return ret;
     };
 
-    let permanents = renderPermanents(me.permanents, true);
-    let enemyPermanents = renderPermanents(enemy.permanents);
+    const permanents = renderPermanents(me.permanents, true);
+    const enemyPermanents = renderPermanents(enemy.permanents);
 
     let gameover = '';
     if (game.winner !== undefined) {
-      let outcome = game.winner == gameInfo.userId ? 'won' : 'lost';
+      const outcome = game.winner == gameInfo.userId ? 'won' : 'lost';
       gameover = (<h3>Game over! You {outcome}!</h3>);
     }
 
-    let renderPower = function(player) {
+    const renderPower = function(player) {
       return (
         <span className="power">
           {player.powerTotal - player.powerUsed}/{player.powerTotal}
@@ -493,7 +494,7 @@ var View = React.createClass({
       );
     };
 
-    let renderShields = function(player) {
+    const renderShields = function(player) {
       return (<span className="shields">
           {player.shieldsUsed}/{player.shieldsTotal}</span>);
     }
@@ -559,9 +560,9 @@ var View = React.createClass({
       );
     }
 
-    let chats = [];
+    const chats = [];
     for (let i = this.state.chats.length - 1; i >= 0; i--) {
-      let chat = this.state.chats[i];
+      const chat = this.state.chats[i];
       chats.push(
         <div key={i}>
           <strong>{chat.username}</strong>:
@@ -571,7 +572,7 @@ var View = React.createClass({
       );
     }
 
-    let chat = (
+    const chat = (
       <div className="chat_container">
         <div className="chat">
           <div id="messages" className="messages">
@@ -588,22 +589,22 @@ var View = React.createClass({
       </div>
     );
 
-    let renderSelection = function() {
+    const renderSelection = function() {
       if (!that.state.selection) {
         return (<div />);
       }
 
-      let cardInfo = that.getCardInfo(that.state.selection);
+      const cardInfo = that.getCardInfo(that.state.selection);
       if (cardInfo === null) {
         console.log('Cannot find card container');
         return (<div />);
       }
 
-      let card = cardInfo.card;
-      let isMine = cardInfo.isMine;
-      let isPerm = cardInfo.isPerm;
+      const card = cardInfo.card;
+      const isMine = cardInfo.isMine;
+      const isPerm = cardInfo.isPerm;
 
-      let actions = [];
+      const actions = [];
       let target = '';
       let play = '';
       let shields = '';
@@ -635,7 +636,7 @@ var View = React.createClass({
 
         // Effects
         if (card.effects !== undefined) {
-          let eles = [];
+          const eles = [];
 
           for (let effect of card.effects) {
             eles.push(
@@ -669,7 +670,7 @@ var View = React.createClass({
         worth = (<div>worth: {card.worth}</div>);
       }
 
-      let orZero = function(v) { return v !== undefined ? v : 0 };
+      const orZero = function(v) { return v !== undefined ? v : 0 };
 
       let stats = '';
       if (card.types.contains('ship')) {
@@ -706,15 +707,15 @@ var View = React.createClass({
       );
     }
 
-    let renderHand = function() {
-      let hand = [];
+    const renderHand = function() {
+      const hand = [];
 
-      for (let card of me.hand) {
+      for (const card of me.hand) {
         hand.push(renderCard(card, true, false));
       }
 
-      let drawPossible = myTurn ? game.drawPossible : 0;
-      let explorePossible = myTurn ? game.canExplore : 0;
+      const drawPossible = myTurn ? game.drawPossible : 0;
+      const explorePossible = myTurn ? game.canExplore : 0;
 
       return (
         <div id="hand">
@@ -729,10 +730,10 @@ var View = React.createClass({
       );
     }
 
-    let renderLog = function() {
-      let log = [];
+    const renderLog = function() {
+      const log = [];
       for (let index = 0; index < game.log.length; index++) {
-        let entry = game.log[index];
+        const entry = game.log[index];
         log.push(<div key={index}>{entry.message}</div>);
       }
 
@@ -762,7 +763,7 @@ var View = React.createClass({
   },
 });
 
-var view = ReactDOM.render(<View />, document.getElementById('view'));
+const view = ReactDOM.render(<View />, document.getElementById('view'));
 
 function connectSocket(msg) {
   socket = new WebSocket('wss://' + location.hostname + '/ws/');
